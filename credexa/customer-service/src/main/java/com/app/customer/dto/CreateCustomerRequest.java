@@ -25,7 +25,12 @@ import lombok.NoArgsConstructor;
 public class CreateCustomerRequest {
 
     // userId is NOT needed - it's automatically retrieved from JWT token via login-service
-    
+
+    // Username is optional - only used when admin creates customer for another user
+    // If null/blank, uses the authenticated user's username
+    @Size(min = 3, max = 100, message = "Username must be between 3 and 100 characters")
+    private String username;
+
     @NotBlank(message = "Full name is required")
     @Size(max = 100, message = "Full name must not exceed 100 characters")
     private String fullName;

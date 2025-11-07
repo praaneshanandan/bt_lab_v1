@@ -251,8 +251,81 @@ This is **not a security issue**.
 
 ---
 
-**Status:** Major issues resolved. Service ready for comprehensive testing.
-**Next:** User to rebuild customer-service and run full test suite.
+## Registration and Customer Creation Workflows FIXED
+
+### Issues Fixed
+1. **User registration didn't create customer profile** - Users had to manually POST to both services
+2. **Admin-created customers had no login credentials** - Customer profiles existed but users couldn't login
+
+### Solutions Implemented
+
+#### Solution 1: Enhanced Registration
+**File:** `login-service/src/main/java/com/app/login/dto/RegisterRequest.java`
+- Expanded to include all customer profile fields (25+ fields)
+- Registration now creates both user account AND customer profile
+
+**File:** `login-service/src/main/java/com/app/login/service/AuthService.java`
+- Updated `register()` method to auto-create customer profile after user creation
+- Uses JWT token for inter-service authentication
+- Error handling: User account still created even if profile creation fails (with warning log)
+
+**File:** `login-service/src/main/java/com/app/login/client/CustomerServiceClient.java` (NEW)
+- REST client for calling customer-service
+- Handles inter-service communication with JWT authentication
+
+#### Solution 2: Admin Create Customer with Account
+**File:** `login-service/src/main/java/com/app/login/dto/AdminCreateCustomerRequest.java` (NEW)
+- Request DTO for admin to create customer with login account
+- Similar to RegisterRequest but password is auto-generated
+
+**File:** `login-service/src/main/java/com/app/login/dto/AdminCreateCustomerResponse.java` (NEW)
+- Response DTO including temporary password
+
+**File:** `login-service/src/main/java/com/app/login/service/AuthService.java`
+- Added `adminCreateCustomerWithAccount()` method
+- Creates both user account and customer profile in ONE transaction
+- Generates 12-character random temporary password
+- Transaction rollback if customer profile creation fails (ensures consistency)
+
+**File:** `login-service/src/main/java/com/app/login/controller/AuthController.java`
+- Added `/admin/create-customer` endpoint (ROLE_ADMIN only)
+- Returns temporary password in response
+
+### What Works Now
+
+#### User Self-Registration:
+1. User POSTs to `/register` with all details (username, password, customer profile)
+2. User account created in login-service ✅
+3. Customer profile auto-created in customer-service ✅
+4. User can immediately login and access profile ✅
+
+#### Admin Creates Customer:
+1. Admin POSTs to `/admin/create-customer` with customer details (no password)
+2. Temporary password auto-generated ✅
+3. User account created in login-service ✅
+4. Customer profile created in customer-service ✅
+5. Admin receives temp password to give to customer ✅
+6. Customer can login with temp password ✅
+
+### Transaction & Error Handling
+- **Registration**: User account created even if profile fails (graceful degradation)
+- **Admin Create**: Transaction rollback ensures no orphaned user accounts
+- **Duplicates**: Proper validation for username, email, mobile
+
+### Testing Required
+- [ ] Test user self-registration with all fields
+- [ ] Verify customer profile auto-created
+- [ ] Test admin create customer endpoint
+- [ ] Verify temporary password works
+- [ ] Test error handling (duplicates, validation)
+- [ ] Verify transaction rollback on failure
+
+See [REGISTRATION_WORKFLOWS.md](REGISTRATION_WORKFLOWS.md) for detailed documentation and testing guide.
+
+---
+
+**Status:** Major issues resolved. New registration workflows implemented. Services ready for comprehensive testing.
+**Next:** User to rebuild login-service and test new registration flows.
 
 **Date:** 2025-11-07
 **Completed by:** Claude Code

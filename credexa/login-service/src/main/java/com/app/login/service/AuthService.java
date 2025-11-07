@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.common.util.JwtUtil;
+import com.app.login.client.CustomerServiceClient;
+import com.app.login.dto.AdminCreateCustomerRequest;
+import com.app.login.dto.AdminCreateCustomerResponse;
 import com.app.login.dto.LoginRequest;
 import com.app.login.dto.LoginResponse;
 import com.app.login.dto.RegisterRequest;
@@ -46,10 +49,11 @@ public class AuthService {
     private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    
+    private final CustomerServiceClient customerServiceClient;
+
     @Autowired(required = false)
     private LoginEventPublisher eventPublisher;
-    
+
     @Autowired
     @Lazy
     private AuthService self; // Self-injection for transactional methods
@@ -60,22 +64,82 @@ public class AuthService {
     @Autowired
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
                       UserSessionRepository sessionRepository, AuditLogRepository auditLogRepository,
-                      PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+                      PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+                      CustomerServiceClient customerServiceClient) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.sessionRepository = sessionRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.customerServiceClient = customerServiceClient;
     }
 
     /**
-     * Register a new user
+     * Register a new user - creates BOTH user account and customer profile
+     * User creation happens in a transaction, then customer profile is created after commit
      */
-    @Transactional
     public User register(RegisterRequest request) {
         log.info("Registering new user: {}", request.getUsername());
 
+        // Create user account in a transaction (will be committed before customer profile creation)
+        User savedUser = createUserAccount(request);
+        
+        log.info("User account created and committed: {} (userId: {}). Now creating customer profile...",
+                savedUser.getUsername(), savedUser.getId());
+
+        // Auto-create customer profile in customer-service (AFTER user transaction is committed)
+        try {
+            // Generate JWT token for inter-service communication
+            List<String> roles = savedUser.getRoles().stream()
+                    .map(role -> role.getName().name())
+                    .collect(Collectors.toList());
+            String tempToken = jwtUtil.generateToken(savedUser.getUsername(), roles);
+
+            CustomerServiceClient.CreateCustomerProfileRequest customerRequest =
+                CustomerServiceClient.CreateCustomerProfileRequest.builder()
+                    .username(savedUser.getUsername())
+                    .fullName(request.getFullName())
+                    .mobileNumber(request.getMobileNumber())
+                    .email(request.getEmail())
+                    .panNumber(request.getPanNumber())
+                    .aadharNumber(request.getAadharNumber())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(request.getGender())
+                    .classification(request.getClassification())
+                    .addressLine1(request.getAddressLine1())
+                    .addressLine2(request.getAddressLine2())
+                    .city(request.getCity())
+                    .state(request.getState())
+                    .pincode(request.getPincode())
+                    .country(request.getCountry())
+                    .accountNumber(request.getAccountNumber())
+                    .ifscCode(request.getIfscCode())
+                    .preferredLanguage(request.getPreferredLanguage())
+                    .preferredCurrency(request.getPreferredCurrency())
+                    .emailNotifications(request.getEmailNotifications())
+                    .smsNotifications(request.getSmsNotifications())
+                    .build();
+
+            customerServiceClient.createCustomerProfile(customerRequest, tempToken);
+            log.info("✓ Customer profile created successfully for user: {}", savedUser.getUsername());
+
+        } catch (Exception e) {
+            log.error("✗ Failed to create customer profile for user: {}. User account exists but profile missing.",
+                    savedUser.getUsername(), e);
+            // Don't rollback user account - just log the error
+            // Admin can manually create profile later if needed
+        }
+
+        return savedUser;
+    }
+
+    /**
+     * Create user account in database (transactional)
+     * This is separated so the transaction commits before we call customer-service
+     */
+    @Transactional
+    private User createUserAccount(RegisterRequest request) {
         // Validate uniqueness
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
@@ -83,12 +147,12 @@ public class AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
-        if (request.getMobileNumber() != null && 
+        if (request.getMobileNumber() != null &&
             userRepository.existsByMobileNumber(request.getMobileNumber())) {
             throw new IllegalArgumentException("Mobile number already exists");
         }
 
-        // Create user
+        // Create user account
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword())) // BCrypt hashing
@@ -111,10 +175,9 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         // Log the registration
-        logAuditEvent(request.getUsername(), AuditLog.EventType.USER_REGISTERED, 
+        logAuditEvent(request.getUsername(), AuditLog.EventType.USER_REGISTERED,
                      true, "User registered successfully", null);
 
-        log.info("User registered successfully: {}", savedUser.getUsername());
         return savedUser;
     }
 
@@ -355,7 +418,7 @@ public class AuthService {
             log.debug("Kafka event publisher not available, skipping event publication");
             return;
         }
-        
+
         try {
             LoginEvent event = LoginEvent.builder()
                     .eventId(java.util.UUID.randomUUID().toString())
@@ -367,11 +430,212 @@ public class AuthService {
                     .ipAddress(request != null ? getClientIp(request) : null)
                     .userAgent(request != null ? request.getHeader("User-Agent") : null)
                     .build();
-            
+
             eventPublisher.publishLoginEvent(event);
         } catch (Exception e) {
             log.error("Failed to publish login event", e);
             // Don't fail the operation if Kafka is unavailable
         }
+    }
+
+    /**
+     * Admin method to create user account only (no customer profile)
+     * Called from customer-service when admin creates a customer profile
+     */
+    @Transactional
+    public com.app.login.dto.CreateUserResponse adminCreateUserAccount(
+            com.app.login.dto.CreateUserRequest request,
+            String adminUsername) {
+        log.info("Admin {} creating user account for username: {}", adminUsername, request.getUsername());
+
+        // Validate uniqueness
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if (request.getMobileNumber() != null &&
+            userRepository.existsByMobileNumber(request.getMobileNumber())) {
+            throw new IllegalArgumentException("Mobile number already exists");
+        }
+
+        // Generate temporary password if not provided
+        String tempPassword = request.getTemporaryPassword();
+        if (tempPassword == null || tempPassword.isBlank()) {
+            tempPassword = generateTemporaryPassword();
+            log.info("Generated temporary password for user: {}", request.getUsername());
+        }
+
+        // Create user account
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(tempPassword))
+                .email(request.getEmail())
+                .mobileNumber(request.getMobileNumber())
+                .preferredLanguage(request.getPreferredLanguage())
+                .preferredCurrency(request.getPreferredCurrency())
+                .active(true)
+                .accountLocked(false)
+                .failedLoginAttempts(0)
+                .createdBy(adminUsername)
+                .roles(new HashSet<>())
+                .build();
+
+        // Assign CUSTOMER role
+        Role customerRole = roleRepository.findByName(Role.RoleName.ROLE_CUSTOMER)
+                .orElseThrow(() -> new RuntimeException("CUSTOMER role not found"));
+        user.getRoles().add(customerRole);
+
+        User savedUser = userRepository.save(user);
+
+        // Log the creation
+        logAuditEvent(request.getUsername(), AuditLog.EventType.USER_REGISTERED,
+                     true, "User account created by admin: " + adminUsername, null);
+
+        log.info("User account created successfully for: {}", savedUser.getUsername());
+
+        return com.app.login.dto.CreateUserResponse.builder()
+                .userId(savedUser.getId())
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
+                .mobileNumber(savedUser.getMobileNumber())
+                .temporaryPassword(tempPassword)
+                .accountActive(savedUser.isActive())
+                .message("User account created successfully. Temporary password: " + tempPassword)
+                .build();
+    }
+
+    /**
+     * Admin method to create customer with login account
+     * Creates both user account and customer profile in one transaction
+     */
+    @Transactional
+    public AdminCreateCustomerResponse adminCreateCustomerWithAccount(
+            AdminCreateCustomerRequest request,
+            String adminUsername) {
+        log.info("Admin {} creating customer with account for username: {}", adminUsername, request.getUsername());
+
+        // Validate uniqueness
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if (request.getMobileNumber() != null &&
+            userRepository.existsByMobileNumber(request.getMobileNumber())) {
+            throw new IllegalArgumentException("Mobile number already exists");
+        }
+
+        // Generate temporary password if not provided
+        String tempPassword = request.getTemporaryPassword();
+        if (tempPassword == null || tempPassword.isBlank()) {
+            tempPassword = generateTemporaryPassword();
+            log.info("Generated temporary password for user: {}", request.getUsername());
+        }
+
+        // Create user account
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(tempPassword))
+                .email(request.getEmail())
+                .mobileNumber(request.getMobileNumber())
+                .preferredLanguage(request.getPreferredLanguage())
+                .preferredCurrency(request.getPreferredCurrency())
+                .active(true)
+                .accountLocked(false)
+                .failedLoginAttempts(0)
+                .createdBy(adminUsername)
+                .roles(new HashSet<>())
+                .build();
+
+        // Assign CUSTOMER role
+        Role customerRole = roleRepository.findByName(Role.RoleName.ROLE_CUSTOMER)
+                .orElseThrow(() -> new RuntimeException("CUSTOMER role not found"));
+        user.getRoles().add(customerRole);
+
+        User savedUser = userRepository.save(user);
+
+        // Log the creation
+        logAuditEvent(request.getUsername(), AuditLog.EventType.USER_REGISTERED,
+                     true, "User account created by admin: " + adminUsername, null);
+
+        log.info("User account created by admin for: {}", savedUser.getUsername());
+
+        // Generate JWT token for inter-service communication
+        List<String> roles = savedUser.getRoles().stream()
+                .map(role -> role.getName().name())
+                .collect(Collectors.toList());
+        String tempToken = jwtUtil.generateToken(savedUser.getUsername(), roles);
+
+        // Create customer profile in customer-service
+        CustomerServiceClient.CustomerProfileResponse customerProfile = null;
+        try {
+            log.info("Creating customer profile for user: {}", savedUser.getUsername());
+
+            CustomerServiceClient.CreateCustomerProfileRequest customerRequest =
+                CustomerServiceClient.CreateCustomerProfileRequest.builder()
+                    .username(savedUser.getUsername())
+                    .fullName(request.getFullName())
+                    .mobileNumber(request.getMobileNumber())
+                    .email(request.getEmail())
+                    .panNumber(request.getPanNumber())
+                    .aadharNumber(request.getAadharNumber())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(request.getGender())
+                    .classification(request.getClassification())
+                    .addressLine1(request.getAddressLine1())
+                    .addressLine2(request.getAddressLine2())
+                    .city(request.getCity())
+                    .state(request.getState())
+                    .pincode(request.getPincode())
+                    .country(request.getCountry())
+                    .accountNumber(request.getAccountNumber())
+                    .ifscCode(request.getIfscCode())
+                    .preferredLanguage(request.getPreferredLanguage())
+                    .preferredCurrency(request.getPreferredCurrency())
+                    .emailNotifications(request.getEmailNotifications())
+                    .smsNotifications(request.getSmsNotifications())
+                    .build();
+
+            customerProfile = customerServiceClient.createCustomerProfile(customerRequest, tempToken);
+            log.info("Customer profile created successfully for user: {}", savedUser.getUsername());
+
+        } catch (Exception e) {
+            log.error("Failed to create customer profile for user: {}", savedUser.getUsername(), e);
+            // Rollback the transaction by throwing exception
+            throw new RuntimeException("Failed to create customer profile. User account creation rolled back: " + e.getMessage());
+        }
+
+        // Build response
+        return AdminCreateCustomerResponse.builder()
+                .userId(savedUser.getId())
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
+                .mobileNumber(savedUser.getMobileNumber())
+                .temporaryPassword(tempPassword)
+                .accountActive(savedUser.isActive())
+                .customerId(customerProfile.getId())
+                .fullName(customerProfile.getFullName())
+                .classification(customerProfile.getClassification())
+                .kycStatus(customerProfile.getKycStatus())
+                .message("Customer created successfully with login credentials. " +
+                        "Temporary password: " + tempPassword + " (User must change on first login)")
+                .build();
+    }
+
+    /**
+     * Generate a temporary password
+     */
+    private String generateTemporaryPassword() {
+        // Generate a random 12-character password
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%";
+        StringBuilder password = new StringBuilder();
+        java.util.Random random = new java.util.Random();
+        for (int i = 0; i < 12; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return password.toString();
     }
 }

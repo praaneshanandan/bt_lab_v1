@@ -14,23 +14,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Request DTO for user registration
- * Now includes customer profile fields for automatic customer profile creation
+ * Request DTO for admin creating a customer with login account
+ * Admin creates both user account and customer profile in one operation
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterRequest {
+public class AdminCreateCustomerRequest {
 
     // ===== Login Account Fields =====
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 100, message = "Username must be between 3 and 100 characters")
     private String username;
-
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
-    private String password;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
@@ -45,6 +41,11 @@ public class RegisterRequest {
 
     @lombok.Builder.Default
     private String preferredCurrency = "INR";
+
+    // Password will be auto-generated and sent to customer via email/SMS
+    // Or admin can optionally provide a temporary password
+    @Size(min = 8, message = "Temporary password must be at least 8 characters")
+    private String temporaryPassword;
 
     // ===== Customer Profile Fields =====
     @NotBlank(message = "Full name is required")
@@ -91,7 +92,7 @@ public class RegisterRequest {
     @Size(max = 100)
     private String country;
 
-    // Financial details (optional at registration)
+    // Financial details (optional)
     @Size(max = 50)
     private String accountNumber;
 

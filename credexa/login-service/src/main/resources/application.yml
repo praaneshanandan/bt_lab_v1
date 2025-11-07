@@ -99,7 +99,7 @@ bank:
 # Microservices URLs
 microservices:
   customer-service:
-    url: http://localhost:8083/api/customer
+    url: http://localhost:8083/api/customer/
   product-pricing-service:
     url: http://localhost:8082/api/products
   fd-calculator-service:

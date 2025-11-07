@@ -39,9 +39,74 @@ public class CustomerService {
     public CustomerResponse createCustomer(CreateCustomerRequest request, String authenticatedUsername, boolean isAdmin) {
         log.info("Creating customer by user: {} (Admin: {})", authenticatedUsername, isAdmin);
 
-        // Get userId from login-service using the authenticated username
-        Long userId = loginServiceClient.getUserIdByUsername(authenticatedUsername);
-        log.info("Retrieved userId: {} for username: {}", userId, authenticatedUsername);
+        Long userId;
+        String customerUsername;
+
+        if (isAdmin) {
+            // ADMIN WORKFLOW: Admin can create customer profile for any user
+            // If the user doesn't exist in login-service, create the user account first
+
+            // Check if username is provided in request (admin specifying which user to create for)
+            // If not provided, use authenticated username
+            customerUsername = (request.getUsername() != null && !request.getUsername().isBlank())
+                    ? request.getUsername()
+                    : authenticatedUsername;
+
+            log.info("Admin creating customer for username: {}", customerUsername);
+
+            // Check if user already exists
+            userId = loginServiceClient.getUserIdByUsername(customerUsername);
+
+            if (userId == null) {
+                // User doesn't exist - create user account first
+                log.info("User {} doesn't exist in login-service. Creating user account first.", customerUsername);
+
+                try {
+                    // Extract JWT token from current security context
+                    String adminJwtToken = extractJwtToken();
+
+                    // Create user account request
+                    LoginServiceClient.CreateUserRequest createUserRequest =
+                        LoginServiceClient.CreateUserRequest.builder()
+                            .username(customerUsername)
+                            .email(request.getEmail())
+                            .mobileNumber(request.getMobileNumber())
+                            .preferredLanguage(request.getPreferredLanguage() != null ?
+                                    request.getPreferredLanguage() : "en")
+                            .preferredCurrency(request.getPreferredCurrency() != null ?
+                                    request.getPreferredCurrency() : "INR")
+                            .temporaryPassword(null)  // Will be auto-generated
+                            .build();
+
+                    LoginServiceClient.CreateUserResponse userResponse =
+                        loginServiceClient.createUserAccount(createUserRequest, adminJwtToken);
+
+                    userId = userResponse.getUserId();
+                    log.info("User account created successfully. userId: {}, tempPassword: {}",
+                            userId, userResponse.getTemporaryPassword());
+
+                    // TODO: Consider returning the temporary password to admin in the response
+
+                } catch (Exception e) {
+                    log.error("Failed to create user account for username: {}", customerUsername, e);
+                    throw new RuntimeException("Failed to create user account: " + e.getMessage());
+                }
+            } else {
+                log.info("User {} already exists in login-service with userId: {}", customerUsername, userId);
+            }
+
+        } else {
+            // REGULAR USER WORKFLOW: User creating their own profile
+            // User must already be logged in, so user account exists
+            customerUsername = authenticatedUsername;
+            userId = loginServiceClient.getUserIdByUsername(authenticatedUsername);
+
+            if (userId == null) {
+                throw new RuntimeException("User account not found. Please contact administrator.");
+            }
+
+            log.info("User creating own profile. userId: {}, username: {}", userId, customerUsername);
+        }
 
         // Security Check: Regular users can only create their own profile
         // Check if the authenticated user already has a customer profile
@@ -346,5 +411,25 @@ public class CustomerService {
         // For non-senior citizens, use requested classification
         log.debug("Using requested classification: {} (age: {})", requestedClassification, age);
         return requestedClassification;
+    }
+
+    /**
+     * Extract JWT token from current security context
+     */
+    private String extractJwtToken() {
+        org.springframework.web.context.request.RequestAttributes requestAttributes =
+            org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+
+        if (requestAttributes instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+            jakarta.servlet.http.HttpServletRequest request =
+                ((org.springframework.web.context.request.ServletRequestAttributes) requestAttributes).getRequest();
+
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                return authHeader.substring(7);
+            }
+        }
+
+        throw new RuntimeException("Unable to extract JWT token from security context");
     }
 }

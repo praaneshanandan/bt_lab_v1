@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.app.common.dto.ApiResponse;
+import com.app.login.dto.AdminCreateCustomerRequest;
+import com.app.login.dto.AdminCreateCustomerResponse;
 import com.app.login.dto.BankConfigResponse;
 import com.app.login.dto.LoginRequest;
 import com.app.login.dto.LoginResponse;
@@ -156,6 +158,52 @@ public class AuthController {
             log.error("Failed to unlock account: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to unlock account: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/admin/create-user")
+    @Operation(summary = "Create user account only",
+               description = "Admin creates just a user account with temporary password (called from customer-service)")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<com.app.login.dto.CreateUserResponse>> createUserAccount(
+            @Valid @RequestBody com.app.login.dto.CreateUserRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+            String adminUsername = authentication.getName();
+            com.app.login.dto.CreateUserResponse response = authService.adminCreateUserAccount(request, adminUsername);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("User account created successfully", response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to create user account", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to create user account: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/admin/create-customer")
+    @Operation(summary = "Create customer with login account",
+               description = "Admin creates both user account and customer profile in one operation. Returns temporary password.")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<AdminCreateCustomerResponse>> createCustomerWithAccount(
+            @Valid @RequestBody AdminCreateCustomerRequest request,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+            String adminUsername = authentication.getName();
+            AdminCreateCustomerResponse response = authService.adminCreateCustomerWithAccount(request, adminUsername);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Customer created successfully with login account", response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to create customer with account", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to create customer: " + e.getMessage()));
         }
     }
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { customerApi } from '@/services/api';
-import type { Customer, UpdateCustomerRequest } from '@/types';
+import type { Customer, UpdateCustomerRequest, CreateCustomerRequest } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ProfileCompletion } from '@/components/ProfileCompletion';
-import { User, Edit2, Save, X, Loader2 } from 'lucide-react';
+import { User, Edit2, Save, X, Loader2, Plus } from 'lucide-react';
 
 export default function MyProfile() {
   const [profile, setProfile] = useState<Customer | null>(null);
@@ -17,6 +17,30 @@ export default function MyProfile() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  const [createForm, setCreateForm] = useState<CreateCustomerRequest>({
+    fullName: '',
+    mobileNumber: '',
+    email: '',
+    panNumber: '',
+    aadharNumber: '',
+    dateOfBirth: '',
+    gender: 'MALE',
+    classification: 'REGULAR',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    country: 'India',
+    accountNumber: '',
+    ifscCode: '',
+    preferredLanguage: 'en',
+    preferredCurrency: 'INR',
+    emailNotifications: true,
+    smsNotifications: true,
+  });
 
   const [editForm, setEditForm] = useState<UpdateCustomerRequest>({});
 
@@ -111,6 +135,29 @@ export default function MyProfile() {
     }
   };
 
+  const handleCreateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      console.log('Creating profile with data:', createForm);
+      console.log('Auth token:', localStorage.getItem('authToken'));
+      console.log('User ID:', localStorage.getItem('userId'));
+      
+      const response = await customerApi.createCustomer(createForm);
+      console.log('Profile created successfully:', response.data);
+      toast.success('Profile created successfully!');
+      setShowCreateForm(false);
+      fetchProfile(); // Refresh to show the new profile
+    } catch (err: any) {
+      console.error('Error creating profile:', err);
+      console.error('Error response:', err.response?.data);
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to create profile';
+      toast.error(errorMsg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getClassificationBadge = (classification: string) => {
     const colors: Record<string, string> = {
       VIP: 'bg-purple-100 text-purple-800',
@@ -156,10 +203,192 @@ export default function MyProfile() {
 
   if (!profile) {
     return (
-      <div className="p-8">
-        <Alert>
-          <AlertDescription>No profile found. Please create your customer profile first.</AlertDescription>
-        </Alert>
+      <div className="p-8 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-6 w-6" />
+              Complete Your Profile
+            </CardTitle>
+            <CardDescription>
+              Welcome! To access all features, please complete your customer profile.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!showCreateForm ? (
+              <>
+                <Alert className="mb-4">
+                  <AlertDescription>
+                    Your login account has been created, but you need to complete your customer profile 
+                    to access all banking features.
+                  </AlertDescription>
+                </Alert>
+                <div className="text-sm text-gray-600 mb-4">
+                  <p><strong>Current Account Details:</strong></p>
+                  <p>Username: {localStorage.getItem('username')}</p>
+                  <p>User ID: {localStorage.getItem('userId')}</p>
+                </div>
+                <Button onClick={() => setShowCreateForm(true)} className="w-full" size="lg">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Create My Customer Profile
+                </Button>
+              </>
+            ) : (
+              <form onSubmit={handleCreateProfile} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="fullName">Full Name *</Label>
+                    <Input
+                      id="fullName"
+                      value={createForm.fullName}
+                      onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="mobileNumber">Mobile Number *</Label>
+                    <Input
+                      id="mobileNumber"
+                      value={createForm.mobileNumber}
+                      onChange={(e) => setCreateForm({ ...createForm, mobileNumber: e.target.value })}
+                      pattern="[0-9]{10}"
+                      placeholder="10 digits"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={createForm.dateOfBirth}
+                      onChange={(e) => setCreateForm({ ...createForm, dateOfBirth: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="gender">Gender *</Label>
+                    <select
+                      id="gender"
+                      value={createForm.gender}
+                      onChange={(e) => setCreateForm({ ...createForm, gender: e.target.value as any })}
+                      className="w-full h-10 px-3 border border-gray-300 rounded-md"
+                      required
+                    >
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="panNumber">PAN Number (Optional)</Label>
+                    <Input
+                      id="panNumber"
+                      value={createForm.panNumber}
+                      onChange={(e) => setCreateForm({ ...createForm, panNumber: e.target.value })}
+                      pattern="[A-Z]{5}[0-9]{4}[A-Z]"
+                      placeholder="ABCDE1234F"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="aadharNumber">Aadhar Number (Optional)</Label>
+                    <Input
+                      id="aadharNumber"
+                      value={createForm.aadharNumber}
+                      onChange={(e) => setCreateForm({ ...createForm, aadharNumber: e.target.value })}
+                      pattern="[0-9]{12}"
+                      placeholder="12 digits"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                  <Input
+                    id="addressLine1"
+                    value={createForm.addressLine1}
+                    onChange={(e) => setCreateForm({ ...createForm, addressLine1: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="addressLine2">Address Line 2 (Optional)</Label>
+                  <Input
+                    id="addressLine2"
+                    value={createForm.addressLine2}
+                    onChange={(e) => setCreateForm({ ...createForm, addressLine2: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      value={createForm.city}
+                      onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      value={createForm.state}
+                      onChange={(e) => setCreateForm({ ...createForm, state: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pincode">Pincode *</Label>
+                    <Input
+                      id="pincode"
+                      value={createForm.pincode}
+                      onChange={(e) => setCreateForm({ ...createForm, pincode: e.target.value })}
+                      pattern="[0-9]{6}"
+                      placeholder="6 digits"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={saving} className="flex-1">
+                    {saving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create Profile'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }

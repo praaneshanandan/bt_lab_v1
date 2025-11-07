@@ -6,7 +6,12 @@
       "Bash(curl:*)",
       "Bash(powershell -Command \"try { Invoke-WebRequest -Uri ''http://localhost:8081/api/auth/health'' -UseBasicParsing | Select-Object -ExpandProperty Content } catch { $_Exception.Message }\")",
       "Bash(powershell -Command:*)",
-      "Bash(powershell -File:*)"
+      "Bash(powershell -File:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(timeout /t 30 /nobreak)",
+      "Bash(taskkill:*)",
+      "Bash(taskkill /F /PID 40832)",
+      "Bash(mvn clean compile:*)"
     ],
     "deny": [],
     "ask": []
