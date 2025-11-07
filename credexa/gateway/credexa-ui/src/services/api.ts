@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type {
   CreateCustomerRequest,
+  UpdateCustomerRequest,
   CreateStandardAccountRequest,
   CustomizeAccountRequest,
   SearchAccountParams,
@@ -32,21 +33,25 @@ api.interceptors.request.use((config) => {
 
 // Auth/Login Service APIs
 export const authApi = {
-  login: (data: LoginRequest) => api.post('/api/login/login', data),
-  register: (data: RegisterRequest) => api.post('/api/login/register', data),
-  logout: () => api.post('/api/login/logout'),
-  validateToken: (token: string) => api.post('/api/login/validate-token', token),
-  getBankConfig: () => api.get('/api/login/bank-config'),
-  getUserByUsername: (username: string) => api.get(`/api/login/user/${username}`),
-  health: () => api.get('/api/login/health'),
+  login: (data: LoginRequest) => api.post('/api/auth/login', data),
+  register: (data: RegisterRequest) => api.post('/api/auth/register', data),
+  logout: () => api.post('/api/auth/logout'),
+  validateToken: (token: string) => api.post('/api/auth/validate-token', token),
+  getBankConfig: () => api.get('/api/auth/bank-config'),
+  getUserByUsername: (username: string) => api.get(`/api/auth/user/${username}`),
+  health: () => api.get('/api/auth/health'),
 };
 
 // Customer Service APIs
 export const customerApi = {
   getCustomer: (id: number) => api.get(`/api/customer/${id}`),
-  getAllCustomers: () => api.get('/api/customer'),
+  getAllCustomers: () => api.get('/api/customer/all'),
+  getOwnProfile: () => api.get('/api/customer/profile'),
   createCustomer: (data: CreateCustomerRequest) => api.post('/api/customer', data),
-  updateCustomer: (id: number, data: Partial<CreateCustomerRequest>) => api.put(`/api/customer/${id}`, data),
+  updateCustomer: (id: number, data: UpdateCustomerRequest) => api.put(`/api/customer/${id}`, data),
+  getCustomerByUserId: (userId: number) => api.get(`/api/customer/user/${userId}`),
+  getCustomerClassification: (id: number) => api.get(`/api/customer/${id}/classification`),
+  getCustomer360View: (id: number) => api.get(`/api/customer/${id}/360-view`),
 };
 
 // Product Pricing Service APIs

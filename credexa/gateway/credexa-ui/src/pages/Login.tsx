@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Loader2, CheckCircle2 } from 'lucide-react';
+import { Building2, Loader2, CheckCircle2, AlertTriangle, Lock } from 'lucide-react';
+import { PasswordStrength } from '@/components/PasswordStrength';
 import { authApi } from '@/services/api';
 import type { BankConfigResponse } from '@/types';
 
@@ -23,6 +25,8 @@ export default function Login() {
   });
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isAccountLocked, setIsAccountLocked] = useState(false);
 
   // Register state
   const [registerForm, setRegisterForm] = useState({
@@ -66,6 +70,10 @@ export default function Login() {
         throw new Error('Invalid response from server');
       }
       
+      // Reset failed attempts on successful login
+      setFailedAttempts(0);
+      setIsAccountLocked(false);
+      
       // Store authentication data
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('authToken', data.token);
@@ -79,7 +87,26 @@ export default function Login() {
       console.error('Login error:', error);
       const err = error as { response?: { data?: { error?: string; message?: string } } };
       const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setLoginError(errorMsg);
+      
+      // Check for specific account locked error
+      if (errorMsg.toLowerCase().includes('locked')) {
+        setIsAccountLocked(true);
+        setLoginError('Your account has been locked after 5 failed login attempts. Please contact support to unlock your account.');
+      } else if (errorMsg.toLowerCase().includes('invalid credentials') || errorMsg.toLowerCase().includes('incorrect')) {
+        // Increment failed attempts
+        const newFailedAttempts = failedAttempts + 1;
+        setFailedAttempts(newFailedAttempts);
+        
+        if (newFailedAttempts >= 5) {
+          setIsAccountLocked(true);
+          setLoginError('Your account has been locked after 5 failed login attempts. Please contact support.');
+        } else {
+          const remainingAttempts = 5 - newFailedAttempts;
+          setLoginError(`Invalid credentials. You have ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining before your account is locked.`);
+        }
+      } else {
+        setLoginError(errorMsg);
+      }
     } finally {
       setLoginLoading(false);
     }
@@ -164,9 +191,21 @@ export default function Login() {
             {/* Login Tab */}
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
-                {loginError && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{loginError}</AlertDescription>
+                {isAccountLocked && (
+                  <Alert variant="destructive" className="border-red-300 bg-red-50">
+                    <Lock className="h-4 w-4" />
+                    <AlertDescription className="font-medium">
+                      Your account has been locked after 5 failed login attempts. Please contact support to unlock your account.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {loginError && !isAccountLocked && (
+                  <Alert variant={failedAttempts > 0 ? "destructive" : "default"} className={failedAttempts >= 3 ? 'border-orange-300 bg-orange-50' : ''}>
+                    {failedAttempts >= 3 && <AlertTriangle className="h-4 w-4 text-orange-600" />}
+                    <AlertDescription className={failedAttempts >= 3 ? 'text-orange-800 font-medium' : ''}>
+                      {loginError}
+                    </AlertDescription>
                   </Alert>
                 )}
 
@@ -180,6 +219,7 @@ export default function Login() {
                     onChange={(e) => setLoginForm({ ...loginForm, usernameOrEmailOrMobile: e.target.value })}
                     required
                     autoFocus
+                    disabled={isAccountLocked}
                     className="h-11"
                   />
                 </div>
@@ -193,11 +233,12 @@ export default function Login() {
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                     required
+                    disabled={isAccountLocked}
                     className="h-11"
                   />
                 </div>
 
-                <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loginLoading}>
+                <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loginLoading || isAccountLocked}>
                   {loginLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -285,6 +326,7 @@ export default function Login() {
                       minLength={8}
                       className="h-11"
                     />
+                    <PasswordStrength password={registerForm.password} />
                   </div>
 
                   <div className="space-y-2">
