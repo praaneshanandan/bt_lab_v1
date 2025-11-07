@@ -8,6 +8,7 @@ import com.app.login.repository.RoleRepository;
 import com.app.login.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,18 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final BankConfigurationRepository bankConfigRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${admin.create-default:true}")
+    private boolean createDefaultAdmin;
+
+    @Value("${admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${admin.password:Admin@123}")
+    private String adminPassword;
+
+    @Value("${admin.email:admin@credexa.com}")
+    private String adminEmail;
 
     @Override
     public void run(String... args) {
@@ -57,15 +70,20 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createDefaultAdminUser() {
-        String adminUsername = "admin";
+        // Only create default admin if enabled (can be disabled in production)
+        if (!createDefaultAdmin) {
+            log.info("Default admin creation is disabled. Set admin.create-default=true to enable.");
+            return;
+        }
+
         if (!userRepository.existsByUsername(adminUsername)) {
             Role adminRole = roleRepository.findByName(Role.RoleName.ROLE_ADMIN)
                     .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
             User admin = User.builder()
                     .username(adminUsername)
-                    .password(passwordEncoder.encode("Admin@123")) // Default password
-                    .email("admin@credexa.com")
+                    .password(passwordEncoder.encode(adminPassword))
+                    .email(adminEmail)
                     .mobileNumber("9999999999")
                     .preferredLanguage("en")
                     .preferredCurrency("USD")
@@ -78,13 +96,14 @@ public class DataInitializer implements CommandLineRunner {
 
             admin.getRoles().add(adminRole);
             userRepository.save(admin);
-            
-            log.info("========================================");
-            log.info("Default Admin User Created:");
-            log.info("Username: admin");
-            log.info("Password: Admin@123");
-            log.info("Email: admin@credexa.com");
-            log.info("========================================");
+
+            log.warn("========================================");
+            log.warn("⚠️  DEFAULT ADMIN USER CREATED");
+            log.warn("Username: {}", adminUsername);
+            log.warn("Email: {}", adminEmail);
+            log.warn("⚠️  CHANGE THE PASSWORD IMMEDIATELY IN PRODUCTION!");
+            log.warn("⚠️  Set admin.create-default=false to disable auto-creation");
+            log.warn("========================================");
         }
     }
 

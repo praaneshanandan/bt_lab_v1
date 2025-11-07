@@ -136,6 +136,29 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/admin/unlock-account/{username}")
+    @Operation(summary = "Unlock user account", description = "Unlock a locked user account (Admin only)")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> unlockAccount(
+            @org.springframework.web.bind.annotation.PathVariable String username,
+            HttpServletRequest request) {
+        try {
+            authService.unlockAccount(username, request);
+            return ResponseEntity.ok(ApiResponse.success("Account unlocked successfully", null));
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to unlock account: {}", username, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to unlock account: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is running")
     public ResponseEntity<ApiResponse<String>> health() {

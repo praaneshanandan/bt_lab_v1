@@ -2,6 +2,7 @@ package com.app.login.config;
 
 import com.app.common.util.JwtUtil;
 import com.app.login.service.CustomUserDetailsService;
+import com.app.login.service.SessionService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final SessionService sessionService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
@@ -53,12 +55,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 .map(SimpleGrantedAuthority::new)
                                 .collect(Collectors.toList());
 
-                        UsernamePasswordAuthenticationToken authToken = 
+                        UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-                        
+
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
-                        
+
+                        // Update session activity to track last activity time
+                        sessionService.updateSessionActivity(token);
+
                         log.debug("JWT authentication successful for user: {}", username);
                     }
                 }

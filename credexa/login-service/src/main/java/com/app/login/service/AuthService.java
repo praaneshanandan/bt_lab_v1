@@ -104,9 +104,9 @@ public class AuthService {
                 .build();
 
         // Assign default role
-        Role userRole = roleRepository.findByName(Role.RoleName.ROLE_USER)
+        Role customerRole = roleRepository.findByName(Role.RoleName.ROLE_CUSTOMER)
                 .orElseThrow(() -> new RuntimeException("Default role not found"));
-        user.getRoles().add(userRole);
+        user.getRoles().add(customerRole);
 
         User savedUser = userRepository.save(user);
 
@@ -262,18 +262,39 @@ public class AuthService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void handleFailedLogin(User user, HttpServletRequest httpRequest) {
         user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
-        
+
         // Lock account after 5 failed attempts
         if (user.getFailedLoginAttempts() >= 5) {
             user.setAccountLocked(true);
-            logAuditEvent(user.getUsername(), AuditLog.EventType.ACCOUNT_LOCKED, 
+            logAuditEvent(user.getUsername(), AuditLog.EventType.ACCOUNT_LOCKED,
                          true, "Account locked due to multiple failed login attempts", httpRequest);
             log.warn("Account locked due to failed attempts: {}", user.getUsername());
         }
 
         userRepository.save(user);
-        logAuditEvent(user.getUsername(), AuditLog.EventType.LOGIN_FAILURE, 
+        logAuditEvent(user.getUsername(), AuditLog.EventType.LOGIN_FAILURE,
                      false, "Invalid password", httpRequest);
+    }
+
+    /**
+     * Unlock user account (Admin only)
+     */
+    @Transactional
+    public void unlockAccount(String username, HttpServletRequest httpRequest) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        if (!user.isAccountLocked()) {
+            throw new IllegalStateException("Account is not locked");
+        }
+
+        user.setAccountLocked(false);
+        user.setFailedLoginAttempts(0);
+        userRepository.save(user);
+
+        logAuditEvent(username, AuditLog.EventType.ACCOUNT_UNLOCKED,
+                     true, "Account unlocked by administrator", httpRequest);
+        log.info("Account unlocked: {}", username);
     }
 
     /**

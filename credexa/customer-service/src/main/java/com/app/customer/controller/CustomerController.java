@@ -44,8 +44,8 @@ public class CustomerController {
      * Get all customers - accessible only to BANK_OFFICER/CUSTOMER_MANAGER or ADMIN
      */
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('CUSTOMER_MANAGER', 'ADMIN')")
-    @Operation(summary = "Get all customers", description = "Retrieve list of all customers. Accessible only to CUSTOMER_MANAGER or ADMIN roles.")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @Operation(summary = "Get all customers", description = "Retrieve list of all customers. Accessible only to MANAGER or ADMIN roles.")
     public ResponseEntity<java.util.List<CustomerResponse>> getAllCustomers() {
         log.info("Received request to get all customers");
         java.util.List<CustomerResponse> customers = customerService.getAllCustomers();
@@ -66,8 +66,8 @@ public class CustomerController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('USER', 'CUSTOMER_MANAGER', 'ADMIN')")
-    @Operation(summary = "Create new customer", description = "Create a new customer profile. Regular users can only create for themselves, admins can create for any user.")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
+    @Operation(summary = "Create new customer", description = "Create a new customer profile. Regular customers can only create for themselves, admins can create for any user.")
     public ResponseEntity<CustomerResponse> createCustomer(
             @Valid @RequestBody CreateCustomerRequest request,
             Authentication authentication) {
@@ -85,7 +85,7 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'CUSTOMER_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Get customer by ID", description = "Retrieve customer details by customer ID")
     public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
         log.info("Received request to get customer by ID: {}", id);
@@ -94,7 +94,7 @@ public class CustomerController {
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('USER', 'CUSTOMER_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Get customer by user ID", description = "Retrieve customer details by user ID from login-service")
     public ResponseEntity<CustomerResponse> getCustomerByUserId(@PathVariable Long userId) {
         log.info("Received request to get customer by user ID: {}", userId);
@@ -103,8 +103,8 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'CUSTOMER_MANAGER', 'ADMIN')")
-    @Operation(summary = "Update customer", description = "Update customer information. Regular users can only update their own profile, admins can update any profile.")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
+    @Operation(summary = "Update customer", description = "Update customer information. Regular customers can only update their own profile, admins can update any profile.")
     public ResponseEntity<CustomerResponse> updateCustomer(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCustomerRequest request,
@@ -121,7 +121,7 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}/classification")
-    @PreAuthorize("hasAnyRole('USER', 'CUSTOMER_MANAGER', 'ADMIN', 'FD_MANAGER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Get customer classification", description = "Get customer classification for FD rate determination")
     public ResponseEntity<CustomerClassificationResponse> getCustomerClassification(@PathVariable Long id) {
         log.info("Received request to get classification for customer ID: {}", id);
@@ -130,7 +130,7 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}/360-view")
-    @PreAuthorize("hasAnyRole('CUSTOMER_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(summary = "Get 360-degree customer view", description = "Get comprehensive customer overview including FD accounts")
     public ResponseEntity<Customer360Response> getCustomer360View(@PathVariable Long id) {
         log.info("Received request to get 360-degree view for customer ID: {}", id);

@@ -52,6 +52,7 @@ public class UserSession {
         if (lastActivity == null) {
             return false;
         }
-        return LocalDateTime.now().isAfter(lastActivity.plusNanos(idleTimeoutMillis * 1_000_000));
+        // Fix: Use correct conversion from milliseconds to nanoseconds
+        return LocalDateTime.now().isAfter(lastActivity.plusNanos(idleTimeoutMillis * 1_000_000L));
     }
 }

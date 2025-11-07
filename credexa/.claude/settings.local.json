@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(powershell -File \"c:\\Users\\dhruv\\Coding\\bt_lab_v1\\credexa\\check-services.ps1\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

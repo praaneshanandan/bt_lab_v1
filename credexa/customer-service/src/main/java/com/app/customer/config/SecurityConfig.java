@@ -38,8 +38,8 @@ public class SecurityConfig {
                             "/swagger-resources/**",
                             "/webjars/**"
                         ).permitAll()
-                        // Customer endpoints - require CUSTOMER, ADMIN, or CUSTOMER_MANAGER role
-                        .requestMatchers("/**").hasAnyRole("USER", "CUSTOMER_MANAGER", "ADMIN")
+                        // Customer endpoints - require CUSTOMER, MANAGER, or ADMIN role
+                        .requestMatchers("/**").hasAnyRole("CUSTOMER", "MANAGER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

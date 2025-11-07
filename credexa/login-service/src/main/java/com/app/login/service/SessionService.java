@@ -55,7 +55,8 @@ public class SessionService {
     @Scheduled(fixedRate = 60000) // Every 1 minute
     @Transactional
     public void autoLogoutInactiveSessions() {
-        LocalDateTime threshold = LocalDateTime.now().minusNanos(idleTimeout * 1_000_000);
+        // Fix: Use minusNanos with correct conversion from milliseconds
+        LocalDateTime threshold = LocalDateTime.now().minusNanos(idleTimeout * 1_000_000L);
         List<UserSession> expiredSessions = sessionRepository.findByActiveTrueAndLastActivityBefore(threshold);
 
         if (!expiredSessions.isEmpty()) {
