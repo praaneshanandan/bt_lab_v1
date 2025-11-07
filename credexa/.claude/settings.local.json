@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(tree:*)",
-      "Bash(powershell -File \"c:\\Users\\dhruv\\Coding\\bt_lab_v1\\credexa\\check-services.ps1\")"
+      "Bash(powershell -File \"c:\\Users\\dhruv\\Coding\\bt_lab_v1\\credexa\\check-services.ps1\")",
+      "Bash(curl:*)",
+      "Bash(powershell -Command \"try { Invoke-WebRequest -Uri ''http://localhost:8081/api/auth/health'' -UseBasicParsing | Select-Object -ExpandProperty Content } catch { $_Exception.Message }\")",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell -File:*)"
     ],
     "deny": [],
     "ask": []

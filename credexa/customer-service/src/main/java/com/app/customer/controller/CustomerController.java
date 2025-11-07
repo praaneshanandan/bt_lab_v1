@@ -86,19 +86,59 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
-    @Operation(summary = "Get customer by ID", description = "Retrieve customer details by customer ID")
-    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
-        log.info("Received request to get customer by ID: {}", id);
+    @Operation(summary = "Get customer by ID", description = "Retrieve customer details by customer ID. Customers can only view their own profile, managers and admins can view any profile.")
+    public ResponseEntity<CustomerResponse> getCustomerById(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String authenticatedUsername = authentication.getName();
+        boolean isAdminOrManager = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
+
+        log.info("User '{}' (Admin/Manager: {}) requesting customer ID: {}",
+                authenticatedUsername, isAdminOrManager, id);
+
         CustomerResponse response = customerService.getCustomerById(id);
+
+        // Security Check: Regular customers can only view their own profile
+        if (!isAdminOrManager && !response.getUsername().equals(authenticatedUsername)) {
+            log.warn("User '{}' attempted to access customer ID: {} (unauthorized)",
+                    authenticatedUsername, id);
+            throw new com.app.customer.exception.UnauthorizedAccessException(
+                "You don't have permission to view this customer profile"
+            );
+        }
+
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
-    @Operation(summary = "Get customer by user ID", description = "Retrieve customer details by user ID from login-service")
-    public ResponseEntity<CustomerResponse> getCustomerByUserId(@PathVariable Long userId) {
-        log.info("Received request to get customer by user ID: {}", userId);
+    @Operation(summary = "Get customer by user ID", description = "Retrieve customer details by user ID from login-service. Customers can only view their own profile.")
+    public ResponseEntity<CustomerResponse> getCustomerByUserId(
+            @PathVariable Long userId,
+            Authentication authentication) {
+
+        String authenticatedUsername = authentication.getName();
+        boolean isAdminOrManager = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
+
+        log.info("User '{}' (Admin/Manager: {}) requesting customer by user ID: {}",
+                authenticatedUsername, isAdminOrManager, userId);
+
         CustomerResponse response = customerService.getCustomerByUserId(userId);
+
+        // Security Check: Regular customers can only view their own profile
+        if (!isAdminOrManager && !response.getUsername().equals(authenticatedUsername)) {
+            log.warn("User '{}' attempted to access user ID: {} (unauthorized)",
+                    authenticatedUsername, userId);
+            throw new com.app.customer.exception.UnauthorizedAccessException(
+                "You don't have permission to view this customer profile"
+            );
+        }
+
         return ResponseEntity.ok(response);
     }
 
@@ -122,9 +162,31 @@ public class CustomerController {
 
     @GetMapping("/{id}/classification")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
-    @Operation(summary = "Get customer classification", description = "Get customer classification for FD rate determination")
-    public ResponseEntity<CustomerClassificationResponse> getCustomerClassification(@PathVariable Long id) {
-        log.info("Received request to get classification for customer ID: {}", id);
+    @Operation(summary = "Get customer classification", description = "Get customer classification for FD rate determination. Customers can only view their own classification.")
+    public ResponseEntity<CustomerClassificationResponse> getCustomerClassification(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        String authenticatedUsername = authentication.getName();
+        boolean isAdminOrManager = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
+
+        log.info("User '{}' (Admin/Manager: {}) requesting classification for customer ID: {}",
+                authenticatedUsername, isAdminOrManager, id);
+
+        // First get customer to check authorization
+        CustomerResponse customer = customerService.getCustomerById(id);
+
+        // Security Check: Regular customers can only view their own classification
+        if (!isAdminOrManager && !customer.getUsername().equals(authenticatedUsername)) {
+            log.warn("User '{}' attempted to access classification for customer ID: {} (unauthorized)",
+                    authenticatedUsername, id);
+            throw new com.app.customer.exception.UnauthorizedAccessException(
+                "You don't have permission to view this customer's classification"
+            );
+        }
+
         CustomerClassificationResponse response = customerService.getCustomerClassification(id);
         return ResponseEntity.ok(response);
     }

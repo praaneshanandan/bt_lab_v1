@@ -44,6 +44,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .logout(AbstractHttpConfigurer::disable) // Disable default logout handling
+            .formLogin(AbstractHttpConfigurer::disable)  // Disable form login to prevent FormContentFilter issues
+            .httpBasic(AbstractHttpConfigurer::disable)   // Disable HTTP Basic auth
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers(
