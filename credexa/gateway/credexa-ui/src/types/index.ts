@@ -288,6 +288,45 @@ export interface RegisterRequest {
   preferredCurrency?: string;
 }
 
+export interface AdminCreateCustomerRequest {
+  username: string;
+  email: string;
+  mobileNumber: string;
+  preferredLanguage?: string;
+  preferredCurrency?: string;
+  temporaryPassword?: string; // Optional - auto-generated if not provided
+  fullName: string;
+  panNumber?: string;
+  aadharNumber?: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  classification: 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR';
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  emailNotifications?: boolean;
+  smsNotifications?: boolean;
+}
+
+export interface AdminCreateCustomerResponse {
+  userId: number;
+  username: string;
+  email: string;
+  mobileNumber: string;
+  temporaryPassword: string; // The generated or provided temporary password
+  accountActive: boolean;
+  customerId: number;
+  fullName: string;
+  classification: string;
+  kycStatus: string;
+  message: string;
+}
+
 export interface TokenValidationResponse {
   valid: boolean;
   username?: string;

@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { customerApi } from '@/services/api';
+import { customerApi, authApi } from '@/services/api';
 import { isManagerOrAdmin } from '@/utils/auth';
-import type { Customer, CreateCustomerRequest } from '@/types';
+import type { Customer, AdminCreateCustomerRequest, AdminCreateCustomerResponse } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, Shield, Eye, Filter, Download, X } from 'lucide-react';
+import { Plus, Search, Eye, Filter, Download, X, Copy, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDuplicateDetection } from '@/hooks/useDuplicateDetection';
@@ -26,10 +26,16 @@ export default function Customers() {
   const [kycStatusFilter, setKycStatusFilter] = useState<string>('ALL');
   const [activeStatusFilter, setActiveStatusFilter] = useState<string>('ALL');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newCustomer, setNewCustomer] = useState<CreateCustomerRequest>({
-    fullName: '',
-    mobileNumber: '',
+  const [createdCustomerInfo, setCreatedCustomerInfo] = useState<AdminCreateCustomerResponse | null>(null);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
+  const [newCustomer, setNewCustomer] = useState<AdminCreateCustomerRequest>({
+    username: '',
     email: '',
+    mobileNumber: '',
+    preferredLanguage: 'en',
+    preferredCurrency: 'INR',
+    fullName: '',
     panNumber: '',
     aadharNumber: '',
     dateOfBirth: '',
@@ -43,8 +49,6 @@ export default function Customers() {
     country: 'India',
     accountNumber: '',
     ifscCode: '',
-    preferredLanguage: 'en',
-    preferredCurrency: 'INR',
     emailNotifications: true,
     smsNotifications: true,
   });
@@ -93,12 +97,22 @@ export default function Customers() {
     }
     
     try {
-      await customerApi.createCustomer(newCustomer);
+      // Use admin endpoint which creates both user account and customer profile
+      const response = await authApi.adminCreateCustomer(newCustomer);
+      const customerInfo = response.data.data;
+      
+      setCreatedCustomerInfo(customerInfo);
+      setShowPasswordDialog(true);
       setIsCreateDialogOpen(false);
+      
+      // Reset form
       setNewCustomer({
-        fullName: '',
-        mobileNumber: '',
+        username: '',
         email: '',
+        mobileNumber: '',
+        preferredLanguage: 'en',
+        preferredCurrency: 'INR',
+        fullName: '',
         panNumber: '',
         aadharNumber: '',
         dateOfBirth: '',
@@ -112,17 +126,26 @@ export default function Customers() {
         country: 'India',
         accountNumber: '',
         ifscCode: '',
-        preferredLanguage: 'en',
-        preferredCurrency: 'INR',
         emailNotifications: true,
         smsNotifications: true,
       });
-      toast.success('Customer profile created successfully!');
+      
+      toast.success('Customer account created successfully!');
       fetchCustomers();
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to create customer';
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const errorMsg = error.response?.data?.message || 'Failed to create customer';
       toast.error(errorMsg);
       console.error('Error creating customer:', err);
+    }
+  };
+
+  const copyPasswordToClipboard = () => {
+    if (createdCustomerInfo?.temporaryPassword) {
+      navigator.clipboard.writeText(createdCustomerInfo.temporaryPassword);
+      setPasswordCopied(true);
+      toast.success('Password copied to clipboard!');
+      setTimeout(() => setPasswordCopied(false), 3000);
     }
   };
 
@@ -221,7 +244,26 @@ export default function Customers() {
               <DialogTitle>Create New Customer</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateCustomer} className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertDescription className="text-sm text-blue-800">
+                  <strong>Admin Customer Creation:</strong> A user account and customer profile will be created. 
+                  A temporary password will be generated for the customer to login.
+                </AlertDescription>
+              </Alert>
+              
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="username">Username *</Label>
+                  <Input
+                    id="username"
+                    value={newCustomer.username}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, username: e.target.value })}
+                    minLength={3}
+                    maxLength={100}
+                    placeholder="Unique username for login"
+                    required
+                  />
+                </div>
                 <div>
                   <Label htmlFor="fullName">Full Name *</Label>
                   <Input
@@ -273,7 +315,7 @@ export default function Customers() {
                   <select
                     id="gender"
                     value={newCustomer.gender}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, gender: e.target.value as any })}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, gender: e.target.value as 'MALE' | 'FEMALE' | 'OTHER' })}
                     className="w-full h-10 px-3 border border-gray-300 rounded-md"
                     required
                   >
@@ -287,7 +329,7 @@ export default function Customers() {
                   <select
                     id="classification"
                     value={newCustomer.classification}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, classification: e.target.value as any })}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, classification: e.target.value as 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR' })}
                     className="w-full h-10 px-3 border border-gray-300 rounded-md"
                     required
                   >
@@ -403,6 +445,74 @@ export default function Customers() {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Password Dialog - Shows temporary password after customer creation */}
+        <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle size={24} />
+                Customer Created Successfully!
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Alert className="bg-green-50 border-green-200">
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p className="font-medium text-green-800">Account Details:</p>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Username:</strong> {createdCustomerInfo?.username}</p>
+                      <p><strong>Customer ID:</strong> {createdCustomerInfo?.customerId}</p>
+                      <p><strong>Full Name:</strong> {createdCustomerInfo?.fullName}</p>
+                      <p><strong>Classification:</strong> {createdCustomerInfo?.classification}</p>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
+              <Alert className="bg-yellow-50 border-yellow-300">
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p className="font-bold text-yellow-900">⚠️ Temporary Password:</p>
+                    <div className="flex items-center gap-2 bg-white p-3 rounded border border-yellow-300">
+                      <code className="flex-1 font-mono text-lg font-bold text-yellow-900">
+                        {createdCustomerInfo?.temporaryPassword}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={copyPasswordToClipboard}
+                        className="flex items-center gap-1"
+                      >
+                        {passwordCopied ? (
+                          <>
+                            <CheckCircle size={14} className="text-green-600" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-yellow-800">
+                      <strong>Important:</strong> Please save this password and share it with the customer securely. 
+                      They will need to change it on first login.
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex justify-end">
+                <Button onClick={() => setShowPasswordDialog(false)}>
+                  Done
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

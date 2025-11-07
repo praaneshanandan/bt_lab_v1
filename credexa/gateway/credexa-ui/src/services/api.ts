@@ -11,6 +11,7 @@ import type {
   UpdateRoleRequest,
   LoginRequest,
   RegisterRequest,
+  AdminCreateCustomerRequest,
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -39,6 +40,7 @@ export const authApi = {
   validateToken: (token: string) => api.post('/api/login/validate-token', token),
   getBankConfig: () => api.get('/api/login/bank-config'),
   getUserByUsername: (username: string) => api.get(`/api/login/user/${username}`),
+  adminCreateCustomer: (data: AdminCreateCustomerRequest) => api.post('/api/login/admin/create-customer', data),
   health: () => api.get('/api/login/health'),
 };
 
