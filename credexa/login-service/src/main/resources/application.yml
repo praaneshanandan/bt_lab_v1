@@ -1,13 +1,13 @@
 spring:
   application:
     name: login-service
-  
+
   datasource:
     url: jdbc:mysql://localhost:3306/login_db?createDatabaseIfNotExist=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,11 +16,27 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-  
+
   security:
     user:
       name: admin
       password: admin
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 267999526702-lmldobad0s5ojs83pahrqma99k6asdje.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
 server:
   port: 8081
@@ -40,14 +56,23 @@ session:
 # SECURITY WARNING: For development only!
 # In production, set admin.create-default=false and create admin manually
 admin:
-  create-default: ${ADMIN_CREATE_DEFAULT:true}  # Set to false in production
+  create-default: ${ADMIN_CREATE_DEFAULT:true} # Set to false in production
   username: ${ADMIN_USERNAME:admin}
-  password: ${ADMIN_PASSWORD:Admin@123}  # CHANGE THIS!
+  password: ${ADMIN_PASSWORD:Admin@123} # CHANGE THIS!
   email: ${ADMIN_EMAIL:admin@credexa.com}
+
+# Manager User Configuration
+# SECURITY WARNING: For development only!
+# In production, set manager.create-default=false and create manager manually
+manager:
+  create-default: ${MANAGER_CREATE_DEFAULT:true} # Set to false in production
+  username: ${MANAGER_USERNAME:manager}
+  password: ${MANAGER_PASSWORD:Manager@123} # CHANGE THIS!
+  email: ${MANAGER_EMAIL:manager@credexa.com}
 
 # Kafka Configuration (disabled by default - set to true when Kafka is available)
 spring.kafka:
-  enabled: false  # Set to true to enable Kafka event publishing
+  enabled: false # Set to true to enable Kafka event publishing
   bootstrap-servers: localhost:9092
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -59,7 +84,7 @@ spring.kafka:
     properties:
       spring.json.trusted.packages: "*"
   admin:
-    fail-fast: false  # Don't fail startup if Kafka is unavailable
+    fail-fast: false # Don't fail startup if Kafka is unavailable
 
 # Swagger/OpenAPI Configuration
 springdoc:

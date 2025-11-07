@@ -280,12 +280,33 @@ export interface LoginResponse {
 }
 
 export interface RegisterRequest {
+  // Login Account Fields
   username: string;
   password: string;
   email: string;
-  mobileNumber?: string;
+  mobileNumber: string;
   preferredLanguage?: string;
   preferredCurrency?: string;
+  // Customer Profile Fields
+  fullName: string;
+  panNumber?: string;
+  aadharNumber?: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  classification: 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR';
+  // Address Details
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  // Optional Financial Details
+  accountNumber?: string;
+  ifscCode?: string;
+  // Communication Preferences
+  emailNotifications?: boolean;
+  smsNotifications?: boolean;
 }
 
 export interface AdminCreateCustomerRequest {

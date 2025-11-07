@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { customerApi } from '@/services/api';
+import { isManagerOrAdmin } from '@/utils/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,12 +75,77 @@ export default function Customer360View() {
   const [data, setData] = useState<Customer360Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasAdminAccess = isManagerOrAdmin();
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     if (id) {
-      fetch360Data(parseInt(id));
+      // Direct customer ID provided in URL
+      checkPermissionAndFetchData(parseInt(id));
+    } else if (userId) {
+      // No ID in URL, find customer by userId (for /my-360-view route)
+      findAndFetchOwnProfile();
     }
-  }, [id]);
+  }, [id, userId]);
+
+  const findAndFetchOwnProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('Finding customer profile for userId:', userId);
+      
+      // Get customer by userId using dedicated endpoint
+      const response = await customerApi.getCustomerByUserId(parseInt(userId!));
+      
+      console.log('Customer API response:', response.data);
+      
+      // The backend returns 'id' field, not 'customerId'
+      const customerId = response.data?.id || response.data?.customerId;
+      
+      if (customerId) {
+        console.log('Found customer ID:', customerId);
+        await fetch360Data(customerId);
+      } else {
+        console.error('No customer ID found in response:', response.data);
+        setError('Unable to find your customer profile. Please complete your profile first.');
+        setLoading(false);
+      }
+    } catch (err: any) {
+      console.error('Error finding customer profile:', err);
+      console.error('Error details:', err.response?.data);
+      setError(`Failed to load your profile data: ${err.response?.data?.message || err.message}`);
+      setLoading(false);
+    }
+  };
+
+  const checkPermissionAndFetchData = async (customerId: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // If not admin/manager, verify this is their own profile
+      if (!hasAdminAccess) {
+        const customerResponse = await customerApi.getCustomer(customerId);
+        const customerUserId = customerResponse.data.userId;
+        
+        // Check if the customer's userId matches the logged-in user's ID
+        if (customerUserId.toString() !== userId) {
+          setError('Access Denied: You can only view your own profile');
+          toast.error('Access Denied: You can only view your own profile');
+          setTimeout(() => navigate('/'), 2000);
+          return;
+        }
+      }
+
+      // If permission check passes, fetch the data
+      await fetch360Data(customerId);
+    } catch (err: any) {
+      console.error('Error checking permissions:', err);
+      setError('Failed to load customer data');
+      setLoading(false);
+    }
+  };
 
   const fetch360Data = async (customerId: number) => {
     try {

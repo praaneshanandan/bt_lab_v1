@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SessionWarningModal } from './components/SessionWarningModal';
 import { useSessionManager } from './hooks/useSessionManager';
 import Login from './pages/Login';
+import OAuth2Redirect from './pages/OAuth2Redirect';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
 import MyProfile from './pages/MyProfile';
@@ -28,8 +29,9 @@ function AppContent() {
         onLogout={logout}
       />
       <Routes>
-        {/* Public route */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
         
         {/* Protected routes */}
         <Route
@@ -43,6 +45,7 @@ function AppContent() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/customers/:id/360-view" element={<Customer360View />} />
+                    <Route path="/my-360-view" element={<Customer360View />} />
                     <Route path="/profile" element={<MyProfile />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/calculator" element={<Calculator />} />

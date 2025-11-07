@@ -1,19 +1,21 @@
 package com.app.login.config;
 
+import java.util.HashSet;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
 import com.app.login.entity.BankConfiguration;
 import com.app.login.entity.Role;
 import com.app.login.entity.User;
 import com.app.login.repository.BankConfigurationRepository;
 import com.app.login.repository.RoleRepository;
 import com.app.login.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-
-import java.util.HashSet;
 
 /**
  * Data initializer to create default roles, admin user, and bank configuration
@@ -40,6 +42,18 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${admin.email:admin@credexa.com}")
     private String adminEmail;
 
+    @Value("${manager.create-default:true}")
+    private boolean createDefaultManager;
+
+    @Value("${manager.username:manager}")
+    private String managerUsername;
+
+    @Value("${manager.password:Manager@123}")
+    private String managerPassword;
+
+    @Value("${manager.email:manager@credexa.com}")
+    private String managerEmail;
+
     @Override
     public void run(String... args) {
         log.info("Initializing default data...");
@@ -49,6 +63,9 @@ public class DataInitializer implements CommandLineRunner {
 
         // Create default admin user
         createDefaultAdminUser();
+
+        // Create default manager user
+        createDefaultManagerUser();
 
         // Create default bank configuration
         createDefaultBankConfiguration();
@@ -103,6 +120,44 @@ public class DataInitializer implements CommandLineRunner {
             log.warn("Email: {}", adminEmail);
             log.warn("⚠️  CHANGE THE PASSWORD IMMEDIATELY IN PRODUCTION!");
             log.warn("⚠️  Set admin.create-default=false to disable auto-creation");
+            log.warn("========================================");
+        }
+    }
+
+    private void createDefaultManagerUser() {
+        // Only create default manager if enabled (can be disabled in production)
+        if (!createDefaultManager) {
+            log.info("Default manager creation is disabled. Set manager.create-default=true to enable.");
+            return;
+        }
+
+        if (!userRepository.existsByUsername(managerUsername)) {
+            Role managerRole = roleRepository.findByName(Role.RoleName.ROLE_MANAGER)
+                    .orElseThrow(() -> new RuntimeException("Manager role not found"));
+
+            User manager = User.builder()
+                    .username(managerUsername)
+                    .password(passwordEncoder.encode(managerPassword))
+                    .email(managerEmail)
+                    .mobileNumber("8888888888")
+                    .preferredLanguage("en")
+                    .preferredCurrency("USD")
+                    .active(true)
+                    .accountLocked(false)
+                    .failedLoginAttempts(0)
+                    .createdBy("SYSTEM")
+                    .roles(new HashSet<>())
+                    .build();
+
+            manager.getRoles().add(managerRole);
+            userRepository.save(manager);
+
+            log.warn("========================================");
+            log.warn("⚠️  DEFAULT MANAGER USER CREATED");
+            log.warn("Username: {}", managerUsername);
+            log.warn("Email: {}", managerEmail);
+            log.warn("⚠️  CHANGE THE PASSWORD IMMEDIATELY IN PRODUCTION!");
+            log.warn("⚠️  Set manager.create-default=false to disable auto-creation");
             log.warn("========================================");
         }
     }

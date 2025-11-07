@@ -29,14 +29,65 @@ export default function Login() {
   const [isAccountLocked, setIsAccountLocked] = useState(false);
 
   // Register state
-  const [registerForm, setRegisterForm] = useState({
+  const [registerStep, setRegisterStep] = useState(1);
+  const [registerForm, setRegisterForm] = useState<{
+    // Step 1: Account Details
+    username: string;
+    password: string;
+    confirmPassword: string;
+    email: string;
+    mobileNumber: string;
+    preferredLanguage: string;
+    preferredCurrency: string;
+    // Step 2: Personal Details
+    fullName: string;
+    dateOfBirth: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER';
+    panNumber: string;
+    aadharNumber: string;
+    classification: 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR';
+    // Step 3: Address Details
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+    // Optional: Financial Details
+    accountNumber: string;
+    ifscCode: string;
+    // Communication Preferences
+    emailNotifications: boolean;
+    smsNotifications: boolean;
+  }>({
+    // Step 1: Account Details
     username: '',
     password: '',
     confirmPassword: '',
     email: '',
     mobileNumber: '',
     preferredLanguage: 'en',
-    preferredCurrency: 'USD',
+    preferredCurrency: 'INR',
+    // Step 2: Personal Details
+    fullName: '',
+    dateOfBirth: '',
+    gender: 'MALE',
+    panNumber: '',
+    aadharNumber: '',
+    classification: 'REGULAR',
+    // Step 3: Address Details
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    country: 'India',
+    // Optional: Financial Details
+    accountNumber: '',
+    ifscCode: '',
+    // Communication Preferences
+    emailNotifications: true,
+    smsNotifications: true,
   });
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -132,13 +183,40 @@ export default function Login() {
       return;
     }
 
+    // Validate PAN format
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+    if (registerForm.panNumber && !panRegex.test(registerForm.panNumber)) {
+      setRegisterError('Invalid PAN format (e.g., ABCDE1234F)');
+      setRegisterLoading(false);
+      return;
+    }
+
+    // Validate Aadhar format
+    const aadharRegex = /^[0-9]{12}$/;
+    if (registerForm.aadharNumber && !aadharRegex.test(registerForm.aadharNumber)) {
+      setRegisterError('Aadhar number must be exactly 12 digits');
+      setRegisterLoading(false);
+      return;
+    }
+
+    // Validate pincode
+    const pincodeRegex = /^[0-9]{6}$/;
+    if (!pincodeRegex.test(registerForm.pincode)) {
+      setRegisterError('Pincode must be exactly 6 digits');
+      setRegisterLoading(false);
+      return;
+    }
+
     try {
-      const { confirmPassword: _, ...registerData } = registerForm;
+      const { confirmPassword, ...registerData } = registerForm;
       console.log('Attempting registration with:', registerData);
       const response = await authApi.register(registerData);
       console.log('Registration response:', response.data);
       
       setRegisterSuccess(true);
+      toast.success('Registration successful! Please login with your credentials.');
+      
+      // Reset form
       setRegisterForm({
         username: '',
         password: '',
@@ -146,8 +224,25 @@ export default function Login() {
         email: '',
         mobileNumber: '',
         preferredLanguage: 'en',
-        preferredCurrency: 'USD',
+        preferredCurrency: 'INR',
+        fullName: '',
+        dateOfBirth: '',
+        gender: 'MALE',
+        panNumber: '',
+        aadharNumber: '',
+        classification: 'REGULAR',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        pincode: '',
+        country: 'India',
+        accountNumber: '',
+        ifscCode: '',
+        emailNotifications: true,
+        smsNotifications: true,
       });
+      setRegisterStep(1);
       
       // Switch to login tab after 2 seconds
       setTimeout(() => {
@@ -162,6 +257,57 @@ export default function Login() {
     } finally {
       setRegisterLoading(false);
     }
+  };
+
+  const nextStep = () => {
+    setRegisterError(null);
+    
+    // Validate Step 1
+    if (registerStep === 1) {
+      if (!registerForm.username || registerForm.username.length < 3) {
+        setRegisterError('Username must be at least 3 characters');
+        return;
+      }
+      if (!registerForm.email) {
+        setRegisterError('Email is required');
+        return;
+      }
+      if (!registerForm.password || registerForm.password.length < 8) {
+        setRegisterError('Password must be at least 8 characters');
+        return;
+      }
+      if (registerForm.password !== registerForm.confirmPassword) {
+        setRegisterError('Passwords do not match');
+        return;
+      }
+      if (!registerForm.mobileNumber || registerForm.mobileNumber.length < 10) {
+        setRegisterError('Mobile number must be at least 10 digits');
+        return;
+      }
+    }
+    
+    // Validate Step 2
+    if (registerStep === 2) {
+      if (!registerForm.fullName) {
+        setRegisterError('Full name is required');
+        return;
+      }
+      if (!registerForm.dateOfBirth) {
+        setRegisterError('Date of birth is required');
+        return;
+      }
+      if (!registerForm.gender) {
+        setRegisterError('Gender is required');
+        return;
+      }
+    }
+    
+    setRegisterStep(registerStep + 1);
+  };
+
+  const prevStep = () => {
+    setRegisterError(null);
+    setRegisterStep(registerStep - 1);
   };
 
   return (
@@ -249,6 +395,45 @@ export default function Login() {
                   )}
                 </Button>
 
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                  </div>
+                </div>
+
+                {/* Google Sign-In Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-11 text-base font-medium"
+                  onClick={() => window.location.href = 'http://localhost:8081/api/auth/oauth2/authorization/google'}
+                  disabled={isAccountLocked}
+                >
+                  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                  Continue with Google
+                </Button>
+
                 <div className="text-center text-sm text-gray-600 mt-4 p-3 bg-blue-50 rounded-lg">
                   <p className="font-medium mb-1">New User?</p>
                   <p className="text-xs">Switch to the Register tab to create an account</p>
@@ -266,131 +451,415 @@ export default function Login() {
                   </AlertDescription>
                 </Alert>
               ) : (
-                <form onSubmit={handleRegister} className="space-y-4 pb-2">
-                  {registerError && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{registerError}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-username">Username *</Label>
-                    <Input
-                      id="reg-username"
-                      type="text"
-                      placeholder="Choose a username (min 3 chars)"
-                      value={registerForm.username}
-                      onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                      required
-                      minLength={3}
-                      className="h-11"
-                    />
+                <div className="space-y-4">
+                  {/* Step Indicator */}
+                  <div className="flex justify-between items-center mb-4">
+                    {[1, 2, 3].map((step) => (
+                      <div key={step} className="flex items-center flex-1">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
+                            registerStep >= step
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {step}
+                        </div>
+                        {step < 3 && (
+                          <div
+                            className={`flex-1 h-1 mx-2 ${
+                              registerStep > step ? 'bg-blue-600' : 'bg-gray-200'
+                            }`}
+                          />
+                        )}
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-email">Email *</Label>
-                    <Input
-                      id="reg-email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={registerForm.email}
-                      onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                      required
-                      className="h-11"
-                    />
+                  <div className="text-center mb-4">
+                    <p className="text-sm font-semibold text-gray-700">
+                      {registerStep === 1 && 'Step 1: Account Details'}
+                      {registerStep === 2 && 'Step 2: Personal Information'}
+                      {registerStep === 3 && 'Step 3: Address Details'}
+                    </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-mobile">Mobile Number</Label>
-                    <Input
-                      id="reg-mobile"
-                      type="tel"
-                      placeholder="1234567890 (optional)"
-                      value={registerForm.mobileNumber}
-                      onChange={(e) => setRegisterForm({ ...registerForm, mobileNumber: e.target.value })}
-                      minLength={10}
-                      maxLength={15}
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-password">Password *</Label>
-                    <Input
-                      id="reg-password"
-                      type="password"
-                      placeholder="Min 8 characters"
-                      value={registerForm.password}
-                      onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                      required
-                      minLength={8}
-                      className="h-11"
-                    />
-                    <PasswordStrength password={registerForm.password} />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-confirm-password">Confirm Password *</Label>
-                    <Input
-                      id="reg-confirm-password"
-                      type="password"
-                      placeholder="Re-enter password"
-                      value={registerForm.confirmPassword}
-                      onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                      required
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="reg-language">Language</Label>
-                      <Select
-                        value={registerForm.preferredLanguage}
-                        onValueChange={(value) => setRegisterForm({ ...registerForm, preferredLanguage: value })}
-                      >
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                          <SelectItem value="hi">Hindi</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="reg-currency">Currency</Label>
-                      <Select
-                        value={registerForm.preferredCurrency}
-                        onValueChange={(value) => setRegisterForm({ ...registerForm, preferredCurrency: value })}
-                      >
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                          <SelectItem value="EUR">EUR (€)</SelectItem>
-                          <SelectItem value="INR">INR (₹)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 text-base font-medium" disabled={registerLoading}>
-                    {registerLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      'Create Account'
+                  <form onSubmit={handleRegister} className="space-y-4 pb-2">
+                    {registerError && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{registerError}</AlertDescription>
+                      </Alert>
                     )}
-                  </Button>
-                </form>
+
+                    {/* Step 1: Account Details */}
+                    {registerStep === 1 && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-username">Username *</Label>
+                          <Input
+                            id="reg-username"
+                            type="text"
+                            placeholder="Choose a username (min 3 chars)"
+                            value={registerForm.username}
+                            onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
+                            required
+                            minLength={3}
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-email">Email *</Label>
+                          <Input
+                            id="reg-email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={registerForm.email}
+                            onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                            required
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-mobile">Mobile Number *</Label>
+                          <Input
+                            id="reg-mobile"
+                            type="tel"
+                            placeholder="1234567890"
+                            value={registerForm.mobileNumber}
+                            onChange={(e) => setRegisterForm({ ...registerForm, mobileNumber: e.target.value })}
+                            required
+                            minLength={10}
+                            maxLength={15}
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-password">Password *</Label>
+                          <Input
+                            id="reg-password"
+                            type="password"
+                            placeholder="Min 8 characters"
+                            value={registerForm.password}
+                            onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                            required
+                            minLength={8}
+                            className="h-11"
+                          />
+                          <PasswordStrength password={registerForm.password} />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-confirm-password">Confirm Password *</Label>
+                          <Input
+                            id="reg-confirm-password"
+                            type="password"
+                            placeholder="Re-enter password"
+                            value={registerForm.confirmPassword}
+                            onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                            required
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-language">Language</Label>
+                            <Select
+                              value={registerForm.preferredLanguage}
+                              onValueChange={(value) => setRegisterForm({ ...registerForm, preferredLanguage: value })}
+                            >
+                              <SelectTrigger className="h-11">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="en">English</SelectItem>
+                                <SelectItem value="es">Spanish</SelectItem>
+                                <SelectItem value="hi">Hindi</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-currency">Currency</Label>
+                            <Select
+                              value={registerForm.preferredCurrency}
+                              onValueChange={(value) => setRegisterForm({ ...registerForm, preferredCurrency: value })}
+                            >
+                              <SelectTrigger className="h-11">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="USD">USD ($)</SelectItem>
+                                <SelectItem value="EUR">EUR (€)</SelectItem>
+                                <SelectItem value="INR">INR (₹)</SelectItem>
+                                <SelectItem value="BHD">BHD</SelectItem>
+                                <SelectItem value="JPY">JPY (¥)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Step 2: Personal Information */}
+                    {registerStep === 2 && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-fullname">Full Name *</Label>
+                          <Input
+                            id="reg-fullname"
+                            type="text"
+                            placeholder="Enter your full name"
+                            value={registerForm.fullName}
+                            onChange={(e) => setRegisterForm({ ...registerForm, fullName: e.target.value })}
+                            required
+                            maxLength={100}
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-dob">Date of Birth *</Label>
+                          <Input
+                            id="reg-dob"
+                            type="date"
+                            value={registerForm.dateOfBirth}
+                            onChange={(e) => setRegisterForm({ ...registerForm, dateOfBirth: e.target.value })}
+                            required
+                            max={new Date().toISOString().split('T')[0]}
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-gender">Gender *</Label>
+                          <Select
+                            value={registerForm.gender}
+                            onValueChange={(value) => setRegisterForm({ ...registerForm, gender: value as 'MALE' | 'FEMALE' | 'OTHER' })}
+                          >
+                            <SelectTrigger className="h-11">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="MALE">Male</SelectItem>
+                              <SelectItem value="FEMALE">Female</SelectItem>
+                              <SelectItem value="OTHER">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-classification">Customer Type *</Label>
+                          <Select
+                            value={registerForm.classification}
+                            onValueChange={(value) => setRegisterForm({ ...registerForm, classification: value as 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR' })}
+                          >
+                            <SelectTrigger className="h-11">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="REGULAR">Regular</SelectItem>
+                              <SelectItem value="PREMIUM">Premium</SelectItem>
+                              <SelectItem value="VIP">VIP</SelectItem>
+                              <SelectItem value="SENIOR_CITIZEN">Senior Citizen</SelectItem>
+                              <SelectItem value="SUPER_SENIOR">Super Senior</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-pan">PAN Number (Optional)</Label>
+                          <Input
+                            id="reg-pan"
+                            type="text"
+                            placeholder="ABCDE1234F"
+                            value={registerForm.panNumber}
+                            onChange={(e) => setRegisterForm({ ...registerForm, panNumber: e.target.value.toUpperCase() })}
+                            maxLength={10}
+                            className="h-11"
+                          />
+                          <p className="text-xs text-gray-500">Format: 5 letters, 4 digits, 1 letter</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-aadhar">Aadhar Number (Optional)</Label>
+                          <Input
+                            id="reg-aadhar"
+                            type="text"
+                            placeholder="123456789012"
+                            value={registerForm.aadharNumber}
+                            onChange={(e) => setRegisterForm({ ...registerForm, aadharNumber: e.target.value.replace(/\D/g, '') })}
+                            maxLength={12}
+                            className="h-11"
+                          />
+                          <p className="text-xs text-gray-500">12-digit Aadhar number</p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Step 3: Address Details */}
+                    {registerStep === 3 && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-address1">Address Line 1 *</Label>
+                          <Input
+                            id="reg-address1"
+                            type="text"
+                            placeholder="House/Flat no., Street"
+                            value={registerForm.addressLine1}
+                            onChange={(e) => setRegisterForm({ ...registerForm, addressLine1: e.target.value })}
+                            required
+                            maxLength={255}
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reg-address2">Address Line 2 (Optional)</Label>
+                          <Input
+                            id="reg-address2"
+                            type="text"
+                            placeholder="Locality, Landmark"
+                            value={registerForm.addressLine2}
+                            onChange={(e) => setRegisterForm({ ...registerForm, addressLine2: e.target.value })}
+                            maxLength={255}
+                            className="h-11"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-city">City *</Label>
+                            <Input
+                              id="reg-city"
+                              type="text"
+                              placeholder="City"
+                              value={registerForm.city}
+                              onChange={(e) => setRegisterForm({ ...registerForm, city: e.target.value })}
+                              required
+                              maxLength={100}
+                              className="h-11"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-state">State *</Label>
+                            <Input
+                              id="reg-state"
+                              type="text"
+                              placeholder="State"
+                              value={registerForm.state}
+                              onChange={(e) => setRegisterForm({ ...registerForm, state: e.target.value })}
+                              required
+                              maxLength={100}
+                              className="h-11"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-pincode">Pincode *</Label>
+                            <Input
+                              id="reg-pincode"
+                              type="text"
+                              placeholder="123456"
+                              value={registerForm.pincode}
+                              onChange={(e) => setRegisterForm({ ...registerForm, pincode: e.target.value.replace(/\D/g, '') })}
+                              required
+                              maxLength={6}
+                              className="h-11"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-country">Country *</Label>
+                            <Input
+                              id="reg-country"
+                              type="text"
+                              placeholder="Country"
+                              value={registerForm.country}
+                              onChange={(e) => setRegisterForm({ ...registerForm, country: e.target.value })}
+                              required
+                              maxLength={100}
+                              className="h-11"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 pt-2">
+                          <Label className="text-sm font-semibold">Notification Preferences</Label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="email-notif"
+                              checked={registerForm.emailNotifications}
+                              onChange={(e) => setRegisterForm({ ...registerForm, emailNotifications: e.target.checked })}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="email-notif" className="font-normal cursor-pointer">
+                              Email Notifications
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="sms-notif"
+                              checked={registerForm.smsNotifications}
+                              onChange={(e) => setRegisterForm({ ...registerForm, smsNotifications: e.target.checked })}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="sms-notif" className="font-normal cursor-pointer">
+                              SMS Notifications
+                            </Label>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-2 pt-2">
+                      {registerStep > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={prevStep}
+                          className="flex-1 h-11"
+                        >
+                          Previous
+                        </Button>
+                      )}
+                      
+                      {registerStep < 3 ? (
+                        <Button
+                          type="button"
+                          onClick={nextStep}
+                          className="flex-1 h-11"
+                        >
+                          Next
+                        </Button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          className="flex-1 h-11 text-base font-medium"
+                          disabled={registerLoading}
+                        >
+                          {registerLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Creating Account...
+                            </>
+                          ) : (
+                            'Create Account'
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </form>
+                </div>
               )}
             </TabsContent>
           </Tabs>
