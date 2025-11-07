@@ -10,21 +10,17 @@ import org.springframework.stereotype.Component;
 import com.app.product.dto.CreateProductRequest;
 import com.app.product.dto.InterestRateMatrixRequest;
 import com.app.product.dto.InterestRateMatrixResponse;
-import com.app.product.dto.ProductBalanceTypeResponse;
 import com.app.product.dto.ProductChargeRequest;
 import com.app.product.dto.ProductChargeResponse;
 import com.app.product.dto.ProductResponse;
 import com.app.product.dto.ProductRoleRequest;
 import com.app.product.dto.ProductRoleResponse;
 import com.app.product.dto.ProductSummaryResponse;
-import com.app.product.dto.ProductTransactionTypeResponse;
 import com.app.product.dto.UpdateProductRequest;
 import com.app.product.entity.InterestRateMatrix;
 import com.app.product.entity.Product;
-import com.app.product.entity.ProductBalanceType;
 import com.app.product.entity.ProductCharge;
 import com.app.product.entity.ProductRole;
-import com.app.product.entity.ProductTransactionType;
 import com.app.product.enums.ProductStatus;
 
 /**
@@ -43,7 +39,6 @@ public class ProductMapper {
                 .description(request.getDescription())
                 .effectiveDate(request.getEffectiveDate())
                 .endDate(request.getEndDate())
-                .bankBranchCode(request.getBankBranchCode())
                 .currencyCode(request.getCurrencyCode())
                 .status(request.getStatus() != null ? request.getStatus() : ProductStatus.DRAFT)
                 .minTermMonths(request.getMinTermMonths())
@@ -56,10 +51,7 @@ public class ProductMapper {
                 .interestPayoutFrequency(request.getInterestPayoutFrequency())
                 .prematureWithdrawalAllowed(request.getPrematureWithdrawalAllowed())
                 .partialWithdrawalAllowed(request.getPartialWithdrawalAllowed())
-                .loanAgainstDepositAllowed(request.getLoanAgainstDepositAllowed())
                 .autoRenewalAllowed(request.getAutoRenewalAllowed())
-                .nomineeAllowed(request.getNomineeAllowed())
-                .jointAccountAllowed(request.getJointAccountAllowed())
                 .tdsRate(request.getTdsRate())
                 .tdsApplicable(request.getTdsApplicable())
                 .build();
@@ -131,17 +123,8 @@ public class ProductMapper {
         if (request.getPartialWithdrawalAllowed() != null) {
             product.setPartialWithdrawalAllowed(request.getPartialWithdrawalAllowed());
         }
-        if (request.getLoanAgainstDepositAllowed() != null) {
-            product.setLoanAgainstDepositAllowed(request.getLoanAgainstDepositAllowed());
-        }
         if (request.getAutoRenewalAllowed() != null) {
             product.setAutoRenewalAllowed(request.getAutoRenewalAllowed());
-        }
-        if (request.getNomineeAllowed() != null) {
-            product.setNomineeAllowed(request.getNomineeAllowed());
-        }
-        if (request.getJointAccountAllowed() != null) {
-            product.setJointAccountAllowed(request.getJointAccountAllowed());
         }
         if (request.getTdsRate() != null) {
             product.setTdsRate(request.getTdsRate());
@@ -163,7 +146,6 @@ public class ProductMapper {
                 .description(product.getDescription())
                 .effectiveDate(product.getEffectiveDate())
                 .endDate(product.getEndDate())
-                .bankBranchCode(product.getBankBranchCode())
                 .currencyCode(product.getCurrencyCode())
                 .status(product.getStatus())
                 .minTermMonths(product.getMinTermMonths() != null ? product.getMinTermMonths().intValue() : null)
@@ -176,17 +158,12 @@ public class ProductMapper {
                 .interestPayoutFrequency(product.getInterestPayoutFrequency())
                 .prematureWithdrawalAllowed(product.getPrematureWithdrawalAllowed())
                 .partialWithdrawalAllowed(product.getPartialWithdrawalAllowed())
-                .loanAgainstDepositAllowed(product.getLoanAgainstDepositAllowed())
                 .autoRenewalAllowed(product.getAutoRenewalAllowed())
-                .nomineeAllowed(product.getNomineeAllowed())
-                .jointAccountAllowed(product.getJointAccountAllowed())
                 .tdsRate(product.getTdsRate())
                 .tdsApplicable(product.getTdsApplicable())
                 .allowedRoles(toRoleResponseList(product.getAllowedRoles()))
                 .charges(toChargeResponseList(product.getCharges()))
                 .interestRateMatrix(toInterestRateResponseList(product.getInterestRateMatrix()))
-                .transactionTypes(toTransactionTypeResponseList(product.getTransactionTypes()))
-                .balanceTypes(toBalanceTypeResponseList(product.getBalanceTypes()))
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .createdBy(product.getCreatedBy())
@@ -257,7 +234,6 @@ public class ProductMapper {
                 .percentageRate(request.getPercentageRate())
                 .frequency(request.getFrequency())
                 .applicableTransactionTypes(request.getApplicableTransactionTypes())
-                .waivable(request.getWaivable())
                 .minCharge(request.getMinCharge())
                 .maxCharge(request.getMaxCharge())
                 .active(true)
@@ -274,7 +250,6 @@ public class ProductMapper {
                 .percentageRate(charge.getPercentageRate())
                 .frequency(charge.getFrequency())
                 .applicableTransactionTypes(charge.getApplicableTransactionTypes())
-                .waivable(charge.getWaivable())
                 .minCharge(charge.getMinCharge())
                 .maxCharge(charge.getMaxCharge())
                 .active(charge.getActive())
@@ -327,44 +302,6 @@ public class ProductMapper {
         if (rates == null) return new ArrayList<>();
         return rates.stream()
                 .map(this::toInterestRateResponse)
-                .collect(Collectors.toList());
-    }
-
-    // ============ ProductTransactionType Mappings ============
-    
-    public ProductTransactionTypeResponse toTransactionTypeResponse(ProductTransactionType txnType) {
-        return ProductTransactionTypeResponse.builder()
-                .id(txnType.getId())
-                .transactionType(txnType.getTransactionType())
-                .allowed(txnType.getAllowed())
-                .requiresApproval(txnType.getRequiresApproval())
-                .description(txnType.getDescription())
-                .validationRules(txnType.getValidationRules())
-                .build();
-    }
-
-    public List<ProductTransactionTypeResponse> toTransactionTypeResponseList(List<ProductTransactionType> txnTypes) {
-        if (txnTypes == null) return new ArrayList<>();
-        return txnTypes.stream()
-                .map(this::toTransactionTypeResponse)
-                .collect(Collectors.toList());
-    }
-
-    // ============ ProductBalanceType Mappings ============
-    
-    public ProductBalanceTypeResponse toBalanceTypeResponse(ProductBalanceType balanceType) {
-        return ProductBalanceTypeResponse.builder()
-                .id(balanceType.getId())
-                .balanceType(balanceType.getBalanceType())
-                .tracked(balanceType.getTracked())
-                .description(balanceType.getDescription())
-                .build();
-    }
-
-    public List<ProductBalanceTypeResponse> toBalanceTypeResponseList(List<ProductBalanceType> balanceTypes) {
-        if (balanceTypes == null) return new ArrayList<>();
-        return balanceTypes.stream()
-                .map(this::toBalanceTypeResponse)
                 .collect(Collectors.toList());
     }
 }

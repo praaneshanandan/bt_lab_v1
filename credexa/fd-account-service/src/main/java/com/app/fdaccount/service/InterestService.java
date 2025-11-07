@@ -160,4 +160,103 @@ public class InterestService {
         BigDecimal interest = calculateInterest(principal, rate, termMonths, calculationMethod);
         return principal.add(interest);
     }
+
+    /**
+     * Calculate TDS (Tax Deducted at Source) on interest
+     * TDS is applicable only if interest exceeds threshold (usually ₹40,000 in India)
+     * 
+     * @param interestAmount Interest amount earned
+     * @param tdsRate TDS rate in percentage (e.g., 10 for 10%)
+     * @param tdsApplicable Whether TDS is applicable for this account
+     * @param tdsThreshold Minimum interest amount for TDS applicability (default ₹40,000)
+     * @return TDS amount to be deducted
+     */
+    public BigDecimal calculateTDS(BigDecimal interestAmount, BigDecimal tdsRate, 
+                                   boolean tdsApplicable, BigDecimal tdsThreshold) {
+        log.debug("Calculating TDS - Interest: {}, Rate: {}%, Applicable: {}, Threshold: {}", 
+                interestAmount, tdsRate, tdsApplicable, tdsThreshold);
+
+        // No TDS if not applicable
+        if (!tdsApplicable) {
+            log.debug("TDS not applicable for this account");
+            return BigDecimal.ZERO;
+        }
+
+        // No TDS if interest is zero or negative
+        if (interestAmount == null || interestAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            log.debug("No TDS as interest amount is zero or negative");
+            return BigDecimal.ZERO;
+        }
+
+        // No TDS if below threshold
+        if (tdsThreshold != null && interestAmount.compareTo(tdsThreshold) < 0) {
+            log.debug("Interest {} is below TDS threshold {}, no TDS deduction", 
+                    interestAmount, tdsThreshold);
+            return BigDecimal.ZERO;
+        }
+
+        // Calculate TDS: (Interest × TDS Rate) / 100
+        BigDecimal tdsAmount = interestAmount
+                .multiply(tdsRate)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        log.debug("✅ Calculated TDS: {} ({}% of {})", tdsAmount, tdsRate, interestAmount);
+        return tdsAmount;
+    }
+
+    /**
+     * Calculate TDS with default threshold (₹40,000 for India)
+     * 
+     * @param interestAmount Interest amount earned
+     * @param tdsRate TDS rate in percentage
+     * @param tdsApplicable Whether TDS is applicable
+     * @return TDS amount to be deducted
+     */
+    public BigDecimal calculateTDS(BigDecimal interestAmount, BigDecimal tdsRate, boolean tdsApplicable) {
+        BigDecimal defaultThreshold = new BigDecimal("40000"); // ₹40,000 threshold as per Indian tax laws
+        return calculateTDS(interestAmount, tdsRate, tdsApplicable, defaultThreshold);
+    }
+
+    /**
+     * Calculate net interest after TDS deduction
+     * 
+     * @param interestAmount Gross interest amount
+     * @param tdsRate TDS rate in percentage
+     * @param tdsApplicable Whether TDS is applicable
+     * @return Net interest after TDS deduction
+     */
+    public BigDecimal calculateNetInterestAfterTDS(BigDecimal interestAmount, BigDecimal tdsRate, 
+                                                    boolean tdsApplicable) {
+        BigDecimal tdsAmount = calculateTDS(interestAmount, tdsRate, tdsApplicable);
+        BigDecimal netInterest = interestAmount.subtract(tdsAmount);
+        
+        log.debug("Net interest after TDS: {} (Gross: {}, TDS: {})", 
+                netInterest, interestAmount, tdsAmount);
+        
+        return netInterest;
+    }
+
+    /**
+     * Calculate net maturity amount after TDS
+     * 
+     * @param principal Principal amount
+     * @param rate Annual interest rate
+     * @param termMonths Term in months
+     * @param calculationMethod Interest calculation method
+     * @param tdsRate TDS rate in percentage
+     * @param tdsApplicable Whether TDS is applicable
+     * @return Net maturity amount (Principal + Net Interest after TDS)
+     */
+    public BigDecimal calculateNetMaturityAmountAfterTDS(BigDecimal principal, BigDecimal rate, 
+                                                          int termMonths, String calculationMethod,
+                                                          BigDecimal tdsRate, boolean tdsApplicable) {
+        BigDecimal grossInterest = calculateInterest(principal, rate, termMonths, calculationMethod);
+        BigDecimal netInterest = calculateNetInterestAfterTDS(grossInterest, tdsRate, tdsApplicable);
+        BigDecimal netMaturityAmount = principal.add(netInterest);
+        
+        log.debug("Net maturity amount after TDS: {} (Principal: {}, Gross Interest: {}, Net Interest: {})", 
+                netMaturityAmount, principal, grossInterest, netInterest);
+        
+        return netMaturityAmount;
+    }
 }

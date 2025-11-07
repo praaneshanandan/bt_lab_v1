@@ -29,11 +29,9 @@ import com.app.product.exception.InvalidProductException;
 import com.app.product.exception.ProductNotFoundException;
 import com.app.product.mapper.ProductMapper;
 import com.app.product.repository.InterestRateMatrixRepository;
-import com.app.product.repository.ProductBalanceTypeRepository;
 import com.app.product.repository.ProductChargeRepository;
 import com.app.product.repository.ProductRepository;
 import com.app.product.repository.ProductRoleRepository;
-import com.app.product.repository.ProductTransactionTypeRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +49,6 @@ public class ProductService {
     private final InterestRateMatrixRepository interestRateMatrixRepository;
     private final ProductChargeRepository productChargeRepository;
     private final ProductRoleRepository productRoleRepository;
-    private final ProductTransactionTypeRepository productTransactionTypeRepository;
-    private final ProductBalanceTypeRepository productBalanceTypeRepository;
     private final ProductMapper productMapper;
 
     /**

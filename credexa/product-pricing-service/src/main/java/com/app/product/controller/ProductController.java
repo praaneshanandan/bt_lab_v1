@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * 
  * Lab L9 Enhancement: Secure integration with Login System
  * - JWT authentication required for all endpoints
- * - Role-based authorization (ADMIN, BANK_OFFICER)
+ * - Role-based authorization (ADMIN, MANAGER, CUSTOMER)
  * - Audit tracking with user context
  */
 @RestController
@@ -57,8 +57,8 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BANK_OFFICER')")
-    @Operation(summary = "Create a new product (ADMIN/BANK_OFFICER only)", 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Create a new product (ADMIN/MANAGER only)", 
                description = "Creates a new banking product with all configuration including roles, charges, and interest rate matrix")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Product created successfully"),
@@ -81,8 +81,8 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BANK_OFFICER')")
-    @Operation(summary = "Update an existing product (ADMIN/BANK_OFFICER only)", 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Update an existing product (ADMIN/MANAGER only)", 
                description = "Updates product details. Product code and type cannot be changed.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Product updated successfully"),
@@ -105,6 +105,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get product by ID", 
                description = "Retrieves complete product details including all configurations")
     @ApiResponses(value = {
@@ -121,6 +122,7 @@ public class ProductController {
     }
 
     @GetMapping("/code/{code}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get product by code", 
                description = "Retrieves product by unique product code")
     @ApiResponses(value = {
@@ -137,6 +139,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get all products", 
                description = "Retrieves paginated list of all products")
     @ApiResponses(value = {
@@ -162,6 +165,7 @@ public class ProductController {
     }
 
     @PostMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Search products", 
                description = "Search products with multiple criteria including name, code, type, status, dates, amounts")
     @ApiResponses(value = {
@@ -177,6 +181,7 @@ public class ProductController {
     }
 
     @GetMapping("/type/{type}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get products by type", 
                description = "Retrieves all products of a specific FD type (FIXED_DEPOSIT, TAX_SAVER_FD, SENIOR_CITIZEN_FD, FLEXI_FD, CUMULATIVE_FD, NON_CUMULATIVE_FD)")
     @ApiResponses(value = {
@@ -192,6 +197,7 @@ public class ProductController {
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get products by status", 
                description = "Retrieves all products with specific status (DRAFT, ACTIVE, INACTIVE, etc.)")
     @ApiResponses(value = {
@@ -207,6 +213,7 @@ public class ProductController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get all active products", 
                description = "Retrieves all products with ACTIVE status")
     @ApiResponses(value = {
@@ -221,6 +228,7 @@ public class ProductController {
     }
 
     @GetMapping("/currently-active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get currently active products", 
                description = "Retrieves products that are ACTIVE and within their effective date range")
     @ApiResponses(value = {
@@ -235,6 +243,7 @@ public class ProductController {
     }
 
     @GetMapping("/date-range")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get products by date range", 
                description = "Retrieves products effective within a specific date range")
     @ApiResponses(value = {
@@ -254,8 +263,8 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BANK_OFFICER')")
-    @Operation(summary = "Update product status (ADMIN/BANK_OFFICER only)", 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Update product status (ADMIN/MANAGER only)", 
                description = "Changes the status of a product (DRAFT, ACTIVE, INACTIVE, SUSPENDED, CLOSED)")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Status updated successfully"),
@@ -277,8 +286,8 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BANK_OFFICER')")
-    @Operation(summary = "Delete product (ADMIN/BANK_OFFICER only)", 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Delete product (ADMIN/MANAGER only)", 
                description = "Soft deletes a product by setting status to CLOSED")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Product deleted successfully"),

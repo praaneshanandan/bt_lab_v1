@@ -71,10 +71,6 @@ public class Product {
     @Column
     private LocalDate endDate;
     
-    @NotBlank(message = "Bank/Branch code is required")
-    @Column(nullable = false, length = 50)
-    private String bankBranchCode;
-    
     @NotBlank(message = "Currency code is required")
     @Column(nullable = false, length = 3)
     private String currencyCode;  // ISO currency code (USD, EUR, INR, etc.)
@@ -125,19 +121,7 @@ public class Product {
     
     @Column
     @Builder.Default
-    private Boolean loanAgainstDepositAllowed = false;
-    
-    @Column
-    @Builder.Default
     private Boolean autoRenewalAllowed = false;
-    
-    @Column
-    @Builder.Default
-    private Boolean nomineeAllowed = true;
-    
-    @Column
-    @Builder.Default
-    private Boolean jointAccountAllowed = true;
     
     // Tax-related
     @Column(precision = 5, scale = 2)
@@ -160,14 +144,6 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<InterestRateMatrix> interestRateMatrix = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ProductTransactionType> transactionTypes = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ProductBalanceType> balanceTypes = new ArrayList<>();
     
     // ==================== AUDIT FIELDS ====================
     

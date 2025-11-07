@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
  * 
  * Lab L9 Enhancement: Secure integration with Login System
  * - JWT token validation required for all endpoints
- * - Role-based authorization (ADMIN, BANK_OFFICER)
+ * - Role-based authorization (ADMIN, MANAGER, CUSTOMER)
  * - Method-level security with @PreAuthorize annotations
  */
 @Configuration

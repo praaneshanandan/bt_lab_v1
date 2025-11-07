@@ -59,8 +59,6 @@ public class ProductResponse {
     private List<ProductRoleResponse> allowedRoles;
     private List<ProductChargeResponse> charges;
     private List<InterestRateMatrixResponse> interestRateMatrix;
-    private List<ProductTransactionTypeResponse> transactionTypes;
-    private List<ProductBalanceTypeResponse> balanceTypes;
 
     // Audit
     private LocalDateTime createdAt;

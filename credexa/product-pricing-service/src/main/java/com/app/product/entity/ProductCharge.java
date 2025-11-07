@@ -68,10 +68,6 @@ public class ProductCharge {
     @Column(length = 200)
     private String applicableTransactionTypes;  // Comma-separated transaction types
 
-    @Column
-    @Builder.Default
-    private Boolean waivable = false;
-
     @Column(precision = 19, scale = 2)
     private BigDecimal minCharge;
 
