@@ -13,13 +13,15 @@ import {
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { authApi } from '@/services/api';
+import { isManagerOrAdmin } from '@/utils/auth';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Products', href: '/products', icon: Package },
-  { name: 'FD Calculator', href: '/calculator', icon: Calculator },
-  { name: 'FD Accounts', href: '/accounts', icon: Wallet },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, requiresManagerOrAdmin: false },
+  { name: 'My Profile', href: '/profile', icon: User, requiresManagerOrAdmin: false },
+  { name: 'Customers', href: '/customers', icon: Users, requiresManagerOrAdmin: true },
+  { name: 'Products', href: '/products', icon: Package, requiresManagerOrAdmin: false },
+  { name: 'FD Calculator', href: '/calculator', icon: Calculator, requiresManagerOrAdmin: false },
+  { name: 'FD Accounts', href: '/accounts', icon: Wallet, requiresManagerOrAdmin: false },
 ];
 
 export function Sidebar() {
@@ -27,6 +29,12 @@ export function Sidebar() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(true);
   const username = localStorage.getItem('username') || 'User';
+  const hasAdminAccess = isManagerOrAdmin();
+  
+  // Filter navigation based on user role
+  const filteredNavigation = navigation.filter(item => 
+    !item.requiresManagerOrAdmin || hasAdminAccess
+  );
 
   const handleLogout = async () => {
     try {
@@ -69,7 +77,7 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
               

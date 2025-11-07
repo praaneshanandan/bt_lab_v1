@@ -1,28 +1,81 @@
 // Customer Types
 export interface Customer {
-  customerId: number;
-  customerName: string;
-  dateOfBirth?: string;
-  email?: string;
-  phoneNumber?: string;
-  address?: string;
+  id: number;
+  userId: number;
+  username: string;
+  fullName: string;
+  mobileNumber: string;
+  email: string;
   panNumber?: string;
   aadharNumber?: string;
-  customerType?: string;
-  kycStatus?: string;
-  createdDate?: string;
-  lastModifiedDate?: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  classification: 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR';
+  kycStatus: 'PENDING' | 'IN_PROGRESS' | 'VERIFIED' | 'REJECTED' | 'EXPIRED';
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  isActive: boolean;
+  accountNumber?: string;
+  ifscCode?: string;
+  preferredLanguage?: string;
+  preferredCurrency?: string;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCustomerRequest {
-  customerName: string;
-  dateOfBirth?: string;
-  email?: string;
-  phoneNumber?: string;
-  address?: string;
+  // NO userId - it's auto-fetched from JWT token by backend
+  fullName: string;
+  mobileNumber: string;
+  email: string;
   panNumber?: string;
   aadharNumber?: string;
-  customerType?: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  classification: 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR';
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  preferredLanguage?: string;
+  preferredCurrency?: string;
+  emailNotifications?: boolean;
+  smsNotifications?: boolean;
+}
+
+export interface UpdateCustomerRequest {
+  fullName?: string;
+  mobileNumber?: string;
+  email?: string;
+  panNumber?: string;
+  aadharNumber?: string;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  classification?: 'REGULAR' | 'PREMIUM' | 'VIP' | 'SENIOR_CITIZEN' | 'SUPER_SENIOR';
+  kycStatus?: 'PENDING' | 'IN_PROGRESS' | 'VERIFIED' | 'REJECTED' | 'EXPIRED';
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  isActive?: boolean;
+  accountNumber?: string;
+  ifscCode?: string;
+  preferredLanguage?: string;
+  preferredCurrency?: string;
+  emailNotifications?: boolean;
+  smsNotifications?: boolean;
 }
 
 // Product Types

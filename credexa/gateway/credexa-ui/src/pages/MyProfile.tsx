@@ -1,0 +1,523 @@
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { customerApi } from '@/services/api';
+import type { Customer, UpdateCustomerRequest } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { ProfileCompletion } from '@/components/ProfileCompletion';
+import { User, Edit2, Save, X, Loader2 } from 'lucide-react';
+
+export default function MyProfile() {
+  const [profile, setProfile] = useState<Customer | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [editForm, setEditForm] = useState<UpdateCustomerRequest>({});
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await customerApi.getOwnProfile();
+      setProfile(response.data);
+      // Initialize edit form with current values
+      setEditForm({
+        fullName: response.data.fullName,
+        mobileNumber: response.data.mobileNumber,
+        email: response.data.email,
+        panNumber: response.data.panNumber,
+        aadharNumber: response.data.aadharNumber,
+        dateOfBirth: response.data.dateOfBirth,
+        gender: response.data.gender,
+        addressLine1: response.data.addressLine1,
+        addressLine2: response.data.addressLine2,
+        city: response.data.city,
+        state: response.data.state,
+        pincode: response.data.pincode,
+        country: response.data.country,
+        accountNumber: response.data.accountNumber,
+        ifscCode: response.data.ifscCode,
+        preferredLanguage: response.data.preferredLanguage,
+        preferredCurrency: response.data.preferredCurrency,
+        emailNotifications: response.data.emailNotifications,
+        smsNotifications: response.data.smsNotifications,
+      });
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to fetch profile. You may need to create your customer profile first.';
+      setError(errorMsg);
+      console.error('Error fetching profile:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    // Reset form to current profile values
+    if (profile) {
+      setEditForm({
+        fullName: profile.fullName,
+        mobileNumber: profile.mobileNumber,
+        email: profile.email,
+        panNumber: profile.panNumber,
+        aadharNumber: profile.aadharNumber,
+        dateOfBirth: profile.dateOfBirth,
+        gender: profile.gender,
+        addressLine1: profile.addressLine1,
+        addressLine2: profile.addressLine2,
+        city: profile.city,
+        state: profile.state,
+        pincode: profile.pincode,
+        country: profile.country,
+        accountNumber: profile.accountNumber,
+        ifscCode: profile.ifscCode,
+        preferredLanguage: profile.preferredLanguage,
+        preferredCurrency: profile.preferredCurrency,
+        emailNotifications: profile.emailNotifications,
+        smsNotifications: profile.smsNotifications,
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profile) return;
+
+    try {
+      setSaving(true);
+      await customerApi.updateCustomer(profile.id, editForm);
+      toast.success('Profile updated successfully!');
+      setIsEditing(false);
+      fetchProfile(); // Refresh profile data
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Failed to update profile';
+      toast.error(errorMsg);
+      console.error('Error updating profile:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getClassificationBadge = (classification: string) => {
+    const colors: Record<string, string> = {
+      VIP: 'bg-purple-100 text-purple-800',
+      PREMIUM: 'bg-blue-100 text-blue-800',
+      SENIOR_CITIZEN: 'bg-orange-100 text-orange-800',
+      SUPER_SENIOR: 'bg-red-100 text-red-800',
+      REGULAR: 'bg-gray-100 text-gray-800',
+    };
+    return colors[classification] || colors.REGULAR;
+  };
+
+  const getKycBadge = (status: string) => {
+    const colors: Record<string, string> = {
+      VERIFIED: 'bg-green-100 text-green-800',
+      REJECTED: 'bg-red-100 text-red-800',
+      IN_PROGRESS: 'bg-blue-100 text-blue-800',
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      EXPIRED: 'bg-gray-100 text-gray-800',
+    };
+    return colors[status] || colors.PENDING;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+          <div className="text-lg text-gray-600">Loading your profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="p-8">
+        <Alert>
+          <AlertDescription>No profile found. Please create your customer profile first.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <User className="h-8 w-8" />
+            My Profile
+          </h1>
+          <p className="text-gray-600 mt-2">View and manage your customer information</p>
+        </div>
+        {!isEditing ? (
+          <Button onClick={handleEdit} className="flex items-center gap-2">
+            <Edit2 size={16} />
+            Edit Profile
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCancel} disabled={saving}>
+              <X size={16} className="mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={16} className="mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Profile Completion Card */}
+      {!isEditing && <ProfileCompletion profile={profile} />}
+
+      {/* Profile Overview Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>Your personal and account details</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Status Badges */}
+          <div className="flex gap-4">
+            <div>
+              <Label className="text-sm text-gray-600">Classification</Label>
+              <Badge className={`mt-1 ${getClassificationBadge(profile.classification)}`}>
+                {profile.classification.replace('_', ' ')}
+              </Badge>
+            </div>
+            <div>
+              <Label className="text-sm text-gray-600">KYC Status</Label>
+              <Badge className={`mt-1 ${getKycBadge(profile.kycStatus)}`}>
+                {profile.kycStatus}
+              </Badge>
+            </div>
+            <div>
+              <Label className="text-sm text-gray-600">Account Status</Label>
+              <Badge className={`mt-1 ${profile.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                {profile.isActive ? 'Active' : 'Inactive'}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Personal Information */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="fullName">Full Name *</Label>
+                <Input
+                  id="fullName"
+                  value={isEditing ? editForm.fullName : profile.fullName}
+                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={isEditing ? editForm.dateOfBirth : profile.dateOfBirth}
+                  onChange={(e) => setEditForm({ ...editForm, dateOfBirth: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <select
+                  id="gender"
+                  value={isEditing ? editForm.gender : profile.gender}
+                  onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as any })}
+                  disabled={!isEditing}
+                  className={`w-full h-10 px-3 border border-gray-300 rounded-md ${!isEditing ? 'bg-gray-50' : ''}`}
+                >
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={profile.username}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={isEditing ? editForm.email : profile.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="mobileNumber">Mobile Number *</Label>
+                <Input
+                  id="mobileNumber"
+                  value={isEditing ? editForm.mobileNumber : profile.mobileNumber}
+                  onChange={(e) => setEditForm({ ...editForm, mobileNumber: e.target.value })}
+                  disabled={!isEditing}
+                  pattern="[0-9]{10}"
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Identity Documents */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Identity Documents</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="panNumber">PAN Number</Label>
+                <Input
+                  id="panNumber"
+                  value={isEditing ? (editForm.panNumber || '') : (profile.panNumber || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, panNumber: e.target.value })}
+                  disabled={!isEditing}
+                  pattern="[A-Z]{5}[0-9]{4}[A-Z]"
+                  placeholder="ABCDE1234F"
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="aadharNumber">Aadhar Number</Label>
+                <Input
+                  id="aadharNumber"
+                  value={isEditing ? (editForm.aadharNumber || '') : (profile.aadharNumber || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, aadharNumber: e.target.value })}
+                  disabled={!isEditing}
+                  pattern="[0-9]{12}"
+                  placeholder="12 digits"
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Address</h3>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                <Input
+                  id="addressLine1"
+                  value={isEditing ? (editForm.addressLine1 || '') : (profile.addressLine1 || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, addressLine1: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="addressLine2">Address Line 2</Label>
+                <Input
+                  id="addressLine2"
+                  value={isEditing ? (editForm.addressLine2 || '') : (profile.addressLine2 || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, addressLine2: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="city">City *</Label>
+                  <Input
+                    id="city"
+                    value={isEditing ? (editForm.city || '') : (profile.city || '-')}
+                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">State *</Label>
+                  <Input
+                    id="state"
+                    value={isEditing ? (editForm.state || '') : (profile.state || '-')}
+                    onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pincode">Pincode *</Label>
+                  <Input
+                    id="pincode"
+                    value={isEditing ? (editForm.pincode || '') : (profile.pincode || '-')}
+                    onChange={(e) => setEditForm({ ...editForm, pincode: e.target.value })}
+                    disabled={!isEditing}
+                    pattern="[0-9]{6}"
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="country">Country *</Label>
+                <Input
+                  id="country"
+                  value={isEditing ? (editForm.country || '') : (profile.country || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Banking Details */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Banking Details</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="accountNumber">Account Number</Label>
+                <Input
+                  id="accountNumber"
+                  value={isEditing ? (editForm.accountNumber || '') : (profile.accountNumber || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, accountNumber: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ifscCode">IFSC Code</Label>
+                <Input
+                  id="ifscCode"
+                  value={isEditing ? (editForm.ifscCode || '') : (profile.ifscCode || '-')}
+                  onChange={(e) => setEditForm({ ...editForm, ifscCode: e.target.value })}
+                  disabled={!isEditing}
+                  className={!isEditing ? 'bg-gray-50' : ''}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Preferences */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Preferences</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="preferredLanguage">Preferred Language</Label>
+                <select
+                  id="preferredLanguage"
+                  value={isEditing ? editForm.preferredLanguage : profile.preferredLanguage}
+                  onChange={(e) => setEditForm({ ...editForm, preferredLanguage: e.target.value })}
+                  disabled={!isEditing}
+                  className={`w-full h-10 px-3 border border-gray-300 rounded-md ${!isEditing ? 'bg-gray-50' : ''}`}
+                >
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="es">Spanish</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="preferredCurrency">Preferred Currency</Label>
+                <select
+                  id="preferredCurrency"
+                  value={isEditing ? editForm.preferredCurrency : profile.preferredCurrency}
+                  onChange={(e) => setEditForm({ ...editForm, preferredCurrency: e.target.value })}
+                  disabled={!isEditing}
+                  className={`w-full h-10 px-3 border border-gray-300 rounded-md ${!isEditing ? 'bg-gray-50' : ''}`}
+                >
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Notification Preferences */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Notification Preferences</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="emailNotifications"
+                  checked={isEditing ? editForm.emailNotifications : profile.emailNotifications}
+                  onChange={(e) => setEditForm({ ...editForm, emailNotifications: e.target.checked })}
+                  disabled={!isEditing}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="emailNotifications" className="cursor-pointer">Email Notifications</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="smsNotifications"
+                  checked={isEditing ? editForm.smsNotifications : profile.smsNotifications}
+                  onChange={(e) => setEditForm({ ...editForm, smsNotifications: e.target.checked })}
+                  disabled={!isEditing}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="smsNotifications" className="cursor-pointer">SMS Notifications</Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Metadata */}
+          <div className="pt-4 border-t text-sm text-gray-600">
+            <div className="grid grid-cols-2 gap-2">
+              <div>Customer ID: <span className="font-semibold">{profile.id}</span></div>
+              <div>User ID: <span className="font-semibold">{profile.userId}</span></div>
+              <div>Created: <span className="font-semibold">{new Date(profile.createdAt).toLocaleDateString()}</span></div>
+              <div>Last Updated: <span className="font-semibold">{new Date(profile.updatedAt).toLocaleDateString()}</span></div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
