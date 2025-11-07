@@ -33,13 +33,13 @@ api.interceptors.request.use((config) => {
 
 // Auth/Login Service APIs
 export const authApi = {
-  login: (data: LoginRequest) => api.post('/api/auth/login', data),
-  register: (data: RegisterRequest) => api.post('/api/auth/register', data),
-  logout: () => api.post('/api/auth/logout'),
-  validateToken: (token: string) => api.post('/api/auth/validate-token', token),
-  getBankConfig: () => api.get('/api/auth/bank-config'),
-  getUserByUsername: (username: string) => api.get(`/api/auth/user/${username}`),
-  health: () => api.get('/api/auth/health'),
+  login: (data: LoginRequest) => api.post('/api/login/login', data),
+  register: (data: RegisterRequest) => api.post('/api/login/register', data),
+  logout: () => api.post('/api/login/logout'),
+  validateToken: (token: string) => api.post('/api/login/validate-token', token),
+  getBankConfig: () => api.get('/api/login/bank-config'),
+  getUserByUsername: (username: string) => api.get(`/api/login/user/${username}`),
+  health: () => api.get('/api/login/health'),
 };
 
 // Customer Service APIs
