@@ -9,6 +9,7 @@ public enum TransactionType {
     INITIAL_DEPOSIT,      // First deposit when account is created
     ADDITIONAL_DEPOSIT,   // Additional deposit to existing account
     WITHDRAWAL,           // Regular withdrawal
+    PARTIAL_WITHDRAWAL,   // Partial withdrawal from account
     PREMATURE_WITHDRAWAL, // Early withdrawal with penalty
     
     // Interest transactions

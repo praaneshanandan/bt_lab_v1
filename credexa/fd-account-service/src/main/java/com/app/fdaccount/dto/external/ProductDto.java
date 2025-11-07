@@ -49,6 +49,9 @@ public class ProductDto {
     private Boolean tdsApplicable;
     private BigDecimal tdsRate;
     
+    // Role restrictions
+    private java.util.List<String> allowedRoles;
+    
     // Helper
     private Boolean currentlyActive;
 }

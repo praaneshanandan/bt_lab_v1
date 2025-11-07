@@ -78,22 +78,85 @@ export interface UpdateCustomerRequest {
   smsNotifications?: boolean;
 }
 
-// Product Types
+// Product Types (matching backend)
 export interface Product {
-  productId: number;
-  productCode: string;
+  id: number;
   productName: string;
+  productCode: string;
+  productType: string;
   description?: string;
-  minPrincipalAmount: number;
-  maxPrincipalAmount: number;
+  effectiveDate: string;
+  endDate?: string;
+  currencyCode: string;
+  status: string;
+  
+  // Term and Amount
+  minTermMonths: number;
+  maxTermMonths: number;
+  minAmount: number;
+  maxAmount: number;
+  minBalanceRequired?: number;
+  
+  // Interest
+  baseInterestRate: number;
+  interestCalculationMethod?: string;
+  interestPayoutFrequency?: string;
+  
+  // TDS
+  tdsRate?: number;
+  tdsApplicable: boolean;
+  
+  // Flags
+  prematureWithdrawalAllowed: boolean;
+  partialWithdrawalAllowed: boolean;
+  loanAgainstDepositAllowed: boolean;
+  autoRenewalAllowed: boolean;
+  nomineeAllowed: boolean;
+  jointAccountAllowed: boolean;
+  
+  // Audit
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  
+  // Legacy compatibility
+  productId?: number;
+  interestRate?: number;
+  compoundingFrequency?: string;
+  isActive?: boolean;
+  features?: string;
+}
+
+export interface InterestRateMatrix {
+  id?: number;
+  minAmount: number;
+  maxAmount: number;
   minTermMonths: number;
   maxTermMonths: number;
   interestRate: number;
-  compoundingFrequency: string;
-  isActive: boolean;
-  effectiveDate?: string;
-  expiryDate?: string;
-  features?: string;
+  customerClassification?: string;
+  effectiveDate: string;
+  endDate?: string;
+}
+
+export interface ProductCharge {
+  id?: number;
+  chargeName: string;
+  chargeType: string;
+  amount?: number;
+  percentage?: number;
+  frequency: string;
+  description?: string;
+}
+
+export interface ProductRole {
+  id?: number;
+  roleType: string;
+  mandatory: boolean;
+  minCount: number;
+  maxCount: number;
+  description?: string;
 }
 
 // Calculator Types
