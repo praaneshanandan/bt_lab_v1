@@ -27,8 +27,25 @@ export default function Products() {
       const response = isManagerOrAdmin() 
         ? await productApi.getAllProducts()
         : await productApi.getActiveProducts();
-      // Backend returns ApiResponse wrapper, so data is in response.data.data
-      setProducts(response.data.data || []);
+      // Backend returns ApiResponse wrapper; data may be:
+      // - an array (for endpoints returning List<...>) OR
+      // - a paginated object { products: [...] }
+      const payload = response?.data?.data;
+      let items: any[] = [];
+      if (!payload) {
+        items = [];
+      } else if (Array.isArray(payload)) {
+        items = payload;
+      } else if (payload.products && Array.isArray(payload.products)) {
+        items = payload.products;
+      } else if (payload.items && Array.isArray(payload.items)) {
+        items = payload.items;
+      } else {
+        // Fallback: try to find first array property
+        const maybeArray = Object.values(payload).find(v => Array.isArray(v));
+        items = Array.isArray(maybeArray) ? (maybeArray as any[]) : [];
+      }
+      setProducts(items || []);
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {

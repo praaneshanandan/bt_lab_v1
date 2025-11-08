@@ -48,11 +48,11 @@ export default function CustomerProductsView({ products, loading }: Props) {
   };
 
   const handleApply = (product: Product) => {
-    navigate(`/accounts/create?productId=${product.id}&productCode=${product.productCode}`);
+    navigate(`/accounts/create?productId=${product.productId}&productCode=${product.productCode}`);
   };
 
   const handleViewDetails = (product: Product) => {
-    navigate(`/products/${product.id}`);
+    navigate(`/products/${product.productId}`);
   };
 
   if (loading) {
@@ -84,7 +84,7 @@ export default function CustomerProductsView({ products, loading }: Props) {
           </div>
         ) : (
           filteredProducts.map((product) => (
-            <Card key={product.id} className="hover:shadow-lg transition-shadow">
+            <Card key={product.productId} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
