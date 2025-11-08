@@ -47,32 +47,32 @@ export default function CustomerDashboard() {
       title: 'My FD Accounts',
       value: stats.totalAccounts,
       icon: Wallet,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      color: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-100 dark:bg-purple-950',
       onClick: () => navigate('/accounts'),
     },
     {
       title: 'Total Investment',
       value: `₹${stats.totalInvestment.toLocaleString()}`,
       icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      color: 'text-green-600 dark:text-green-400',
+      bgColor: 'bg-green-100 dark:bg-green-950',
       onClick: () => navigate('/accounts'),
     },
     {
       title: 'Maturing Soon',
       value: stats.upcomingMaturity,
       icon: Calendar,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
+      color: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-100 dark:bg-orange-950',
       onClick: () => navigate('/accounts'),
     },
     {
       title: 'Notifications',
       value: stats.activeNotifications,
       icon: Bell,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-100 dark:bg-blue-950',
       onClick: () => {},
     },
   ];
@@ -80,7 +80,7 @@ export default function CustomerDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-lg text-gray-600">Loading dashboard...</div>
+        <div className="text-lg text-muted-foreground">Loading dashboard...</div>
       </div>
     );
   }
@@ -88,8 +88,8 @@ export default function CustomerDashboard() {
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Welcome, {username}!</h1>
-        <p className="text-gray-600 mt-2">Manage your Fixed Deposits and track your investments</p>
+        <h1 className="text-3xl font-bold text-foreground">Welcome, {username}!</h1>
+        <p className="text-muted-foreground mt-2">Manage your Fixed Deposits and track your investments</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -102,13 +102,13 @@ export default function CustomerDashboard() {
               onClick={stat.onClick}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <CardTitle className="text-sm font-medium text-foreground">{stat.title}</CardTitle>
                 <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                   <Icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
               </CardContent>
             </Card>
           );
@@ -122,7 +122,7 @@ export default function CustomerDashboard() {
             <CardDescription>Your latest fixed deposit accounts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No FD accounts yet. Create your first FD account!
             </div>
           </CardContent>
@@ -137,31 +137,31 @@ export default function CustomerDashboard() {
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/my-360-view')}
-                className="w-full text-left p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                className="w-full text-left p-4 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 rounded-lg transition-colors border border-indigo-200 dark:border-indigo-800"
               >
-                <h3 className="font-semibold text-indigo-900">My 360° View</h3>
-                <p className="text-sm text-indigo-700">Complete profile overview</p>
+                <h3 className="font-semibold text-indigo-900 dark:text-indigo-100">My 360° View</h3>
+                <p className="text-sm text-indigo-700 dark:text-indigo-300">Complete profile overview</p>
               </button>
               <button
                 onClick={() => navigate('/calculator')}
-                className="w-full text-left p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="w-full text-left p-4 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
               >
-                <h3 className="font-semibold text-blue-900">Calculate FD Returns</h3>
-                <p className="text-sm text-blue-700">Use our FD calculator</p>
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100">Calculate FD Returns</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">Use our FD calculator</p>
               </button>
               <button
                 onClick={() => navigate('/products')}
-                className="w-full text-left p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                className="w-full text-left p-4 bg-green-50 dark:bg-green-950 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors border border-green-200 dark:border-green-800"
               >
-                <h3 className="font-semibold text-green-900">Browse Products</h3>
-                <p className="text-sm text-green-700">Explore FD products</p>
+                <h3 className="font-semibold text-green-900 dark:text-green-100">Browse Products</h3>
+                <p className="text-sm text-green-700 dark:text-green-300">Explore FD products</p>
               </button>
               <button
                 onClick={() => navigate('/profile')}
-                className="w-full text-left p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                className="w-full text-left p-4 bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-lg transition-colors border border-purple-200 dark:border-purple-800"
               >
-                <h3 className="font-semibold text-purple-900">Update Profile</h3>
-                <p className="text-sm text-purple-700">Manage your information</p>
+                <h3 className="font-semibold text-purple-900 dark:text-purple-100">Update Profile</h3>
+                <p className="text-sm text-purple-700 dark:text-purple-300">Manage your information</p>
               </button>
             </div>
           </CardContent>
@@ -170,3 +170,4 @@ export default function CustomerDashboard() {
     </div>
   );
 }
+

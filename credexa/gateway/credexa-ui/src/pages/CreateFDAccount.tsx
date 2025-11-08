@@ -135,7 +135,7 @@ export default function CreateFDAccount() {
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create FD Account</h1>
+          <h1 className="text-3xl font-bold text-foreground">Create FD Account</h1>
           <p className="text-gray-600 mt-2">Open a new fixed deposit account</p>
         </div>
       </div>
@@ -371,3 +371,4 @@ export default function CreateFDAccount() {
     </div>
   );
 }
+

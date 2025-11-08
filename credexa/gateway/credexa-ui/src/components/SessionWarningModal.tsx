@@ -40,7 +40,7 @@ export function SessionWarningModal({
             <div className="text-6xl font-bold text-orange-500 mb-2">
               {secondsRemaining}
             </div>
-            <div className="text-sm text-gray-600">seconds remaining</div>
+            <div className="text-sm text-muted-foreground">seconds remaining</div>
           </div>
         </div>
 
@@ -65,3 +65,4 @@ export function SessionWarningModal({
     </Dialog>
   );
 }
+

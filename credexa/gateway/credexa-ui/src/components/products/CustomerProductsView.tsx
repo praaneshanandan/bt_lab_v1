@@ -80,7 +80,7 @@ export default function CustomerProductsView({ products, loading }: Props) {
         {filteredProducts.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No products available at the moment</p>
+            <p className="text-muted-foreground">No products available at the moment</p>
           </div>
         ) : (
           filteredProducts.map((product) => (
@@ -121,7 +121,7 @@ export default function CustomerProductsView({ products, loading }: Props) {
                 </div>
 
                 {/* Term Range */}
-                <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-gray-50 p-3 rounded-lg">
                   <Calendar className="h-4 w-4" />
                   <span>
                     <strong>Term:</strong> {product.minTermMonths} - {product.maxTermMonths} months
@@ -152,7 +152,7 @@ export default function CustomerProductsView({ products, loading }: Props) {
 
                 {/* Description */}
                 {product.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {product.description}
                   </p>
                 )}
@@ -199,3 +199,4 @@ export default function CustomerProductsView({ products, loading }: Props) {
     </div>
   );
 }
+

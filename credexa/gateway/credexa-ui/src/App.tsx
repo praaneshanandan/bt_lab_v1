@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SessionWarningModal } from './components/SessionWarningModal';
@@ -39,9 +40,9 @@ function AppContent() {
           path="/*"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen bg-gray-50">
+              <div className="flex h-screen bg-background">
                 <Sidebar />
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto bg-background text-foreground">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/customers" element={<Customers />} />
@@ -67,12 +68,12 @@ function AppContent() {
 
 function App() {
   return (
-    <>
+    <ThemeProvider>
       <Toaster position="top-right" richColors expand={false} closeButton />
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
-    </>
+    </ThemeProvider>
   );
 }
 

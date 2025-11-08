@@ -230,7 +230,7 @@ export default function FDCalculator() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Calculator className="h-8 w-8 text-blue-600" />
             FD Calculator
           </h1>
@@ -795,3 +795,4 @@ export default function FDCalculator() {
     </div>
   );
 }
+

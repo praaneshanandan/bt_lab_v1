@@ -213,7 +213,7 @@ export default function Customer360View() {
       PREMIUM: 'bg-blue-100 text-blue-800 border-blue-200',
       SENIOR_CITIZEN: 'bg-orange-100 text-orange-800 border-orange-200',
       SUPER_SENIOR: 'bg-red-100 text-red-800 border-red-200',
-      REGULAR: 'bg-gray-100 text-gray-800 border-gray-200',
+      REGULAR: 'bg-muted text-muted-foreground border-gray-200',
     };
     return colors[classification] || colors.REGULAR;
   };
@@ -224,7 +224,7 @@ export default function Customer360View() {
       REJECTED: 'bg-red-100 text-red-800 border-red-200',
       IN_PROGRESS: 'bg-blue-100 text-blue-800 border-blue-200',
       PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      EXPIRED: 'bg-gray-100 text-gray-800 border-gray-200',
+      EXPIRED: 'bg-muted text-muted-foreground border-gray-200',
     };
     return colors[status] || colors.PENDING;
   };
@@ -282,7 +282,7 @@ export default function Customer360View() {
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Customer 360° View</h1>
+            <h1 className="text-3xl font-bold text-foreground">Customer 360° View</h1>
             <p className="text-gray-600 mt-1">Comprehensive customer information and insights</p>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function Customer360View() {
               <Badge className={`${getKycBadge(customer.kycStatus)} border`}>
                 {customer.kycStatus}
               </Badge>
-              <Badge className={customer.isActive ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-gray-100 text-gray-800 border border-gray-200'}>
+              <Badge className={customer.isActive ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-muted text-muted-foreground border border-gray-200'}>
                 {customer.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </div>
@@ -320,7 +320,7 @@ export default function Customer360View() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Contact Information */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Phone size={16} className="text-blue-600" />
                 Contact Details
               </h3>
@@ -338,7 +338,7 @@ export default function Customer360View() {
 
             {/* Address */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <MapPin size={16} className="text-blue-600" />
                 Address
               </h3>
@@ -356,7 +356,7 @@ export default function Customer360View() {
 
             {/* Banking Details */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Building2 size={16} className="text-blue-600" />
                 Banking Details
               </h3>
@@ -380,7 +380,7 @@ export default function Customer360View() {
 
             {/* Identity Documents */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <CreditCard size={16} className="text-blue-600" />
                 Identity Documents
               </h3>
@@ -398,7 +398,7 @@ export default function Customer360View() {
 
             {/* Personal Info */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Calendar size={16} className="text-blue-600" />
                 Personal Information
               </h3>
@@ -420,7 +420,7 @@ export default function Customer360View() {
 
             {/* Account Info */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Calendar size={16} className="text-blue-600" />
                 Account Timeline
               </h3>
@@ -462,7 +462,7 @@ export default function Customer360View() {
               </div>
             </div>
             <div className="flex items-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-foreground">
                 <strong>Benefit:</strong> {classification.classificationDescription}
               </div>
             </div>
@@ -503,7 +503,7 @@ export default function Customer360View() {
             </div>
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="text-sm text-gray-600 mb-1">Matured Accounts</div>
-              <div className="text-2xl font-bold text-gray-700">{accountSummary.maturedFdCount}</div>
+              <div className="text-2xl font-bold text-foreground">{accountSummary.maturedFdCount}</div>
             </div>
           </div>
 
@@ -529,3 +529,4 @@ export default function Customer360View() {
     </div>
   );
 }
+

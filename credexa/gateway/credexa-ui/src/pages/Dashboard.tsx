@@ -19,3 +19,4 @@ export default function Dashboard() {
   // Route to appropriate dashboard based on role
   return hasAdminAccess ? <AdminDashboard /> : <CustomerDashboard />;
 }
+

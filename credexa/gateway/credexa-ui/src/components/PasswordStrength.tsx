@@ -73,9 +73,10 @@ function CheckItem({ passed, text }: { passed: boolean; text: string }) {
       ) : (
         <X className="h-3 w-3 text-gray-400 flex-shrink-0" />
       )}
-      <span className={passed ? 'text-green-700' : 'text-gray-500'}>
+      <span className={passed ? 'text-green-700' : 'text-muted-foreground'}>
         {text}
       </span>
     </div>
   );
 }
+

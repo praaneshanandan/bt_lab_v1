@@ -219,7 +219,7 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
               <TableBody>
                 {filteredProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No products found
                     </TableCell>
                   </TableRow>
@@ -238,7 +238,7 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
                       <TableCell>
                         <div className="text-sm">
                           <div>{formatCurrency(product.minAmount)}</div>
-                          <div className="text-gray-500">to {formatCurrency(product.maxAmount)}</div>
+                          <div className="text-muted-foreground">to {formatCurrency(product.maxAmount)}</div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -651,3 +651,4 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
     </div>
   );
 }
+

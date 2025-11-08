@@ -22,13 +22,13 @@ export function ProfileCompletion({ profile }: ProfileCompletionProps) {
   const isComplete = completionPercentage === 100;
 
   return (
-    <Card className={`${isComplete ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}`}>
+    <Card className={`${isComplete ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950' : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950'}`}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="text-lg flex items-center gap-2 text-foreground">
           {isComplete ? (
-            <Check className="h-5 w-5 text-green-600" />
+            <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
           ) : (
-            <AlertCircle className="h-5 w-5 text-orange-600" />
+            <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           )}
           Profile Completion
         </CardTitle>
@@ -37,17 +37,17 @@ export function ProfileCompletion({ profile }: ProfileCompletionProps) {
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="font-medium">
+            <span className="font-medium text-foreground">
               {isComplete ? 'Profile Complete!' : `${completionPercentage}% Complete`}
             </span>
-            <span className="text-gray-600">
+            <span className="text-muted-foreground">
               {completedCount}/{totalCount} sections
             </span>
           </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-3 bg-muted rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${
-                isComplete ? 'bg-green-500' : completionPercentage >= 60 ? 'bg-blue-500' : 'bg-orange-500'
+                isComplete ? 'bg-green-500 dark:bg-green-600' : completionPercentage >= 60 ? 'bg-blue-500 dark:bg-blue-600' : 'bg-orange-500 dark:bg-orange-600'
               }`}
               style={{ width: `${completionPercentage}%` }}
             />
@@ -84,8 +84,8 @@ export function ProfileCompletion({ profile }: ProfileCompletionProps) {
         </div>
 
         {!isComplete && (
-          <div className="pt-2 border-t">
-            <p className="text-sm text-gray-700">
+          <div className="pt-2 border-t border-border">
+            <p className="text-sm text-foreground">
               <strong>Complete your profile</strong> to unlock all features and ensure smooth FD account processing!
             </p>
           </div>
@@ -108,21 +108,22 @@ function ChecklistItem({
     <div className="flex items-start gap-2">
       <div className="mt-0.5">
         {completed ? (
-          <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
+          <div className="h-5 w-5 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center">
             <Check className="h-3 w-3 text-white" />
           </div>
         ) : (
-          <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex items-center justify-center">
-            <X className="h-3 w-3 text-gray-400" />
+          <div className="h-5 w-5 rounded-full border-2 border-muted-foreground flex items-center justify-center">
+            <X className="h-3 w-3 text-muted-foreground" />
           </div>
         )}
       </div>
       <div className="flex-1">
-        <div className={`text-sm font-medium ${completed ? 'text-green-700' : 'text-gray-700'}`}>
+        <div className={`text-sm font-medium ${completed ? 'text-green-700 dark:text-green-300' : 'text-foreground'}`}>
           {label}
         </div>
-        <div className="text-xs text-gray-600">{description}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
       </div>
     </div>
   );
 }
+
