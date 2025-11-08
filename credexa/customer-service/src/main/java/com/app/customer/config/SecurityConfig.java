@@ -23,15 +23,18 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .formLogin(AbstractHttpConfigurer::disable)  // Disable form login to prevent FormContentFilter issues
                 .httpBasic(AbstractHttpConfigurer::disable)   // Disable HTTP Basic auth
                 .authorizeHttpRequests(auth -> auth
+                        // OPTIONS requests for CORS preflight
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // Public endpoints (health check, swagger)
                         .requestMatchers(
                             "/health",

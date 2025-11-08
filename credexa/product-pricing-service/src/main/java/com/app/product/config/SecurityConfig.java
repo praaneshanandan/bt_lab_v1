@@ -39,6 +39,14 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource))  // Use CORS from WebConfig
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) -> {
+                    // Return 401 without redirect for CORS preflight compatibility
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"" + authException.getMessage() + "\"}");
+                })
+            )
             .authorizeHttpRequests(auth -> auth
                 // Allow CORS preflight requests
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
@@ -52,14 +60,7 @@ public class SecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                // Read-only endpoints - any authenticated user
-                .requestMatchers(
-                    "/active",
-                    "/currently-active",
-                    "/code/**",
-                    "/{id}"
-                ).authenticated()
-                // All other product endpoints require authentication
+                // All product endpoints require authentication (empty path is root after context-path)
                 // Specific role checks handled by @PreAuthorize in controller
                 .anyRequest().authenticated()
             )

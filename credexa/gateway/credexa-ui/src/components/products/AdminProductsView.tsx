@@ -73,10 +73,14 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
 
   const handleCreate = () => {
     setSelectedProduct(null);
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
     setFormData({
       productType: 'FIXED_DEPOSIT',
       status: 'DRAFT',
       currencyCode: 'INR',
+      bankBranchCode: 'MAIN',
+      effectiveDate: today,
       minTermMonths: 6,
       maxTermMonths: 60,
       minAmount: 10000,
@@ -109,11 +113,11 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
   };
 
   const confirmDelete = async () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct?.productId) return;
 
     setIsSubmitting(true);
     try {
-      await productApi.deleteProduct(selectedProduct.id);
+      await productApi.deleteProduct(selectedProduct.productId);
       toast.success('Product deleted successfully');
       onRefresh();
       setDeleteDialogOpen(false);
@@ -129,8 +133,8 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
     setIsSubmitting(true);
 
     try {
-      if (selectedProduct) {
-        await productApi.updateProduct(selectedProduct.id, formData);
+      if (selectedProduct?.productId) {
+        await productApi.updateProduct(selectedProduct.productId, formData);
         toast.success('Product updated successfully');
       } else {
         await productApi.createProduct(formData);
@@ -218,7 +222,7 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
                   </TableRow>
                 ) : (
                   filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.productId}>
                       <TableCell className="font-medium">{product.productCode}</TableCell>
                       <TableCell>{product.productName}</TableCell>
                       <TableCell>
@@ -316,9 +320,11 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="FIXED_DEPOSIT">Fixed Deposit</SelectItem>
-                      <SelectItem value="RECURRING_DEPOSIT">Recurring Deposit</SelectItem>
-                      <SelectItem value="SAVINGS">Savings</SelectItem>
-                      <SelectItem value="LOAN">Loan</SelectItem>
+                      <SelectItem value="TAX_SAVER_FD">Tax Saver FD</SelectItem>
+                      <SelectItem value="SENIOR_CITIZEN_FD">Senior Citizen FD</SelectItem>
+                      <SelectItem value="FLEXI_FD">Flexi FD</SelectItem>
+                      <SelectItem value="CUMULATIVE_FD">Cumulative FD</SelectItem>
+                      <SelectItem value="NON_CUMULATIVE_FD">Non-Cumulative FD</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -336,8 +342,43 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
                       <SelectItem value="ACTIVE">Active</SelectItem>
                       <SelectItem value="INACTIVE">Inactive</SelectItem>
                       <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                      <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bankBranchCode">Bank/Branch Code *</Label>
+                  <Input
+                    id="bankBranchCode"
+                    value={formData.bankBranchCode || ''}
+                    onChange={(e) => setFormData({...formData, bankBranchCode: e.target.value})}
+                    required
+                    placeholder="e.g., MAIN"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currencyCode">Currency Code *</Label>
+                  <Input
+                    id="currencyCode"
+                    value={formData.currencyCode || ''}
+                    onChange={(e) => setFormData({...formData, currencyCode: e.target.value})}
+                    required
+                    maxLength={3}
+                    placeholder="e.g., INR"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="effectiveDate">Effective Date *</Label>
+                  <Input
+                    id="effectiveDate"
+                    type="date"
+                    value={formData.effectiveDate || ''}
+                    onChange={(e) => setFormData({...formData, effectiveDate: e.target.value})}
+                    required
+                  />
                 </div>
               </div>
 

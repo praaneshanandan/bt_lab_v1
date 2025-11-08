@@ -1,13 +1,13 @@
 spring:
   application:
     name: product-pricing-service
-    
+
   datasource:
     url: jdbc:mysql://localhost:3306/product_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,7 +16,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-        
+
   cache:
     type: caffeine
     caffeine:
@@ -26,11 +26,13 @@ spring:
       - productsByCode
       - productsByType
       - activeProducts
-      
+
 server:
   port: 8084
   servlet:
     context-path: /api/products
+  tomcat:
+    redirect-context-root: false # Prevent redirect for context root without trailing slash
 
 # JWT Configuration (shared with other services)
 jwt:
@@ -54,7 +56,7 @@ springdoc:
     enabled: true
     operations-sorter: method
     tags-sorter: alpha
-    
+
 # Logging
 logging:
   level:

@@ -13,9 +13,9 @@ export const useSessionManager = () => {
   const [showWarning, setShowWarning] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(30);
   const lastActivityRef = useRef<number>(Date.now());
-  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const logoutTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const checkIntervalRef = useRef<ReturnType<typeof setInterval>>();
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const logoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const checkIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const logout = useCallback(async () => {
     try {

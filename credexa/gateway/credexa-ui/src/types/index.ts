@@ -80,13 +80,13 @@ export interface UpdateCustomerRequest {
 
 // Product Types (matching backend)
 export interface Product {
-  id: number;
+  productId: number;  // Backend uses productId, not id
   productName: string;
   productCode: string;
   productType: string;
   description?: string;
   effectiveDate: string;
-  endDate?: string;
+  bankBranchCode: string;
   currencyCode: string;
   status: string;
   
@@ -114,18 +114,25 @@ export interface Product {
   nomineeAllowed: boolean;
   jointAccountAllowed: boolean;
   
+  // Relationships
+  allowedRoles?: ProductRole[];
+  charges?: ProductCharge[];
+  interestRateMatrix?: InterestRateMatrix[];
+  
   // Audit
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
+  currentlyActive?: boolean;
   
-  // Legacy compatibility
-  productId?: number;
+  // Legacy compatibility (for backward compatibility)
+  id?: number;
   interestRate?: number;
   compoundingFrequency?: string;
   isActive?: boolean;
   features?: string;
+  endDate?: string;
 }
 
 export interface InterestRateMatrix {
