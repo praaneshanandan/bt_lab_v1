@@ -48,7 +48,9 @@ public class SecurityConfig {
             .formLogin(AbstractHttpConfigurer::disable)  // Disable form login to prevent FormContentFilter issues
             .httpBasic(AbstractHttpConfigurer::disable)   // Disable HTTP Basic auth
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // Allow CORS preflight requests
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                // Public endpoints (these are relative to context-path /api/auth)
                 .requestMatchers(
                     "/register",
                     "/login",
@@ -63,7 +65,8 @@ public class SecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**",
                     "/oauth2/**",  // OAuth2 endpoints
-                    "/login/oauth2/**"  // OAuth2 login callback
+                    "/login/oauth2/**",  // OAuth2 login callback
+                    "/error"  // Allow error endpoint
                 ).permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()

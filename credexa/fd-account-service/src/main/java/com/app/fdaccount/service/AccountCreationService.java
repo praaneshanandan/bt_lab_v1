@@ -322,6 +322,7 @@ public class AccountCreationService {
 
     /**
      * Validate account roles against product allowed roles
+     * Note: allowedRoles is a simple List<String> with role names
      */
     private void validateAccountRoles(ProductDto product, List<AccountRoleRequest> accountRoles) {
         // Skip if product has no role restrictions
@@ -330,18 +331,19 @@ public class AccountCreationService {
             return;
         }
 
-        log.debug("Validating {} account roles against {} product roles", 
+        log.debug("Validating {} account roles against {} allowed product roles", 
                 accountRoles.size(), product.getAllowedRoles().size());
 
         // Check if any roles in request are not allowed by product
         for (AccountRoleRequest accountRole : accountRoles) {
+            String requestedRole = accountRole.getRoleType().toString();
             boolean isAllowed = product.getAllowedRoles().stream()
-                    .anyMatch(ar -> ar.getRoleType().equals(accountRole.getRoleType().toString()));
+                    .anyMatch(allowedRole -> allowedRole.equalsIgnoreCase(requestedRole));
             
             if (!isAllowed) {
                 throw new IllegalArgumentException(
-                        String.format("Role '%s' is not allowed for this product", 
-                                accountRole.getRoleType()));
+                        String.format("Role '%s' is not allowed for this product. Allowed roles: %s", 
+                                accountRole.getRoleType(), String.join(", ", product.getAllowedRoles())));
             }
         }
 

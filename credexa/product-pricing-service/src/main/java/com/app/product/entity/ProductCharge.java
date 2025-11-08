@@ -70,5 +70,9 @@ public class ProductCharge {
 
     @Column
     @Builder.Default
+    private Boolean waivable = false;  // Can this charge be waived
+
+    @Column
+    @Builder.Default
     private Boolean active = true;
 }

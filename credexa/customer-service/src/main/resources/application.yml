@@ -1,19 +1,19 @@
 spring:
   application:
     name: customer-service
-  
+
   devtools:
     restart:
       enabled: false
     livereload:
       enabled: false
-    
+
   datasource:
     url: jdbc:mysql://localhost:3306/customer_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,12 +22,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-        
+
   security:
     enabled: true
-    
+
 server:
-  port: 8083
+  port: 8082
   servlet:
     context-path: /api/customer
 
@@ -46,7 +46,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
-    
+
 # Logging
 logging:
   level:
