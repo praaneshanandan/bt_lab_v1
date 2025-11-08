@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/products/{productId}/roles")
+@RequestMapping("/{productId}/roles")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Product Roles", description = "APIs for managing product role configurations")
@@ -36,9 +37,11 @@ public class ProductRoleController {
     private final ProductRoleService roleService;
 
     @PostMapping
-    @Operation(summary = "Add role to product", description = "Adds a new allowed role configuration to a product")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Add role to product (ADMIN/MANAGER only)", description = "Adds a new allowed role configuration to a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Role added successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<ApiResponse<ProductRoleResponse>> addRole(
@@ -52,6 +55,7 @@ public class ProductRoleController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get all roles for product", description = "Retrieves all role configurations for a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Roles retrieved successfully")
@@ -65,6 +69,7 @@ public class ProductRoleController {
     }
 
     @GetMapping("/type/{roleType}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get roles by type", description = "Retrieves role configurations of a specific type")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Roles retrieved successfully")
@@ -89,6 +94,7 @@ class RoleManagementController {
     private final ProductRoleService roleService;
 
     @GetMapping("/{roleId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get role by ID", description = "Retrieves a specific role configuration by its ID")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Role retrieved successfully"),
@@ -103,9 +109,11 @@ class RoleManagementController {
     }
 
     @PutMapping("/{roleId}")
-    @Operation(summary = "Update role", description = "Updates an existing role configuration")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Update role (ADMIN/MANAGER only)", description = "Updates an existing role configuration")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Role updated successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Role not found")
     })
     public ResponseEntity<ApiResponse<ProductRoleResponse>> updateRole(
@@ -118,9 +126,11 @@ class RoleManagementController {
     }
 
     @DeleteMapping("/{roleId}")
-    @Operation(summary = "Delete role", description = "Deletes a role configuration from a product")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Delete role (ADMIN/MANAGER only)", description = "Deletes a role configuration from a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Role deleted successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Role not found")
     })
     public ResponseEntity<ApiResponse<Void>> deleteRole(

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/products/{productId}/charges")
+@RequestMapping("/{productId}/charges")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Product Charges", description = "APIs for managing product charges and fees")
@@ -36,9 +37,11 @@ public class ProductChargeController {
     private final ProductChargeService chargeService;
 
     @PostMapping
-    @Operation(summary = "Add charge to product", description = "Adds a new charge or fee to a product")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Add charge to product (ADMIN/MANAGER only)", description = "Adds a new charge or fee to a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Charge added successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<ApiResponse<ProductChargeResponse>> addCharge(
@@ -52,6 +55,7 @@ public class ProductChargeController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get all charges for product", description = "Retrieves all charges associated with a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Charges retrieved successfully")
@@ -65,6 +69,7 @@ public class ProductChargeController {
     }
 
     @GetMapping("/type/{chargeType}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get charges by type", description = "Retrieves charges of a specific type for a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Charges retrieved successfully")
@@ -89,6 +94,7 @@ class ChargeManagementController {
     private final ProductChargeService chargeService;
 
     @GetMapping("/{chargeId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get charge by ID", description = "Retrieves a specific charge by its ID")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Charge retrieved successfully"),
@@ -103,9 +109,11 @@ class ChargeManagementController {
     }
 
     @PutMapping("/{chargeId}")
-    @Operation(summary = "Update charge", description = "Updates an existing charge")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Update charge (ADMIN/MANAGER only)", description = "Updates an existing charge")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Charge updated successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Charge not found")
     })
     public ResponseEntity<ApiResponse<ProductChargeResponse>> updateCharge(
@@ -118,9 +126,11 @@ class ChargeManagementController {
     }
 
     @DeleteMapping("/{chargeId}")
-    @Operation(summary = "Delete charge", description = "Deletes a charge from a product")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Delete charge (ADMIN/MANAGER only)", description = "Deletes a charge from a product")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Charge deleted successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Charge not found")
     })
     public ResponseEntity<ApiResponse<Void>> deleteCharge(

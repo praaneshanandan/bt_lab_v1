@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * REST Controller for Interest Rate operations
  */
 @RestController
-@RequestMapping("/products/{productId}/interest-rates")
+@RequestMapping("/{productId}/interest-rates")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Interest Rate Management", description = "APIs for managing product interest rates")
@@ -36,6 +37,7 @@ public class InterestRateController {
     private final InterestRateService interestRateService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get interest rates for product", 
                description = "Retrieves all interest rate slabs configured for a product")
     @ApiResponses(value = {
@@ -51,6 +53,7 @@ public class InterestRateController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get active interest rates", 
                description = "Retrieves interest rates active on a specific date")
     @ApiResponses(value = {
@@ -69,6 +72,7 @@ public class InterestRateController {
     }
 
     @GetMapping("/applicable")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Find applicable interest rate", 
                description = "Finds the best applicable interest rate for given amount, term, and customer classification")
     @ApiResponses(value = {
@@ -96,6 +100,7 @@ public class InterestRateController {
     }
 
     @GetMapping("/calculate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Calculate effective interest rate", 
                description = "Calculates the effective interest rate considering base rate and matrix")
     @ApiResponses(value = {
