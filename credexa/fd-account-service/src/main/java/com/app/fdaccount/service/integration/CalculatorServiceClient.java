@@ -9,7 +9,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.app.fdaccount.dto.external.ApiResponseWrapper;
+import com.app.common.dto.ApiResponse;
 import com.app.fdaccount.dto.external.CalculationRequest;
 import com.app.fdaccount.dto.external.CalculationResultDto;
 
@@ -42,12 +42,12 @@ public class CalculatorServiceClient {
                  request.getPrincipalAmount(), request.getInterestRate(), request.getTenure(), request.getTenureUnit());
 
         try {
-            ApiResponseWrapper<CalculationResultDto> response = webClientBuilder.build()
+            ApiResponse<CalculationResultDto> response = webClientBuilder.build()
                     .post()
                     .uri(calculatorServiceUrl + "/calculate/standalone")
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<CalculationResultDto>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<CalculationResultDto>>() {})
                     .timeout(Duration.ofMillis(timeout))
                     .block();
 

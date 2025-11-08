@@ -36,6 +36,8 @@ public class ProductIntegrationService {
         try {
             WebClient webClient = webClientBuilder.baseUrl(productPricingUrl).build();
             
+            // Product Pricing context-path is /api/products, ProductController has empty @RequestMapping
+            // So full URL is: http://localhost:8084/api/products/{id}
             ApiResponse<ProductDto> response = webClient.get()
                 .uri("/{id}", productId)
                 .retrieve()
@@ -66,7 +68,10 @@ public class ProductIntegrationService {
         try {
             WebClient webClient = webClientBuilder.baseUrl(productPricingUrl).build();
             
-            String uri = String.format("/%d/interest-rates/applicable?amount=%s&termMonths=%d", 
+            // InterestRateController has @RequestMapping("/products/{productId}/interest-rates")
+            // Combined with context-path /api/products, full URL becomes:
+            // http://localhost:8084/api/products/products/{productId}/interest-rates/applicable
+            String uri = String.format("/products/%d/interest-rates/applicable?amount=%s&termMonths=%d", 
                                      productId, amount.toString(), termMonths);
             
             if (classification != null && !classification.isBlank()) {

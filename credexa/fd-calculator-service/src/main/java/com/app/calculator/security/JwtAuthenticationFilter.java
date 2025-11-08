@@ -68,7 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // If username is extracted and no authentication is set
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Validate token
-                if (jwtUtil.validateToken(jwt)) {
+                if (jwtUtil.validateToken(jwt, username)) {
                     // Extract roles from JWT
                     List<String> roles = jwtUtil.extractRoles(jwt);
                     
@@ -90,10 +90,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Set authentication in SecurityContext
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     
-                    log.debug("JWT authentication successful for user: {} with roles: {} on path: {}", 
+                    log.info("✅ JWT authentication successful for user: {} with roles: {} on path: {}", 
                              username, roles, requestPath);
                 } else {
-                    log.warn("Invalid JWT token for path: {}", requestPath);
+                    log.error("❌ Invalid JWT token for path: {}", requestPath);
                 }
             }
         } catch (Exception e) {

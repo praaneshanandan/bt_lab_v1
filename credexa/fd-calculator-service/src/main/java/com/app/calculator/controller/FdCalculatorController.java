@@ -138,12 +138,12 @@ public class FdCalculatorController {
     }
     
     @PostMapping("/calculate/standalone")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
     @Operation(
         summary = "Calculate FD with standalone inputs",
         description = "Calculate FD maturity amount and interest with manual inputs (no product required). " +
                      "User provides all parameters including principal, rate, tenure, and calculation type. " +
-                     "Requires CUSTOMER role."
+                     "Requires CUSTOMER, MANAGER, or ADMIN role."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

@@ -363,12 +363,12 @@ public class AccountCreationService {
                     .anyMatch(allowedRole -> allowedRole.getRoleType().equalsIgnoreCase(requestedRole));
             
             if (!isAllowed) {
-                String allowedRolesList = product.getAllowedRoles().stream()
+                String allowedRolesStr = product.getAllowedRoles().stream()
                         .map(ProductRoleDto::getRoleType)
                         .collect(java.util.stream.Collectors.joining(", "));
                 throw new IllegalArgumentException(
                         String.format("Role '%s' is not allowed for this product. Allowed roles: %s", 
-                                accountRole.getRoleType(), allowedRolesList));
+                                accountRole.getRoleType(), allowedRolesStr));
             }
         }
 
