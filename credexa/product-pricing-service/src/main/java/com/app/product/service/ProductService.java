@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.product.dto.CreateProductRequest;
-import com.app.product.dto.InterestRateMatrixRequest;
 import com.app.product.dto.ProductListResponse;
 import com.app.product.dto.ProductResponse;
 import com.app.product.dto.ProductSearchCriteria;
@@ -419,24 +418,6 @@ public class ProductService {
                 throw new InvalidProductException("Minimum amount cannot be greater than maximum amount");
             }
         }
-
-        // Validate date range
-        if (request.getEffectiveDate() != null && request.getEndDate() != null) {
-            if (request.getEffectiveDate().isAfter(request.getEndDate())) {
-                throw new InvalidProductException("Effective date cannot be after end date");
-            }
-        }
-
-        // Validate interest rate matrix
-        if (request.getInterestRateMatrix() != null) {
-            for (InterestRateMatrixRequest rate : request.getInterestRateMatrix()) {
-                if (rate.getEffectiveDate() != null && rate.getEndDate() != null) {
-                    if (rate.getEffectiveDate().isAfter(rate.getEndDate())) {
-                        throw new InvalidProductException("Interest rate effective date cannot be after end date");
-                    }
-                }
-            }
-        }
     }
 
     private void validateProductUpdateRules(Product product, UpdateProductRequest request) {
@@ -446,11 +427,6 @@ public class ProductService {
         
         if (minTerm != null && maxTerm != null && minTerm > maxTerm) {
             throw new InvalidProductException("Minimum term months cannot be greater than maximum term months");
-        }
-
-        // Validate date range
-        if (request.getEndDate() != null && request.getEndDate().isBefore(product.getEffectiveDate())) {
-            throw new InvalidProductException("End date cannot be before effective date");
         }
     }
 }

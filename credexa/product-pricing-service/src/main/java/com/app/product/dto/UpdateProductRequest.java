@@ -29,8 +29,6 @@ public class UpdateProductRequest {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    private LocalDate endDate;
-
     private ProductStatus status;
 
     // Business Rules - Simple

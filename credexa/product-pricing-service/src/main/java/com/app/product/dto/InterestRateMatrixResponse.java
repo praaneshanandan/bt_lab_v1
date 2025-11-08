@@ -15,15 +15,9 @@ import lombok.NoArgsConstructor;
 public class InterestRateMatrixResponse {
     
     private Long id;
-    private BigDecimal minAmount;
-    private BigDecimal maxAmount;
-    private Integer minTermMonths;
-    private Integer maxTermMonths;
     private String customerClassification;
     private BigDecimal interestRate;
     private BigDecimal additionalRate;
     private LocalDate effectiveDate;
-    private LocalDate endDate;
-    private String remarks;
     private BigDecimal totalRate; // computed: interestRate + additionalRate
 }

@@ -15,8 +15,5 @@ public class ProductRoleResponse {
     
     private Long id;
     private RoleType roleType;
-    private Boolean mandatory;
-    private Integer minCount;
-    private Integer maxCount;
     private String description;
 }

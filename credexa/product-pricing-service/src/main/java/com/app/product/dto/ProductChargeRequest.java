@@ -23,7 +23,4 @@ public class ProductChargeRequest {
     private BigDecimal percentageRate;
     @NotNull private ChargeFrequency frequency;
     private String applicableTransactionTypes;
-    private Boolean waivable;
-    private BigDecimal minCharge;
-    private BigDecimal maxCharge;
 }

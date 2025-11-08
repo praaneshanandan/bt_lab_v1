@@ -38,7 +38,6 @@ public class ProductMapper {
                 .productType(request.getProductType())
                 .description(request.getDescription())
                 .effectiveDate(request.getEffectiveDate())
-                .endDate(request.getEndDate())
                 .currencyCode(request.getCurrencyCode())
                 .status(request.getStatus() != null ? request.getStatus() : ProductStatus.DRAFT)
                 .minTermMonths(request.getMinTermMonths())
@@ -86,9 +85,6 @@ public class ProductMapper {
         }
         if (request.getDescription() != null) {
             product.setDescription(request.getDescription());
-        }
-        if (request.getEndDate() != null) {
-            product.setEndDate(request.getEndDate());
         }
         if (request.getStatus() != null) {
             product.setStatus(request.getStatus());
@@ -145,7 +141,6 @@ public class ProductMapper {
                 .productType(product.getProductType())
                 .description(product.getDescription())
                 .effectiveDate(product.getEffectiveDate())
-                .endDate(product.getEndDate())
                 .currencyCode(product.getCurrencyCode())
                 .status(product.getStatus())
                 .minTermMonths(product.getMinTermMonths() != null ? product.getMinTermMonths().intValue() : null)
@@ -181,7 +176,6 @@ public class ProductMapper {
                 .description(product.getDescription())
                 .status(product.getStatus())
                 .effectiveDate(product.getEffectiveDate())
-                .endDate(product.getEndDate())
                 .baseInterestRate(product.getBaseInterestRate())
                 .minAmount(product.getMinAmount())
                 .maxAmount(product.getMaxAmount())
@@ -197,9 +191,6 @@ public class ProductMapper {
         return ProductRole.builder()
                 .product(product)
                 .roleType(request.getRoleType())
-                .mandatory(request.getMandatory())
-                .minCount(request.getMinCount())
-                .maxCount(request.getMaxCount())
                 .description(request.getDescription())
                 .build();
     }
@@ -208,9 +199,6 @@ public class ProductMapper {
         return ProductRoleResponse.builder()
                 .id(role.getId())
                 .roleType(role.getRoleType())
-                .mandatory(role.getMandatory())
-                .minCount(role.getMinCount())
-                .maxCount(role.getMaxCount())
                 .description(role.getDescription())
                 .build();
     }
@@ -234,8 +222,6 @@ public class ProductMapper {
                 .percentageRate(request.getPercentageRate())
                 .frequency(request.getFrequency())
                 .applicableTransactionTypes(request.getApplicableTransactionTypes())
-                .minCharge(request.getMinCharge())
-                .maxCharge(request.getMaxCharge())
                 .active(true)
                 .build();
     }
@@ -250,8 +236,6 @@ public class ProductMapper {
                 .percentageRate(charge.getPercentageRate())
                 .frequency(charge.getFrequency())
                 .applicableTransactionTypes(charge.getApplicableTransactionTypes())
-                .minCharge(charge.getMinCharge())
-                .maxCharge(charge.getMaxCharge())
                 .active(charge.getActive())
                 .build();
     }
@@ -268,32 +252,20 @@ public class ProductMapper {
     public InterestRateMatrix toInterestRateEntity(InterestRateMatrixRequest request, Product product) {
         return InterestRateMatrix.builder()
                 .product(product)
-                .minAmount(request.getMinAmount())
-                .maxAmount(request.getMaxAmount())
-                .minTermMonths(request.getMinTermMonths())
-                .maxTermMonths(request.getMaxTermMonths())
                 .customerClassification(request.getCustomerClassification())
                 .interestRate(request.getInterestRate())
                 .additionalRate(request.getAdditionalRate())
                 .effectiveDate(request.getEffectiveDate())
-                .endDate(request.getEndDate())
-                .remarks(request.getRemarks())
                 .build();
     }
 
     public InterestRateMatrixResponse toInterestRateResponse(InterestRateMatrix rate) {
         return InterestRateMatrixResponse.builder()
                 .id(rate.getId())
-                .minAmount(rate.getMinAmount())
-                .maxAmount(rate.getMaxAmount())
-                .minTermMonths(rate.getMinTermMonths() != null ? rate.getMinTermMonths().intValue() : null)
-                .maxTermMonths(rate.getMaxTermMonths() != null ? rate.getMaxTermMonths().intValue() : null)
                 .customerClassification(rate.getCustomerClassification())
                 .interestRate(rate.getInterestRate())
                 .additionalRate(rate.getAdditionalRate())
                 .effectiveDate(rate.getEffectiveDate())
-                .endDate(rate.getEndDate())
-                .remarks(rate.getRemarks())
                 .totalRate(rate.getTotalRate())
                 .build();
     }

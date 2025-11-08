@@ -35,9 +35,6 @@ public class ProductRoleService {
         ProductRole role = ProductRole.builder()
                 .product(product)
                 .roleType(request.getRoleType())
-                .mandatory(request.getMandatory())
-                .minCount(request.getMinCount())
-                .maxCount(request.getMaxCount())
                 .description(request.getDescription())
                 .build();
         
@@ -67,9 +64,6 @@ public class ProductRoleService {
                 .orElseThrow(() -> new RuntimeException("Role not found with ID: " + roleId));
         
         if (request.getRoleType() != null) role.setRoleType(request.getRoleType());
-        if (request.getMandatory() != null) role.setMandatory(request.getMandatory());
-        if (request.getMinCount() != null) role.setMinCount(request.getMinCount());
-        if (request.getMaxCount() != null) role.setMaxCount(request.getMaxCount());
         if (request.getDescription() != null) role.setDescription(request.getDescription());
         
         role = roleRepository.save(role);
@@ -94,9 +88,6 @@ public class ProductRoleService {
         return ProductRoleResponse.builder()
                 .id(role.getId())
                 .roleType(role.getRoleType())
-                .mandatory(role.getMandatory())
-                .minCount(role.getMinCount())
-                .maxCount(role.getMaxCount())
                 .description(role.getDescription())
                 .build();
     }

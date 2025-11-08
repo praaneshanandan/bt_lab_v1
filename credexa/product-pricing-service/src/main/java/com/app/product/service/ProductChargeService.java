@@ -43,7 +43,6 @@ public class ProductChargeService {
                 .fixedAmount(request.getFixedAmount())
                 .percentageRate(request.getPercentageRate())
                 .frequency(request.getFrequency())
-                .waivable(request.getWaivable())
                 .build();
         
         charge = chargeRepository.save(charge);
@@ -86,7 +85,6 @@ public class ProductChargeService {
         if (request.getFixedAmount() != null) charge.setFixedAmount(request.getFixedAmount());
         if (request.getPercentageRate() != null) charge.setPercentageRate(request.getPercentageRate());
         if (request.getFrequency() != null) charge.setFrequency(request.getFrequency());
-        if (request.getWaivable() != null) charge.setWaivable(request.getWaivable());
         
         charge = chargeRepository.save(charge);
         return toResponse(charge);
@@ -120,7 +118,6 @@ public class ProductChargeService {
                 .fixedAmount(charge.getFixedAmount())
                 .percentageRate(charge.getPercentageRate())
                 .frequency(charge.getFrequency())
-                .waivable(charge.getWaivable())
                 .active(true)
                 .build();
     }

@@ -1,6 +1,7 @@
 package com.app.fdaccount.dto.external;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,6 +49,9 @@ public class ProductDto {
     // TDS
     private Boolean tdsApplicable;
     private BigDecimal tdsRate;
+    
+    // Allowed roles
+    private List<ProductRoleDto> allowedRoles;
     
     // Helper
     private Boolean currentlyActive;

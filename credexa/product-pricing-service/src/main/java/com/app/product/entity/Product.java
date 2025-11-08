@@ -68,9 +68,6 @@ public class Product {
     @Column(nullable = false)
     private LocalDate effectiveDate;
     
-    @Column
-    private LocalDate endDate;
-    
     @NotBlank(message = "Currency code is required")
     @Column(nullable = false, length = 3)
     private String currencyCode;  // ISO currency code (USD, EUR, INR, etc.)
@@ -180,9 +177,6 @@ public class Product {
             return false;
         }
         if (effectiveDate.isAfter(date)) {
-            return false;
-        }
-        if (endDate != null && endDate.isBefore(date)) {
             return false;
         }
         return true;

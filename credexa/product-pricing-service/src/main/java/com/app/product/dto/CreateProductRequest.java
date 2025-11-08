@@ -41,8 +41,6 @@ public class CreateProductRequest {
     @NotNull(message = "Effective date is required")
     private LocalDate effectiveDate;
 
-    private LocalDate endDate;
-
     @NotBlank(message = "Bank/Branch code is required")
     @Size(max = 50)
     private String bankBranchCode;

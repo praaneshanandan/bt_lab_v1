@@ -42,17 +42,6 @@ public class ProductRole {
     @Column(nullable = false, length = 50)
     private RoleType roleType;
 
-    @Column
-    @Builder.Default
-    private Boolean mandatory = false;
-
-    @Column
-    @Builder.Default
-    private Integer minCount = 0;
-
-    @Column
-    private Integer maxCount;
-
     @Column(length = 500)
     private String description;
 }

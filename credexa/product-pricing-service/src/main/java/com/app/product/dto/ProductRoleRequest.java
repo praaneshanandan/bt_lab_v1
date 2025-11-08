@@ -20,8 +20,5 @@ public class ProductRoleRequest {
     @NotNull(message = "Role type is required")
     private RoleType roleType;
 
-    private Boolean mandatory;
-    private Integer minCount;
-    private Integer maxCount;
     private String description;
 }

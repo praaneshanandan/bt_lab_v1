@@ -28,7 +28,6 @@ public class ProductResponse {
     private ProductType productType;
     private String description;
     private LocalDate effectiveDate;
-    private LocalDate endDate;
     private String bankBranchCode;
     private String currencyCode;
     private ProductStatus status;

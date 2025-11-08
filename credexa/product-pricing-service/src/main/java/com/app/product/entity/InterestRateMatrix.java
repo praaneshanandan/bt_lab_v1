@@ -38,20 +38,6 @@ public class InterestRateMatrix {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    // Amount slab
-    @Column(precision = 19, scale = 2)
-    private BigDecimal minAmount;
-
-    @Column(precision = 19, scale = 2)
-    private BigDecimal maxAmount;
-
-    // Term slab (in months)
-    @Column(precision = 10, scale = 2)
-    private BigDecimal minTermMonths;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal maxTermMonths;
-
     // Customer classification (REGULAR, PREMIUM, SENIOR_CITIZEN, SUPER_SENIOR, VIP)
     @Column(length = 50)
     private String customerClassification;
@@ -66,16 +52,10 @@ public class InterestRateMatrix {
     @Builder.Default
     private BigDecimal additionalRate = BigDecimal.ZERO;
 
-    // Effective dates for this rate
+    // Effective date for this rate
     @NotNull(message = "Effective date is required")
     @Column(nullable = false)
     private LocalDate effectiveDate;
-
-    @Column
-    private LocalDate endDate;
-
-    @Column(length = 500)
-    private String remarks;
 
     @Column
     @Builder.Default
@@ -84,32 +64,12 @@ public class InterestRateMatrix {
     /**
      * Check if this rate is applicable for given criteria
      */
-    public boolean isApplicable(BigDecimal amount, BigDecimal termMonths, 
-                               String classification, LocalDate date) {
-        // Check date range
+    public boolean isApplicable(String classification, LocalDate date) {
+        // Check effective date
         if (effectiveDate.isAfter(date)) {
             return false;
         }
-        if (endDate != null && endDate.isBefore(date)) {
-            return false;
-        }
         if (!active) {
-            return false;
-        }
-
-        // Check amount range
-        if (minAmount != null && amount.compareTo(minAmount) < 0) {
-            return false;
-        }
-        if (maxAmount != null && amount.compareTo(maxAmount) > 0) {
-            return false;
-        }
-
-        // Check term range
-        if (minTermMonths != null && termMonths.compareTo(minTermMonths) < 0) {
-            return false;
-        }
-        if (maxTermMonths != null && termMonths.compareTo(maxTermMonths) > 0) {
             return false;
         }
 

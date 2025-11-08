@@ -29,7 +29,6 @@ The Product Pricing module manages Fixed Deposit (FD) product configurations for
 | `productType` | Enum | Yes | Type of FD product | SENIOR_CITIZEN_FD |
 | `description` | String(1000) | No | Detailed product description | "Special FD for senior citizens..." |
 | `effectiveDate` | LocalDate | Yes | Date from which product is valid | 2024-01-01 |
-| `endDate` | LocalDate | No | Date when product expires | 2025-12-31 |
 | `currencyCode` | String(3) | Yes | ISO currency code | "INR", "USD" |
 | `status` | Enum | Yes | Current product status | ACTIVE, DRAFT, INACTIVE |
 
@@ -103,31 +102,25 @@ The Product Pricing module manages Fixed Deposit (FD) product configurations for
 
 ## 2. Product Role Entity
 **Table:** `product_roles`  
-**Purpose:** Defines which roles (Owner, Co-Owner, Guardian, etc.) are allowed for a product and their constraints.
+**Purpose:** Defines which roles (Owner, Co-Owner, Guardian, etc.) are allowed for a product.
 
 | Field | Type | Required | Description | Example |
 |-------|------|----------|-------------|---------|
 | `id` | Long | Auto | Primary key | 1 |
 | `product` | Product | Yes | Reference to parent product | Product(id=1) |
 | `roleType` | Enum | Yes | Type of role | OWNER, CO_OWNER, GUARDIAN |
-| `mandatory` | Boolean | No (false) | Is this role mandatory? | true for OWNER |
-| `minCount` | Integer | No (0) | Minimum number of this role | 1 for mandatory roles |
-| `maxCount` | Integer | No | Maximum number of this role | 2 for CO_OWNER |
 | `description` | String(500) | No | Additional notes about the role | "Primary account holder" |
 
 ### Role Validation Logic
 During FD account creation, the system validates:
-1. **Mandatory roles present:** If `mandatory=true`, at least `minCount` of this role must be provided
-2. **Min count satisfied:** Number of roles >= `minCount`
-3. **Max count not exceeded:** Number of roles <= `maxCount` (if specified)
-4. **Only allowed roles:** No roles provided that aren't in the product's `allowedRoles` list
+- **Only allowed roles:** No roles provided that aren't in the product's `allowedRoles` list
 
 ### Example Configuration
 ```
 Product: Senior Citizen FD
-- OWNER: mandatory=true, minCount=1, maxCount=1 (Exactly 1 owner required)
-- NOMINEE: mandatory=false, minCount=0, maxCount=3 (Up to 3 nominees allowed)
-- CO_OWNER: mandatory=false, minCount=0, maxCount=2 (Up to 2 co-owners allowed)
+- OWNER: "Primary account owner"
+- NOMINEE: "Beneficiary in case of death"
+- CO_OWNER: "Joint account holder"
 ```
 
 ---
@@ -147,14 +140,11 @@ Product: Senior Citizen FD
 | `percentageRate` | BigDecimal(5,2) | No | Percentage-based charge | 1.00 (1% of principal) |
 | `frequency` | Enum | Yes | When charge is applied | ONE_TIME, MONTHLY, ON_MATURITY |
 | `applicableTransactionTypes` | String(200) | No | Comma-separated transaction types | "PREMATURE_WITHDRAWAL,PARTIAL_WITHDRAWAL" |
-| `minCharge` | BigDecimal(19,2) | No | Minimum charge amount | 100.00 |
-| `maxCharge` | BigDecimal(19,2) | No | Maximum charge amount | 5000.00 |
 | `active` | Boolean | No (true) | Is charge currently active? | true |
 
 ### Charge Calculation Logic
 - **Either** `fixedAmount` **OR** `percentageRate` should be set, not both
 - If `percentageRate` is used: `charge = (amount × percentageRate) / 100`
-- If both `minCharge` and `maxCharge` are set, final charge is capped within this range
 - Charge is only applied if `active = true`
 
 ### Common Charge Examples
@@ -169,47 +159,36 @@ Product: Senior Citizen FD
 
 ## 4. Interest Rate Matrix Entity
 **Table:** `interest_rate_matrix`  
-**Purpose:** Defines multi-dimensional interest rate slabs based on deposit amount, term duration, and customer classification.
+**Purpose:** Defines interest rates based on customer classification.
 
 | Field | Type | Required | Description | Example |
 |-------|------|----------|-------------|---------|
 | `id` | Long | Auto | Primary key | 1 |
 | `product` | Product | Yes | Reference to parent product | Product(id=1) |
-| `minAmount` | BigDecimal(19,2) | No | Minimum deposit amount for this slab | 100000.00 (₹1 lakh) |
-| `maxAmount` | BigDecimal(19,2) | No | Maximum deposit amount for this slab | 500000.00 (₹5 lakh) |
-| `minTermMonths` | BigDecimal(10,2) | No | Minimum term in months | 12.00 (1 year) |
-| `maxTermMonths` | BigDecimal(10,2) | No | Maximum term in months | 36.00 (3 years) |
 | `customerClassification` | String(50) | No | Customer category | "REGULAR", "SENIOR_CITIZEN", "SUPER_SENIOR", "VIP" |
-| `interestRate` | BigDecimal(5,2) | Yes | Base interest rate for this slab | 6.50 (6.5% p.a.) |
+| `interestRate` | BigDecimal(5,2) | Yes | Base interest rate | 6.50 (6.5% p.a.) |
 | `additionalRate` | BigDecimal(5,2) | No (0) | Additional rate (senior citizen bonus, etc.) | 0.50 (extra 0.5%) |
 | `effectiveDate` | LocalDate | Yes | Date from which this rate is valid | 2024-01-01 |
-| `endDate` | LocalDate | No | Date when this rate expires | null (ongoing) |
-| `remarks` | String(500) | No | Additional notes | "Special festive rate" |
 | `active` | Boolean | No (true) | Is this rate currently active? | true |
 
 ### Rate Selection Logic
 When creating an FD account, the system:
-1. Filters by **effective date range** (`effectiveDate <= today <= endDate`)
-2. Filters by **amount range** (`minAmount <= depositAmount <= maxAmount`)
-3. Filters by **term range** (`minTermMonths <= termMonths <= maxTermMonths`)
-4. Filters by **customer classification** (exact match if specified)
-5. Returns the **highest matching rate**
-6. Final rate = `interestRate + additionalRate`
+1. Filters by **effective date** (`effectiveDate <= today`)
+2. Filters by **customer classification** (exact match if specified)
+3. Returns the **highest matching rate**
+4. Final rate = `interestRate + additionalRate`
 
 ### Example Rate Matrix
 ```
 Product: Regular Fixed Deposit
 
-Slab 1: Amount: ₹10K-₹1L, Term: 6-12 months, Classification: REGULAR
+Slab 1: Classification: REGULAR
         Rate: 5.5% + 0% = 5.5%
 
-Slab 2: Amount: ₹10K-₹1L, Term: 6-12 months, Classification: SENIOR_CITIZEN
+Slab 2: Classification: SENIOR_CITIZEN
         Rate: 5.5% + 0.5% = 6.0%
 
-Slab 3: Amount: ₹1L-₹10L, Term: 12-36 months, Classification: REGULAR
-        Rate: 6.5% + 0% = 6.5%
-
-Slab 4: Amount: ₹1L-₹10L, Term: 12-36 months, Classification: SENIOR_CITIZEN
+Slab 3: Classification: SUPER_SENIOR
         Rate: 6.5% + 0.75% = 7.25%
 ```
 
@@ -293,9 +272,9 @@ Defines when a charge/fee is applied.
    └─> Sets tax config (TDS rate, applicable flag)
 
 2. Admin adds Product Roles
-   └─> OWNER (mandatory=true, minCount=1, maxCount=1)
-   └─> CO_OWNER (mandatory=false, minCount=0, maxCount=2)
-   └─> NOMINEE (mandatory=false, minCount=0, maxCount=3)
+   └─> OWNER (primary account holder)
+   └─> CO_OWNER (optional joint holder)
+   └─> NOMINEE (optional beneficiary)
 
 3. Admin adds Product Charges
    └─> Account Opening Fee (₹500, ONE_TIME)
@@ -303,9 +282,10 @@ Defines when a charge/fee is applied.
    └─> Statement Fee (₹50, PER_TRANSACTION)
 
 4. Admin adds Interest Rate Matrix
-   └─> Multiple slabs for different amount/term/classification combinations
-   └─> Regular customers: 5.5% - 6.5%
-   └─> Senior citizens: 6.0% - 7.25%
+   └─> Multiple rates for different customer classifications
+   └─> Regular customers: 5.5%
+   └─> Senior citizens: 6.0% (5.5% + 0.5% additional)
+   └─> Super senior: 7.25% (6.5% + 0.75% additional)
 
 5. Admin activates Product (status = ACTIVE)
 ```
@@ -317,7 +297,7 @@ Customer requests FD account
    v
 1. Fetch Product by productCode
    └─> Validate: status = ACTIVE
-   └─> Validate: effectiveDate <= today <= endDate
+   └─> Validate: effectiveDate <= today
    |
    v
 2. Validate Amount
@@ -332,16 +312,13 @@ Customer requests FD account
    v
 4. Validate Roles (from customer request)
    └─> Fetch product.allowedRoles
-   └─> Check: All mandatory roles present
-   └─> Check: Role counts within min/max limits
-   └─> Check: No disallowed roles provided
+   └─> Check: All provided roles are in allowed list
    |
    v
 5. Calculate Interest Rate
    └─> Fetch product.interestRateMatrix
-   └─> Filter by amount range
-   └─> Filter by term range
    └─> Filter by customer classification
+   └─> Filter by effective date
    └─> Select highest matching rate
    └─> Apply rate = interestRate + additionalRate
    |
@@ -349,7 +326,6 @@ Customer requests FD account
 6. Calculate Charges (if any)
    └─> Fetch product.charges where applicableTransactionTypes contains "INITIAL_DEPOSIT"
    └─> Calculate fixed or percentage-based charges
-   └─> Apply min/max charge limits
    |
    v
 7. Calculate TDS (if applicable)
@@ -375,9 +351,9 @@ Customer requests FD account
 | Premature withdrawal allowed | `prematureWithdrawalAllowed` | Premature closure request |
 | Partial withdrawal allowed | `partialWithdrawalAllowed` | Partial withdrawal request |
 | Minimum balance for withdrawal | `minBalanceRequired` | Partial withdrawal calculation |
-| Role requirements | `allowedRoles` (mandatory, min/max) | Account creation |
+| Role requirements | `allowedRoles` | Account creation |
 | TDS applicability | `tdsApplicable`, `tdsRate` | Interest calculation |
-| Product active status | `status`, `effectiveDate`, `endDate` | All operations |
+| Product active status | `status`, `effectiveDate` | All operations |
 
 ---
 
@@ -401,6 +377,8 @@ Customer requests FD account
 - ❌ Track account balances (done by fd-account-service)
 
 ### Recently Removed Features
+
+#### 1. Balance Type and Transaction Type Entities (Removed in Cleanup #1)
 The following entities were removed as they were over-engineered for FD products and not used by fd-account-service:
 - ❌ `ProductBalanceType` - Configuration for which balance types to track
 - ❌ `ProductTransactionType` - Configuration for allowed transaction types
@@ -409,6 +387,44 @@ The following entities were removed as they were over-engineered for FD products
 - ❌ `TransactionType` enum - 12 transaction type definitions
 
 **Reason for removal:** FD-account-service uses its own hardcoded transaction types and balance tracking logic. These configuration entities added complexity without providing value for simple FD products.
+
+#### 2. Validation-Related Fields (Removed in Cleanup #2)
+The following fields were removed to simplify product configuration and reduce unnecessary validation complexity:
+
+**From ProductRole entity:**
+- ❌ `mandatory` (Boolean) - Whether role is mandatory for account creation
+- ❌ `minCount` (Integer) - Minimum number of this role type required
+- ❌ `maxCount` (Integer) - Maximum number of this role type allowed
+
+**From ProductCharge entity:**
+- ❌ `minCharge` (BigDecimal) - Minimum charge amount for capping
+- ❌ `maxCharge` (BigDecimal) - Maximum charge amount for capping
+
+**From InterestRateMatrix entity:**
+- ❌ `minAmount` (BigDecimal) - Minimum deposit amount for rate slab
+- ❌ `maxAmount` (BigDecimal) - Maximum deposit amount for rate slab
+- ❌ `minTermMonths` (BigDecimal) - Minimum term duration for rate slab
+- ❌ `maxTermMonths` (BigDecimal) - Maximum term duration for rate slab
+- ❌ `endDate` (LocalDate) - Rate expiry date
+- ❌ `remarks` (String) - Additional notes about the rate
+
+**From Product entity:**
+- ❌ `endDate` (LocalDate) - Product expiry date
+
+**Impact on Services:**
+- AccountCreationService.validateAccountRoles() simplified from 56 lines to 24 lines (57% reduction)
+- Role validation now only checks if provided roles are in the allowed list
+- Removed mandatory role checking, min/max count enforcement
+- Interest rate selection simplified from 4 parameters to 2 (removed amount/term range filtering)
+- Charge calculation simplified (removed min/max capping logic)
+- Product lifecycle simplified (only effectiveDate, no endDate)
+
+**Reason for removal:** These fields added over-engineered validation complexity that wasn't providing value:
+- Role validation (mandatory/min/max counts) was too restrictive and not used by business
+- Charge min/max capping was unnecessary - charges are either fixed or percentage-based
+- Interest rate slabs by amount/term added complexity without business need (rates vary only by customer classification)
+- Product/rate endDate field caused confusion with effectiveDate and wasn't actively used
+- Remarks field in InterestRateMatrix was never populated or used
 
 ---
 
@@ -454,7 +470,6 @@ The following entities were removed as they were over-engineered for FD products
   "productType": "SENIOR_CITIZEN_FD",
   "description": "Special FD for senior citizens with higher interest rates",
   "effectiveDate": "2024-01-01",
-  "endDate": null,
   "currencyCode": "INR",
   "status": "ACTIVE",
   
@@ -478,23 +493,14 @@ The following entities were removed as they were over-engineered for FD products
   "allowedRoles": [
     {
       "roleType": "OWNER",
-      "mandatory": true,
-      "minCount": 1,
-      "maxCount": 1,
-      "description": "Primary account owner - mandatory"
+      "description": "Primary account owner"
     },
     {
       "roleType": "CO_OWNER",
-      "mandatory": false,
-      "minCount": 0,
-      "maxCount": 1,
       "description": "Optional co-owner for joint account"
     },
     {
       "roleType": "NOMINEE",
-      "mandatory": false,
-      "minCount": 0,
-      "maxCount": 3,
       "description": "Optional nominees for succession"
     }
   ],
@@ -513,18 +519,12 @@ The following entities were removed as they were over-engineered for FD products
       "percentageRate": 1.00,
       "frequency": "ONE_TIME",
       "applicableTransactionTypes": "PREMATURE_WITHDRAWAL",
-      "minCharge": 500.00,
-      "maxCharge": 10000.00,
       "active": true
     }
   ],
   
   "interestRateMatrix": [
     {
-      "minAmount": 25000.00,
-      "maxAmount": 100000.00,
-      "minTermMonths": 6,
-      "maxTermMonths": 12,
       "customerClassification": "SENIOR_CITIZEN",
       "interestRate": 6.00,
       "additionalRate": 0.50,
@@ -532,24 +532,16 @@ The following entities were removed as they were over-engineered for FD products
       "active": true
     },
     {
-      "minAmount": 100000.00,
-      "maxAmount": 1000000.00,
-      "minTermMonths": 12,
-      "maxTermMonths": 36,
-      "customerClassification": "SENIOR_CITIZEN",
+      "customerClassification": "SUPER_SENIOR",
       "interestRate": 6.50,
       "additionalRate": 0.75,
       "effectiveDate": "2024-01-01",
       "active": true
     },
     {
-      "minAmount": 1000000.00,
-      "maxAmount": null,
-      "minTermMonths": 36,
-      "maxTermMonths": 120,
-      "customerClassification": "SENIOR_CITIZEN",
-      "interestRate": 7.00,
-      "additionalRate": 1.00,
+      "customerClassification": "REGULAR",
+      "interestRate": 5.50,
+      "additionalRate": 0.00,
       "effectiveDate": "2024-01-01",
       "active": true
     }
@@ -558,18 +550,32 @@ The following entities were removed as they were over-engineered for FD products
 ```
 
 **Result:**
-- Senior citizens depositing ₹25K-₹1L for 6-12 months get 6.5% p.a.
-- Senior citizens depositing ₹1L-₹10L for 1-3 years get 7.25% p.a.
-- Senior citizens depositing ₹10L+ for 3-10 years get 8.0% p.a.
+- Senior citizens get 6.5% p.a. (6.0% base + 0.5% additional)
+- Super senior citizens get 7.25% p.a. (6.5% base + 0.75% additional)
+- Regular customers get 5.5% p.a.
 - Account opening fee: ₹500
-- Premature closure penalty: 1% of principal (₹500 min, ₹10K max)
+- Premature closure penalty: 1% of principal
 - TDS @ 10% if interest >= ₹40,000
 
 ---
 
 ## Revision History
 - **Version 1.0** - Initial documentation (2024-11-08)
-- Removed: Balance types and transaction types configuration entities
+  - Created comprehensive field guide for product-pricing module
+  
+- **Version 1.1** - Balance/Transaction Type Cleanup (2024-11-08)
+  - Removed: Balance types and transaction types configuration entities (20 files deleted)
+  - Reason: Over-engineered for FD products, not used by fd-account-service
+  
+- **Version 1.2** - Validation Field Simplification (2024-11-08)
+  - Removed 12 validation-related fields across 4 entities:
+    - ProductRole: mandatory, minCount, maxCount
+    - ProductCharge: minCharge, maxCharge
+    - InterestRateMatrix: minAmount, maxAmount, minTermMonths, maxTermMonths, endDate, remarks
+    - Product: endDate
+  - Simplified AccountCreationService.validateAccountRoles() by 57% (56 lines → 24 lines)
+  - Simplified interest rate selection from 4 parameters to 2 parameters
+  - Reason: Removed over-engineered validation complexity that wasn't providing business value
 
 ---
 

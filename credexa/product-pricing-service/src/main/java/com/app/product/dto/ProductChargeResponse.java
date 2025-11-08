@@ -23,8 +23,5 @@ public class ProductChargeResponse {
     private BigDecimal percentageRate;
     private ChargeFrequency frequency;
     private String applicableTransactionTypes;
-    private Boolean waivable;
-    private BigDecimal minCharge;
-    private BigDecimal maxCharge;
     private Boolean active;
 }

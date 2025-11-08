@@ -27,7 +27,6 @@ public class ProductSummaryResponse {
     private String description;
     private ProductStatus status;
     private LocalDate effectiveDate;
-    private LocalDate endDate;
     private BigDecimal baseInterestRate;
     private BigDecimal minAmount;
     private BigDecimal maxAmount;

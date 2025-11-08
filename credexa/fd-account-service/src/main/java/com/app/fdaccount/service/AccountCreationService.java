@@ -333,43 +333,6 @@ public class AccountCreationService {
         log.debug("Validating {} account roles against {} product roles", 
                 accountRoles.size(), product.getAllowedRoles().size());
 
-        // Check each mandatory role
-        for (var allowedRole : product.getAllowedRoles()) {
-            String roleType = allowedRole.getRoleType();
-            Boolean mandatory = allowedRole.getMandatory();
-            Integer minCount = allowedRole.getMinCount();
-            Integer maxCount = allowedRole.getMaxCount();
-
-            // Count how many roles of this type are present in the request
-            long roleCount = accountRoles.stream()
-                    .filter(r -> r.getRoleType().toString().equals(roleType))
-                    .count();
-
-            // Check mandatory requirement
-            if (Boolean.TRUE.equals(mandatory) && roleCount == 0) {
-                throw new IllegalArgumentException(
-                        String.format("Mandatory role '%s' is missing. %s", 
-                                roleType, allowedRole.getDescription()));
-            }
-
-            // Check minimum count
-            if (minCount != null && roleCount < minCount) {
-                throw new IllegalArgumentException(
-                        String.format("Role '%s' requires at least %d, but %d provided", 
-                                roleType, minCount, roleCount));
-            }
-
-            // Check maximum count
-            if (maxCount != null && roleCount > maxCount) {
-                throw new IllegalArgumentException(
-                        String.format("Role '%s' allows at most %d, but %d provided", 
-                                roleType, maxCount, roleCount));
-            }
-
-            log.debug("✅ Role '{}' validation passed: count={}, min={}, max={}, mandatory={}", 
-                    roleType, roleCount, minCount, maxCount, mandatory);
-        }
-
         // Check if any roles in request are not allowed by product
         for (AccountRoleRequest accountRole : accountRoles) {
             boolean isAllowed = product.getAllowedRoles().stream()
