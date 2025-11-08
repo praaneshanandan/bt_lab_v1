@@ -24,14 +24,9 @@ public interface InterestRateMatrixRepository extends JpaRepository<InterestRate
      * Find applicable interest rate for given criteria
      */
     @Query("SELECT i FROM InterestRateMatrix i WHERE i.product.id = :productId " +
-           "AND (:amount IS NULL OR (i.minAmount IS NULL OR :amount >= i.minAmount) " +
-           "    AND (i.maxAmount IS NULL OR :amount <= i.maxAmount)) " +
-           "AND (:termMonths IS NULL OR (i.minTermMonths IS NULL OR :termMonths >= i.minTermMonths) " +
-           "    AND (i.maxTermMonths IS NULL OR :termMonths <= i.maxTermMonths)) " +
            "AND (:customerClassification IS NULL OR i.customerClassification IS NULL " +
            "    OR i.customerClassification = :customerClassification) " +
            "AND i.effectiveDate <= :currentDate " +
-           "AND (i.endDate IS NULL OR i.endDate >= :currentDate) " +
            "ORDER BY i.interestRate DESC")
     List<InterestRateMatrix> findApplicableRates(
         @Param("productId") Long productId,
@@ -61,8 +56,7 @@ public interface InterestRateMatrixRepository extends JpaRepository<InterestRate
      * Find active rate slabs for a product on a specific date
      */
     @Query("SELECT i FROM InterestRateMatrix i WHERE i.product.id = :productId " +
-           "AND i.effectiveDate <= :date " +
-           "AND (i.endDate IS NULL OR i.endDate >= :date)")
+           "AND i.effectiveDate <= :date")
     List<InterestRateMatrix> findActiveRatesOnDate(
         @Param("productId") Long productId,
         @Param("date") LocalDate date

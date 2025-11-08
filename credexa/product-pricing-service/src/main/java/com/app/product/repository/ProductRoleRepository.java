@@ -23,10 +23,4 @@ public interface ProductRoleRepository extends JpaRepository<ProductRole, Long> 
      * Find a specific role type for a product
      */
     Optional<ProductRole> findByProductIdAndRoleType(Long productId, RoleType roleType);
-
-    /**
-     * Find all mandatory roles for a product
-     */
-    @Query("SELECT r FROM ProductRole r WHERE r.product.id = :productId AND r.mandatory = true")
-    List<ProductRole> findMandatoryRolesByProductId(@Param("productId") Long productId);
 }
