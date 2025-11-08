@@ -145,7 +145,8 @@ export default function FDCalculator() {
         throw new Error('Invalid response format');
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to calculate. Please check your inputs.';
+      // Try to get the detailed error message from the response
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to calculate. Please check your inputs.';
       setError(errorMsg);
       toast.error(errorMsg);
       console.error('Error calculating:', err);
@@ -178,7 +179,8 @@ export default function FDCalculator() {
         throw new Error('Invalid response format');
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to calculate. Please check your inputs.';
+      // Try to get the detailed error message from the response
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to calculate. Please check your inputs.';
       setError(errorMsg);
       toast.error(errorMsg);
       console.error('Error calculating:', err);

@@ -73,6 +73,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     List<String> roles = jwtUtil.extractRoles(jwt);
                     
                     // Convert roles to GrantedAuthority
+                    // Note: If roles already have ROLE_ prefix (e.g., ROLE_CUSTOMER), keep them as-is
+                    // Spring Security's hasRole() will add ROLE_ prefix, so we need to use hasAuthority() in @PreAuthorize
                     List<GrantedAuthority> authorities = roles.stream()
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
