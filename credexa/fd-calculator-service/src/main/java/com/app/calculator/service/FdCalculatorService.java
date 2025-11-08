@@ -250,12 +250,22 @@ public class FdCalculatorService {
             finalRate = finalRate.add(additionalRate);
         }
         
-        // Lab L11: Enforce product-defined maximum interest rate
+        // Lab L11: Enforce product-defined maximum interest rate (if available)
+        // Note: maxInterestRate might not be in Product entity yet, so check null
         if (product.getMaxInterestRate() != null && finalRate.compareTo(product.getMaxInterestRate()) > 0) {
             log.warn("Lab L11: Final rate {}% exceeds product max rate {}%. Capping to product maximum.", 
                     finalRate, product.getMaxInterestRate());
             additionalRate = product.getMaxInterestRate().subtract(baseRate);
             finalRate = product.getMaxInterestRate();
+        } else if (product.getMaxInterestRate() == null) {
+            // Fallback: If product doesn't have maxInterestRate, apply a safe cap of base + 2%
+            BigDecimal fallbackMaxRate = baseRate.add(BigDecimal.valueOf(2.0));
+            if (finalRate.compareTo(fallbackMaxRate) > 0) {
+                log.warn("Lab L11: Product has no max rate defined. Final rate {}% exceeds safe cap {}%. Capping to base + 2%.",
+                        finalRate, fallbackMaxRate);
+                additionalRate = BigDecimal.valueOf(2.0);
+                finalRate = fallbackMaxRate;
+            }
         }
         
         // Determine calculation type

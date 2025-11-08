@@ -41,8 +41,8 @@ public class SecurityConfig {
                     "/webjars/**"
                 ).permitAll()
                 
-                // Allow public access to health check
-                .requestMatchers("/health").permitAll()
+                // Allow public access to actuator endpoints
+                .requestMatchers("/actuator/**").permitAll()
                 
                 // Lab L10: All FD calculation endpoints require authentication
                 // Role-based access is enforced at method level with @PreAuthorize

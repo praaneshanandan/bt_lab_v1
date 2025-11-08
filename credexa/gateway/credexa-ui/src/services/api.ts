@@ -133,14 +133,61 @@ export const productApi = {
 
 // FD Calculator Service APIs
 export const calculatorApi = {
+  // Standalone calculation (manual inputs)
   calculateStandalone: (data: {
     principalAmount: number;
     interestRate: number;
-    termInMonths: number;
-    compoundingFrequency: string;
+    tenure: number;
+    tenureUnit: string;
+    calculationType: string;
+    compoundingFrequency?: string;
+    tdsRate?: number;
+    customerClassifications?: string[];
   }) => calculatorApiInstance.post('/api/calculator/calculate/standalone', data),
-  calculateWithProduct: (productCode: string, principalAmount: number) =>
-    calculatorApiInstance.post(`/api/calculator/calculate/product/${productCode}`, { principalAmount }),
+  
+  // Product-based calculation
+  calculateWithProduct: (data: {
+    productId: number;
+    principalAmount: number;
+    tenure: number;
+    tenureUnit: string;
+    calculationType?: string;
+    compoundingFrequency?: string;
+    customInterestRate?: number;
+    customerId?: number;
+    customerClassifications?: string[];
+    applyTds?: boolean;
+  }) => calculatorApiInstance.post('/api/calculator/calculate/product-based', data),
+  
+  // Lab L6 endpoint - Calculate FD with auto-fetched user categories
+  calculateFD: (data: {
+    principalAmount: number;
+    interestRate: number;
+    tenure: number;
+    tenureUnit: string;
+    calculationType: string;
+    compoundingFrequency?: string;
+    tdsRate?: number;
+    customerClassifications?: string[];
+  }) => calculatorApiInstance.post('/api/calculator/fd/calculate', data),
+  
+  // Scenario comparison
+  compareScenarios: (data: {
+    commonPrincipal?: number;
+    scenarios: Array<{
+      principalAmount: number;
+      interestRate: number;
+      tenure: number;
+      tenureUnit: string;
+      calculationType: string;
+      compoundingFrequency?: string;
+      tdsRate?: number;
+      customerClassifications?: string[];
+    }>;
+  }) => calculatorApiInstance.post('/api/calculator/compare', data),
+  
+  // Health check
+  health: () => calculatorApiInstance.get('/api/calculator/health'),
 };
 
 // FD Account Service APIs

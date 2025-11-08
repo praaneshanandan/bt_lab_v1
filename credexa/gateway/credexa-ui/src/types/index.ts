@@ -159,7 +159,87 @@ export interface ProductRole {
   description?: string;
 }
 
-// Calculator Types
+// Calculator Types - Matching Backend DTOs
+export interface StandaloneCalculationRequest {
+  principalAmount: number;
+  interestRate: number;
+  tenure: number;
+  tenureUnit: 'DAYS' | 'MONTHS' | 'YEARS';
+  calculationType: 'SIMPLE' | 'COMPOUND';
+  compoundingFrequency?: 'DAILY' | 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUALLY' | 'ANNUALLY';
+  tdsRate?: number;
+  customerClassifications?: string[];
+}
+
+export interface ProductBasedCalculationRequest {
+  productId: number;
+  principalAmount: number;
+  tenure: number;
+  tenureUnit: 'DAYS' | 'MONTHS' | 'YEARS';
+  calculationType?: 'SIMPLE' | 'COMPOUND';
+  compoundingFrequency?: 'DAILY' | 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUALLY' | 'ANNUALLY';
+  customInterestRate?: number;
+  customerId?: number;
+  customerClassifications?: string[];
+  applyTds?: boolean;
+}
+
+export interface MonthlyBreakdown {
+  month: number;
+  date: string;
+  openingBalance: number;
+  interestEarned: number;
+  closingBalance: number;
+  cumulativeInterest: number;
+}
+
+export interface CalculationResponse {
+  principalAmount: number;
+  interestRate: number;
+  baseInterestRate?: number;
+  additionalInterestRate?: number;
+  tenure: number;
+  tenureUnit: string;
+  tenureInYears: number;
+  calculationType: string;
+  compoundingFrequency?: string;
+  interestEarned: number;
+  tdsAmount?: number;
+  tdsRate?: number;
+  maturityAmount: number;
+  netInterest: number;
+  startDate: string;
+  maturityDate: string;
+  productId?: number;
+  productName?: string;
+  productCode?: string;
+  customerClassifications?: string[];
+  monthlyBreakdown?: MonthlyBreakdown[];
+}
+
+export interface ComparisonScenario {
+  principalAmount: number;
+  interestRate: number;
+  tenure: number;
+  tenureUnit: 'DAYS' | 'MONTHS' | 'YEARS';
+  calculationType: 'SIMPLE' | 'COMPOUND';
+  compoundingFrequency?: 'DAILY' | 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUALLY' | 'ANNUALLY';
+  tdsRate?: number;
+  customerClassifications?: string[];
+}
+
+export interface ComparisonRequest {
+  commonPrincipal?: number;
+  scenarios: ComparisonScenario[];
+}
+
+export interface ComparisonResponse {
+  scenarios: CalculationResponse[];
+  bestScenario: CalculationResponse;
+  bestScenarioIndex: number;
+}
+
+// Legacy types for backward compatibility
 export interface CalculatorRequest {
   principalAmount: number;
   interestRate: number;
@@ -167,15 +247,10 @@ export interface CalculatorRequest {
   compoundingFrequency: string;
 }
 
-export interface CalculatorResponse {
-  principalAmount: number;
-  interestRate: number;
-  termInMonths: number;
-  compoundingFrequency: string;
-  maturityAmount: number;
-  interestEarned: number;
-  effectiveInterestRate: number;
-  calculationDate: string;
+export interface CalculatorResponse extends CalculationResponse {
+  termInMonths?: number;
+  effectiveInterestRate?: number;
+  calculationDate?: string;
 }
 
 // FD Account Types

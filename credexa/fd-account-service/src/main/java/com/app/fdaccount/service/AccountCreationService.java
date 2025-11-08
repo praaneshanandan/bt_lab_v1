@@ -19,6 +19,7 @@ import com.app.fdaccount.dto.RoleResponse;
 import com.app.fdaccount.dto.external.CalculationResultDto;
 import com.app.fdaccount.dto.external.CustomerDto;
 import com.app.fdaccount.dto.external.ProductDto;
+import com.app.fdaccount.dto.external.ProductRoleDto;
 import com.app.fdaccount.entity.AccountBalance;
 import com.app.fdaccount.entity.AccountRole;
 import com.app.fdaccount.entity.AccountTransaction;
@@ -338,12 +339,15 @@ public class AccountCreationService {
         for (AccountRoleRequest accountRole : accountRoles) {
             String requestedRole = accountRole.getRoleType().toString();
             boolean isAllowed = product.getAllowedRoles().stream()
-                    .anyMatch(allowedRole -> allowedRole.equalsIgnoreCase(requestedRole));
+                    .anyMatch(allowedRole -> allowedRole.getRoleType().equalsIgnoreCase(requestedRole));
             
             if (!isAllowed) {
+                String allowedRolesStr = product.getAllowedRoles().stream()
+                        .map(ProductRoleDto::getRoleType)
+                        .collect(java.util.stream.Collectors.joining(", "));
                 throw new IllegalArgumentException(
                         String.format("Role '%s' is not allowed for this product. Allowed roles: %s", 
-                                accountRole.getRoleType(), String.join(", ", product.getAllowedRoles())));
+                                accountRole.getRoleType(), allowedRolesStr));
             }
         }
 
