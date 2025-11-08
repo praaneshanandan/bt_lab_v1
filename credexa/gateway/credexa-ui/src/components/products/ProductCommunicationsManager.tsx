@@ -166,7 +166,7 @@ const ProductCommunicationsManager: React.FC<ProductCommunicationsManagerProps> 
           <tbody className="divide-y divide-gray-200">
             {communications.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 8 : 7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={isAdmin ? 8 : 7} className="px-4 py-8 text-center text-muted-foreground">
                   No communications configured for this product
                 </td>
               </tr>
@@ -229,7 +229,7 @@ const ProductCommunicationsManager: React.FC<ProductCommunicationsManagerProps> 
               <h3 className="text-lg font-semibold">
                 {editingComm ? 'Edit Communication' : 'Add New Communication'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
                 <X size={20} />
               </button>
             </div>
@@ -322,7 +322,7 @@ const ProductCommunicationsManager: React.FC<ProductCommunicationsManagerProps> 
                   placeholder="Use placeholders: {{customerName}}, {{accountNumber}}, {{amount}}, {{maturityDate}}"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Available placeholders: customerName, accountNumber, amount, maturityDate, interestRate
                 </p>
               </div>
@@ -410,3 +410,4 @@ const ProductCommunicationsManager: React.FC<ProductCommunicationsManagerProps> 
 };
 
 export default ProductCommunicationsManager;
+

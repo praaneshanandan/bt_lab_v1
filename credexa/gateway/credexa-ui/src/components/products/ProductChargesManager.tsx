@@ -194,7 +194,7 @@ const ProductChargesManager: React.FC<ProductChargesManagerProps> = ({ productId
           <tbody className="divide-y divide-gray-200">
             {charges.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 8 : 7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={isAdmin ? 8 : 7} className="px-4 py-8 text-center text-muted-foreground">
                   No charges configured for this product
                 </td>
               </tr>
@@ -252,7 +252,7 @@ const ProductChargesManager: React.FC<ProductChargesManagerProps> = ({ productId
               <h3 className="text-lg font-semibold">
                 {editingCharge ? 'Edit Charge' : 'Add New Charge'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
                 <X size={20} />
               </button>
             </div>
@@ -460,3 +460,4 @@ const ProductChargesManager: React.FC<ProductChargesManagerProps> = ({ productId
 };
 
 export default ProductChargesManager;
+

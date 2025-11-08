@@ -42,7 +42,7 @@ export default function OAuth2Redirect() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
         <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        <h2 className="text-xl font-semibold text-foreground mb-2">
           Completing your login...
         </h2>
         <p className="text-gray-600">
@@ -52,3 +52,4 @@ export default function OAuth2Redirect() {
     </div>
   );
 }
+

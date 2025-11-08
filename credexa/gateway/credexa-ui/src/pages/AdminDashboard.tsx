@@ -53,48 +53,48 @@ export default function AdminDashboard() {
       title: 'Total Customers',
       value: stats.totalCustomers,
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-100 dark:bg-blue-950',
       onClick: () => navigate('/customers'),
     },
     {
       title: 'Active Products',
       value: stats.totalProducts,
       icon: Package,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      color: 'text-green-600 dark:text-green-400',
+      bgColor: 'bg-green-100 dark:bg-green-950',
       onClick: () => navigate('/products'),
     },
     {
       title: 'FD Accounts',
       value: stats.totalAccounts,
       icon: Wallet,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      color: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-100 dark:bg-purple-950',
       onClick: () => navigate('/accounts'),
     },
     {
       title: 'Total Value',
       value: `₹${stats.totalValue.toLocaleString()}`,
       icon: TrendingUp,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
+      color: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-100 dark:bg-orange-950',
       onClick: () => navigate('/accounts'),
     },
     {
       title: 'Pending Approvals',
       value: stats.pendingApprovals,
       icon: AlertCircle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100',
+      color: 'text-red-600 dark:text-red-400',
+      bgColor: 'bg-red-100 dark:bg-red-950',
       onClick: () => {},
     },
     {
       title: 'Recent Activity',
       value: stats.recentActivity,
       icon: Activity,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100',
+      color: 'text-indigo-600 dark:text-indigo-400',
+      bgColor: 'bg-indigo-100 dark:bg-indigo-950',
       onClick: () => {},
     },
   ];
@@ -102,7 +102,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-lg text-gray-600">Loading dashboard...</div>
+        <div className="text-lg text-muted-foreground">Loading dashboard...</div>
       </div>
     );
   }
@@ -110,8 +110,8 @@ export default function AdminDashboard() {
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome, {username} - Manage the entire Fixed Deposit system</p>
+        <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+        <p className="text-muted-foreground mt-2">Welcome, {username} - Manage the entire Fixed Deposit system</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -124,13 +124,13 @@ export default function AdminDashboard() {
               onClick={stat.onClick}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <CardTitle className="text-sm font-medium text-foreground">{stat.title}</CardTitle>
                 <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                   <Icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
               </CardContent>
             </Card>
           );
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
             <CardDescription>Latest transactions and account updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No recent activity
             </div>
           </CardContent>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
             <CardDescription>FD accounts maturing in the next 30 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No upcoming maturities
             </div>
           </CardContent>
@@ -173,24 +173,24 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/customers')}
-                className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="w-full text-left p-3 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
               >
-                <h3 className="font-semibold text-blue-900">Manage Customers</h3>
-                <p className="text-sm text-blue-700">View and edit customer data</p>
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100">Manage Customers</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">View and edit customer data</p>
               </button>
               <button
                 onClick={() => navigate('/products')}
-                className="w-full text-left p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                className="w-full text-left p-3 bg-green-50 dark:bg-green-950 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors border border-green-200 dark:border-green-800"
               >
-                <h3 className="font-semibold text-green-900">Manage Products</h3>
-                <p className="text-sm text-green-700">Configure FD products</p>
+                <h3 className="font-semibold text-green-900 dark:text-green-100">Manage Products</h3>
+                <p className="text-sm text-green-700 dark:text-green-300">Configure FD products</p>
               </button>
               <button
                 onClick={() => navigate('/accounts')}
-                className="w-full text-left p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                className="w-full text-left p-3 bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-lg transition-colors border border-purple-200 dark:border-purple-800"
               >
-                <h3 className="font-semibold text-purple-900">View All Accounts</h3>
-                <p className="text-sm text-purple-700">Monitor FD accounts</p>
+                <h3 className="font-semibold text-purple-900 dark:text-purple-100">View All Accounts</h3>
+                <p className="text-sm text-purple-700 dark:text-purple-300">Monitor FD accounts</p>
               </button>
             </div>
           </CardContent>
@@ -204,15 +204,15 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Customer Growth (30 days)</span>
+                <span className="text-sm font-medium text-foreground">Customer Growth (30 days)</span>
                 <span className="text-lg font-bold text-green-600">+0%</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Total Deposits (30 days)</span>
+                <span className="text-sm font-medium text-foreground">Total Deposits (30 days)</span>
                 <span className="text-lg font-bold text-blue-600">₹0</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Active FD Accounts</span>
+                <span className="text-sm font-medium text-foreground">Active FD Accounts</span>
                 <span className="text-lg font-bold text-purple-600">0</span>
               </div>
             </div>
@@ -222,3 +222,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

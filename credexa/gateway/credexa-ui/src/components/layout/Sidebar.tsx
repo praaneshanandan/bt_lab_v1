@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { authApi } from '@/services/api';
 import { isManagerOrAdmin } from '@/utils/auth';
 
@@ -58,7 +59,7 @@ export function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-slate-900 text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-sidebar text-sidebar-foreground border border-sidebar-border"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -67,12 +68,16 @@ export function Sidebar() {
       <div
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-slate-900 text-white transition-transform duration-300 ease-in-out`}
+        } lg:translate-x-0 fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-transform duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-center h-16 border-b border-slate-700">
-            <h1 className="text-2xl font-bold text-blue-400">Credexa FD</h1>
+          <div className="flex items-center justify-center h-16 border-b border-sidebar-border px-4">
+            <img 
+              src="/bank-logo.png" 
+              alt="Bank Logo" 
+              className="h-12 w-auto object-contain"
+            />
           </div>
 
           {/* Navigation */}
@@ -87,8 +92,8 @@ export function Sidebar() {
                   to={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                   }`}
                   onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
                 >
@@ -100,29 +105,31 @@ export function Sidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-slate-700 space-y-3">
+          <div className="p-4 border-t border-sidebar-border space-y-3">
             {/* User Info */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-slate-800 rounded-lg">
-              <div className="p-2 bg-blue-600 rounded-full">
-                <User size={16} className="text-white" />
+            <div className="flex items-center gap-3 px-4 py-2 bg-sidebar-accent rounded-lg">
+              <div className="p-2 bg-sidebar-primary rounded-full">
+                <User size={16} className="text-sidebar-primary-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{username}</p>
-                <p className="text-xs text-slate-400">Logged in</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{username}</p>
+                <p className="text-xs text-sidebar-foreground/60">Logged in</p>
               </div>
+              {/* Theme Toggle */}
+              <ThemeToggle />
             </div>
             
             {/* Logout Button */}
             <Button
               variant="ghost"
-              className="w-full justify-start text-slate-300 hover:bg-red-900/20 hover:text-red-400"
+              className="w-full justify-start text-sidebar-foreground hover:bg-destructive/20 hover:text-destructive"
               onClick={handleLogout}
             >
               <LogOut size={20} className="mr-3" />
               <span className="font-medium">Logout</span>
             </Button>
             
-            <p className="text-sm text-slate-400 text-center pt-2">
+            <p className="text-sm text-sidebar-foreground/60 text-center pt-2">
               Banking Portal v1.0
             </p>
           </div>
@@ -139,3 +146,4 @@ export function Sidebar() {
     </>
   );
 }
+

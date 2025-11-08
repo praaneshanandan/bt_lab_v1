@@ -160,22 +160,22 @@ export default function MyProfile() {
 
   const getClassificationBadge = (classification: string) => {
     const colors: Record<string, string> = {
-      VIP: 'bg-purple-100 text-purple-800',
-      PREMIUM: 'bg-blue-100 text-blue-800',
-      SENIOR_CITIZEN: 'bg-orange-100 text-orange-800',
-      SUPER_SENIOR: 'bg-red-100 text-red-800',
-      REGULAR: 'bg-gray-100 text-gray-800',
+      VIP: 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200',
+      PREMIUM: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200',
+      SENIOR_CITIZEN: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200',
+      SUPER_SENIOR: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200',
+      REGULAR: 'bg-muted text-muted-foreground',
     };
     return colors[classification] || colors.REGULAR;
   };
 
   const getKycBadge = (status: string) => {
     const colors: Record<string, string> = {
-      VERIFIED: 'bg-green-100 text-green-800',
-      REJECTED: 'bg-red-100 text-red-800',
-      IN_PROGRESS: 'bg-blue-100 text-blue-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      EXPIRED: 'bg-gray-100 text-gray-800',
+      VERIFIED: 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200',
+      REJECTED: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200',
+      IN_PROGRESS: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200',
+      PENDING: 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200',
+      EXPIRED: 'bg-muted text-muted-foreground',
     };
     return colors[status] || colors.PENDING;
   };
@@ -184,8 +184,8 @@ export default function MyProfile() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
-          <div className="text-lg text-gray-600">Loading your profile...</div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+          <div className="text-lg text-muted-foreground">Loading your profile...</div>
         </div>
       </div>
     );
@@ -223,8 +223,8 @@ export default function MyProfile() {
                     to access all banking features.
                   </AlertDescription>
                 </Alert>
-                <div className="text-sm text-gray-600 mb-4">
-                  <p><strong>Current Account Details:</strong></p>
+                <div className="text-sm text-muted-foreground mb-4">
+                  <p className="text-foreground"><strong>Current Account Details:</strong></p>
                   <p>Username: {localStorage.getItem('username')}</p>
                   <p>User ID: {localStorage.getItem('userId')}</p>
                 </div>
@@ -286,7 +286,7 @@ export default function MyProfile() {
                       id="gender"
                       value={createForm.gender}
                       onChange={(e) => setCreateForm({ ...createForm, gender: e.target.value as any })}
-                      className="w-full h-10 px-3 border border-gray-300 rounded-md"
+                      className="w-full h-10 px-3 border border-border rounded-md"
                       required
                     >
                       <option value="MALE">Male</option>
@@ -397,11 +397,11 @@ export default function MyProfile() {
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
             <User className="h-8 w-8" />
             My Profile
           </h1>
-          <p className="text-gray-600 mt-2">View and manage your customer information</p>
+          <p className="text-muted-foreground mt-2">View and manage your customer information</p>
         </div>
         {!isEditing ? (
           <Button onClick={handleEdit} className="flex items-center gap-2">
@@ -444,20 +444,20 @@ export default function MyProfile() {
           {/* Status Badges */}
           <div className="flex gap-4">
             <div>
-              <Label className="text-sm text-gray-600">Classification</Label>
+              <Label className="text-sm text-muted-foreground">Classification</Label>
               <Badge className={`mt-1 ${getClassificationBadge(profile.classification)}`}>
                 {profile.classification.replace('_', ' ')}
               </Badge>
             </div>
             <div>
-              <Label className="text-sm text-gray-600">KYC Status</Label>
+              <Label className="text-sm text-muted-foreground">KYC Status</Label>
               <Badge className={`mt-1 ${getKycBadge(profile.kycStatus)}`}>
                 {profile.kycStatus}
               </Badge>
             </div>
             <div>
-              <Label className="text-sm text-gray-600">Account Status</Label>
-              <Badge className={`mt-1 ${profile.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+              <Label className="text-sm text-muted-foreground">Account Status</Label>
+              <Badge className={`mt-1 ${profile.isActive ? 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200' : 'bg-muted text-muted-foreground'}`}>
                 {profile.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </div>
@@ -465,7 +465,7 @@ export default function MyProfile() {
 
           {/* Personal Information */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Personal Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="fullName">Full Name *</Label>
@@ -474,7 +474,7 @@ export default function MyProfile() {
                   value={isEditing ? editForm.fullName : profile.fullName}
                   onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div>
@@ -485,7 +485,7 @@ export default function MyProfile() {
                   value={isEditing ? editForm.dateOfBirth : profile.dateOfBirth}
                   onChange={(e) => setEditForm({ ...editForm, dateOfBirth: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div>
@@ -495,7 +495,7 @@ export default function MyProfile() {
                   value={isEditing ? editForm.gender : profile.gender}
                   onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as any })}
                   disabled={!isEditing}
-                  className={`w-full h-10 px-3 border border-gray-300 rounded-md ${!isEditing ? 'bg-gray-50' : ''}`}
+                  className={`w-full h-10 px-3 border border-border rounded-md ${!isEditing ? 'bg-muted' : ''}`}
                 >
                   <option value="MALE">Male</option>
                   <option value="FEMALE">Female</option>
@@ -508,7 +508,7 @@ export default function MyProfile() {
                   id="username"
                   value={profile.username}
                   disabled
-                  className="bg-gray-50"
+                  className="bg-muted"
                 />
               </div>
             </div>
@@ -516,7 +516,7 @@ export default function MyProfile() {
 
           {/* Contact Information */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Contact Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email">Email *</Label>
@@ -526,7 +526,7 @@ export default function MyProfile() {
                   value={isEditing ? editForm.email : profile.email}
                   onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div>
@@ -537,7 +537,7 @@ export default function MyProfile() {
                   onChange={(e) => setEditForm({ ...editForm, mobileNumber: e.target.value })}
                   disabled={!isEditing}
                   pattern="[0-9]{10}"
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
             </div>
@@ -545,7 +545,7 @@ export default function MyProfile() {
 
           {/* Identity Documents */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Identity Documents</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Identity Documents</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="panNumber">PAN Number</Label>
@@ -556,7 +556,7 @@ export default function MyProfile() {
                   disabled={!isEditing}
                   pattern="[A-Z]{5}[0-9]{4}[A-Z]"
                   placeholder="ABCDE1234F"
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div>
@@ -568,7 +568,7 @@ export default function MyProfile() {
                   disabled={!isEditing}
                   pattern="[0-9]{12}"
                   placeholder="12 digits"
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
             </div>
@@ -576,7 +576,7 @@ export default function MyProfile() {
 
           {/* Address */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Address</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Address</h3>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="addressLine1">Address Line 1 *</Label>
@@ -585,7 +585,7 @@ export default function MyProfile() {
                   value={isEditing ? (editForm.addressLine1 || '') : (profile.addressLine1 || '-')}
                   onChange={(e) => setEditForm({ ...editForm, addressLine1: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div>
@@ -595,7 +595,7 @@ export default function MyProfile() {
                   value={isEditing ? (editForm.addressLine2 || '') : (profile.addressLine2 || '-')}
                   onChange={(e) => setEditForm({ ...editForm, addressLine2: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -606,7 +606,7 @@ export default function MyProfile() {
                     value={isEditing ? (editForm.city || '') : (profile.city || '-')}
                     onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
                     disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    className={!isEditing ? 'bg-muted' : ''}
                   />
                 </div>
                 <div>
@@ -616,7 +616,7 @@ export default function MyProfile() {
                     value={isEditing ? (editForm.state || '') : (profile.state || '-')}
                     onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
                     disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    className={!isEditing ? 'bg-muted' : ''}
                   />
                 </div>
                 <div>
@@ -627,7 +627,7 @@ export default function MyProfile() {
                     onChange={(e) => setEditForm({ ...editForm, pincode: e.target.value })}
                     disabled={!isEditing}
                     pattern="[0-9]{6}"
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    className={!isEditing ? 'bg-muted' : ''}
                   />
                 </div>
               </div>
@@ -638,7 +638,7 @@ export default function MyProfile() {
                   value={isEditing ? (editForm.country || '') : (profile.country || '-')}
                   onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
             </div>
@@ -646,7 +646,7 @@ export default function MyProfile() {
 
           {/* Banking Details */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Banking Details</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Banking Details</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="accountNumber">Account Number</Label>
@@ -655,7 +655,7 @@ export default function MyProfile() {
                   value={isEditing ? (editForm.accountNumber || '') : (profile.accountNumber || '-')}
                   onChange={(e) => setEditForm({ ...editForm, accountNumber: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
               <div>
@@ -665,7 +665,7 @@ export default function MyProfile() {
                   value={isEditing ? (editForm.ifscCode || '') : (profile.ifscCode || '-')}
                   onChange={(e) => setEditForm({ ...editForm, ifscCode: e.target.value })}
                   disabled={!isEditing}
-                  className={!isEditing ? 'bg-gray-50' : ''}
+                  className={!isEditing ? 'bg-muted' : ''}
                 />
               </div>
             </div>
@@ -673,7 +673,7 @@ export default function MyProfile() {
 
           {/* Preferences */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Preferences</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Preferences</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="preferredLanguage">Preferred Language</Label>
@@ -682,7 +682,7 @@ export default function MyProfile() {
                   value={isEditing ? editForm.preferredLanguage : profile.preferredLanguage}
                   onChange={(e) => setEditForm({ ...editForm, preferredLanguage: e.target.value })}
                   disabled={!isEditing}
-                  className={`w-full h-10 px-3 border border-gray-300 rounded-md ${!isEditing ? 'bg-gray-50' : ''}`}
+                  className={`w-full h-10 px-3 border border-border rounded-md ${!isEditing ? 'bg-muted' : ''}`}
                 >
                   <option value="en">English</option>
                   <option value="hi">Hindi</option>
@@ -696,7 +696,7 @@ export default function MyProfile() {
                   value={isEditing ? editForm.preferredCurrency : profile.preferredCurrency}
                   onChange={(e) => setEditForm({ ...editForm, preferredCurrency: e.target.value })}
                   disabled={!isEditing}
-                  className={`w-full h-10 px-3 border border-gray-300 rounded-md ${!isEditing ? 'bg-gray-50' : ''}`}
+                  className={`w-full h-10 px-3 border border-border rounded-md ${!isEditing ? 'bg-muted' : ''}`}
                 >
                   <option value="INR">INR (₹)</option>
                   <option value="USD">USD ($)</option>
@@ -709,7 +709,7 @@ export default function MyProfile() {
 
           {/* Notification Preferences */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Notification Preferences</h3>
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Notification Preferences</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input
@@ -750,3 +750,6 @@ export default function MyProfile() {
     </div>
   );
 }
+
+
+

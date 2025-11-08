@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2, Loader2, CheckCircle2, AlertTriangle, Lock } from 'lucide-react';
 import { PasswordStrength } from '@/components/PasswordStrength';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { authApi } from '@/services/api';
 import type { BankConfigResponse } from '@/types';
 
@@ -311,18 +312,25 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 overflow-auto">
-      <Card className="w-full max-w-md shadow-xl my-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 overflow-auto">
+      {/* Theme Toggle - Top Right */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      
+      <Card className="w-full max-w-md shadow-xl my-8 bg-card dark:bg-card border-border dark:border-border">
         <CardHeader className="space-y-1 text-center pb-4">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full shadow-lg">
-              <Building2 className="text-white" size={40} />
-            </div>
+            <img 
+              src="/bank-logo.png" 
+              alt="Bank Logo" 
+              className="h-20 w-auto object-contain"
+            />
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             {bankConfig?.bankName || 'Credexa FD'}
           </CardTitle>
-          <CardDescription className="text-base text-gray-600">
+          <CardDescription className="text-base text-muted-foreground">
             Fixed Deposit Management System
           </CardDescription>
         </CardHeader>
@@ -338,7 +346,7 @@ export default function Login() {
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
                 {isAccountLocked && (
-                  <Alert variant="destructive" className="border-red-300 bg-red-50">
+                  <Alert variant="destructive" className="border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950">
                     <Lock className="h-4 w-4" />
                     <AlertDescription className="font-medium">
                       Your account has been locked after 5 failed login attempts. Please contact support to unlock your account.
@@ -347,9 +355,9 @@ export default function Login() {
                 )}
                 
                 {loginError && !isAccountLocked && (
-                  <Alert variant={failedAttempts > 0 ? "destructive" : "default"} className={failedAttempts >= 3 ? 'border-orange-300 bg-orange-50' : ''}>
-                    {failedAttempts >= 3 && <AlertTriangle className="h-4 w-4 text-orange-600" />}
-                    <AlertDescription className={failedAttempts >= 3 ? 'text-orange-800 font-medium' : ''}>
+                  <Alert variant={failedAttempts > 0 ? "destructive" : "default"} className={failedAttempts >= 3 ? 'border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950' : ''}>
+                    {failedAttempts >= 3 && <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />}
+                    <AlertDescription className={failedAttempts >= 3 ? 'text-orange-800 dark:text-orange-300 font-medium' : ''}>
                       {loginError}
                     </AlertDescription>
                   </Alert>
@@ -398,10 +406,10 @@ export default function Login() {
                 {/* Divider */}
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                    <span className="bg-card dark:bg-card px-2 text-muted-foreground">Or continue with</span>
                   </div>
                 </div>
 
@@ -434,8 +442,8 @@ export default function Login() {
                   Continue with Google
                 </Button>
 
-                <div className="text-center text-sm text-gray-600 mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="font-medium mb-1">New User?</p>
+                <div className="text-center text-sm text-muted-foreground mt-4 p-3 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/20">
+                  <p className="font-medium mb-1 text-foreground">New User?</p>
                   <p className="text-xs">Switch to the Register tab to create an account</p>
                 </div>
               </form>
@@ -444,9 +452,9 @@ export default function Login() {
             {/* Register Tab */}
             <TabsContent value="register" className="space-y-4 mt-0">
               {registerSuccess ? (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800 font-medium">
+                <Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-800 dark:text-green-300 font-medium">
                     Registration successful! Redirecting to login...
                   </AlertDescription>
                 </Alert>
@@ -459,8 +467,8 @@ export default function Login() {
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
                             registerStep >= step
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-200 text-gray-500'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {step}
@@ -468,7 +476,7 @@ export default function Login() {
                         {step < 3 && (
                           <div
                             className={`flex-1 h-1 mx-2 ${
-                              registerStep > step ? 'bg-blue-600' : 'bg-gray-200'
+                              registerStep > step ? 'bg-primary' : 'bg-muted'
                             }`}
                           />
                         )}
@@ -477,7 +485,7 @@ export default function Login() {
                   </div>
 
                   <div className="text-center mb-4">
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-sm font-semibold text-foreground">
                       {registerStep === 1 && 'Step 1: Account Details'}
                       {registerStep === 2 && 'Step 2: Personal Information'}
                       {registerStep === 3 && 'Step 3: Address Details'}
@@ -681,7 +689,7 @@ export default function Login() {
                             maxLength={10}
                             className="h-11"
                           />
-                          <p className="text-xs text-gray-500">Format: 5 letters, 4 digits, 1 letter</p>
+                          <p className="text-xs text-muted-foreground">Format: 5 letters, 4 digits, 1 letter</p>
                         </div>
 
                         <div className="space-y-2">
@@ -695,7 +703,7 @@ export default function Login() {
                             maxLength={12}
                             className="h-11"
                           />
-                          <p className="text-xs text-gray-500">12-digit Aadhar number</p>
+                          <p className="text-xs text-muted-foreground">12-digit Aadhar number</p>
                         </div>
                       </>
                     )}
@@ -868,3 +876,4 @@ export default function Login() {
     </div>
   );
 }
+

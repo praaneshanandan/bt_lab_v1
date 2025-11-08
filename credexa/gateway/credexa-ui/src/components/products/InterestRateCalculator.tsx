@@ -97,7 +97,7 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
       <form onSubmit={handleCalculate} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Investment Amount (₹)
             </label>
             <input
@@ -113,7 +113,7 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Term (Months)
             </label>
             <input
@@ -129,7 +129,7 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Customer Classification
             </label>
             <select
@@ -169,36 +169,36 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600">Applicable Interest Rate</p>
+                <p className="text-sm text-muted-foreground">Applicable Interest Rate</p>
                 <p className="text-3xl font-bold text-blue-600">{result.applicableRate.toFixed(2)}%</p>
-                <p className="text-xs text-gray-500 mt-1">Per annum</p>
+                <p className="text-xs text-muted-foreground mt-1">Per annum</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Effective Interest Rate</p>
+                <p className="text-sm text-muted-foreground">Effective Interest Rate</p>
                 <p className="text-2xl font-semibold text-green-600">{result.effectiveRate.toFixed(2)}%</p>
-                <p className="text-xs text-gray-500 mt-1">After compounding</p>
+                <p className="text-xs text-muted-foreground mt-1">After compounding</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Monthly Rate</p>
-                <p className="text-xl font-medium text-gray-700">{result.monthlyRate.toFixed(3)}%</p>
+                <p className="text-sm text-muted-foreground">Monthly Rate</p>
+                <p className="text-xl font-medium text-foreground">{result.monthlyRate.toFixed(3)}%</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Estimated Maturity Amount</p>
+                <p className="text-sm text-muted-foreground mb-1">Estimated Maturity Amount</p>
                 <p className="text-3xl font-bold text-green-700">
                   {formatCurrency(calculateMaturityAmount())}
                 </p>
                 <div className="mt-3 pt-3 border-t border-green-200">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Principal:</span>
+                    <span className="text-muted-foreground">Principal:</span>
                     <span className="font-medium">{formatCurrency(parseFloat(formData.amount))}</span>
                   </div>
                   <div className="flex justify-between text-sm mt-1">
-                    <span className="text-gray-600">Interest:</span>
+                    <span className="text-muted-foreground">Interest:</span>
                     <span className="font-medium text-green-600">
                       {formatCurrency(calculateMaturityAmount() - parseFloat(formData.amount))}
                     </span>
@@ -208,8 +208,8 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
 
               {result.compoundingFrequency && (
                 <div>
-                  <p className="text-sm text-gray-600">Compounding Frequency</p>
-                  <p className="text-lg font-medium text-gray-700">{result.compoundingFrequency}</p>
+                  <p className="text-sm text-muted-foreground">Compounding Frequency</p>
+                  <p className="text-lg font-medium text-foreground">{result.compoundingFrequency}</p>
                 </div>
               )}
 
@@ -225,7 +225,7 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               <strong>Note:</strong> This is an estimate. Actual returns may vary based on compounding frequency, 
               premature withdrawal penalties, and other terms and conditions. Please refer to the product documentation 
               for complete details.
@@ -238,3 +238,4 @@ const InterestRateCalculator: React.FC<InterestRateCalculatorProps> = ({ product
 };
 
 export default InterestRateCalculator;
+

@@ -146,12 +146,12 @@ export default function ProductDetails() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'ACTIVE': 'bg-green-100 text-green-800',
-      'INACTIVE': 'bg-gray-100 text-gray-800',
+      'INACTIVE': 'bg-muted text-muted-foreground',
       'DRAFT': 'bg-yellow-100 text-yellow-800',
       'SUSPENDED': 'bg-orange-100 text-orange-800',
       'CLOSED': 'bg-red-100 text-red-800',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-muted text-muted-foreground';
   };
 
   return (
@@ -228,7 +228,7 @@ export default function ProductDetails() {
             <CardTitle>About This Product</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700">{product.description}</p>
+            <p className="text-foreground">{product.description}</p>
           </CardContent>
         </Card>
       )}
@@ -259,7 +259,7 @@ export default function ProductDetails() {
                 ) : (
                   <XCircle className="h-5 w-5 text-gray-400 flex-shrink-0" />
                 )}
-                <span className={feature.value ? 'text-gray-900' : 'text-gray-500'}>
+                <span className={feature.value ? 'text-foreground' : 'text-gray-500'}>
                   {feature.label}
                 </span>
               </div>
@@ -371,7 +371,7 @@ export default function ProductDetails() {
               className={`px-4 py-2 font-medium transition-colors ${
                 activeTab === 'overview'
                   ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:text-foreground'
               }`}
             >
               Overview
@@ -381,7 +381,7 @@ export default function ProductDetails() {
               className={`px-4 py-2 font-medium transition-colors ${
                 activeTab === 'rates'
                   ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:text-foreground'
               }`}
             >
               Interest Calculator
@@ -393,7 +393,7 @@ export default function ProductDetails() {
                   className={`px-4 py-2 font-medium transition-colors ${
                     activeTab === 'roles'
                       ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-600 hover:text-foreground'
                   }`}
                 >
                   Roles
@@ -403,7 +403,7 @@ export default function ProductDetails() {
                   className={`px-4 py-2 font-medium transition-colors ${
                     activeTab === 'charges'
                       ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-600 hover:text-foreground'
                   }`}
                 >
                   Charges
@@ -413,7 +413,7 @@ export default function ProductDetails() {
                   className={`px-4 py-2 font-medium transition-colors ${
                     activeTab === 'communications'
                       ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-600 hover:text-foreground'
                   }`}
                 >
                   Communications
@@ -427,15 +427,15 @@ export default function ProductDetails() {
             {activeTab === 'overview' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Product Summary</h3>
-                <p className="text-gray-700">{product.description}</p>
+                <p className="text-foreground">{product.description}</p>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">Base Interest Rate</p>
-                    <p className="text-2xl font-bold text-gray-900">{product.baseInterestRate}%</p>
+                    <p className="text-2xl font-bold text-foreground">{product.baseInterestRate}%</p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">Interest Calculation</p>
-                    <p className="text-lg font-semibold text-gray-900">{product.interestCalculationMethod}</p>
+                    <p className="text-lg font-semibold text-foreground">{product.interestCalculationMethod}</p>
                   </div>
                 </div>
               </div>
@@ -465,7 +465,7 @@ export default function ProductDetails() {
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-gray-600 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-foreground">
               <strong>Note:</strong> Interest rates and terms are subject to change. 
               Please verify all details before opening an account. 
               For more information, contact your nearest branch or customer service.
@@ -476,3 +476,4 @@ export default function ProductDetails() {
     </div>
   );
 }
+

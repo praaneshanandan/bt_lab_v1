@@ -66,7 +66,7 @@ export default function FDAccounts() {
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">FD Accounts</h1>
+          <h1 className="text-3xl font-bold text-foreground">FD Accounts</h1>
           <p className="text-gray-600 mt-2">Manage fixed deposit accounts</p>
         </div>
         <Button
@@ -153,3 +153,4 @@ export default function FDAccounts() {
     </div>
   );
 }
+

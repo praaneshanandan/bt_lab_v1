@@ -159,7 +159,7 @@ const ProductRolesManager: React.FC<ProductRolesManagerProps> = ({ productId, is
           <tbody className="divide-y divide-gray-200">
             {roles.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 7 : 6} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={isAdmin ? 7 : 6} className="px-4 py-8 text-center text-muted-foreground">
                   No roles configured for this product
                 </td>
               </tr>
@@ -219,7 +219,7 @@ const ProductRolesManager: React.FC<ProductRolesManagerProps> = ({ productId, is
               <h3 className="text-lg font-semibold">
                 {editingRole ? 'Edit Role' : 'Add New Role'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
                 <X size={20} />
               </button>
             </div>
@@ -333,3 +333,4 @@ const ProductRolesManager: React.FC<ProductRolesManagerProps> = ({ productId, is
 };
 
 export default ProductRolesManager;
+
