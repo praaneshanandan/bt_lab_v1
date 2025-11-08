@@ -260,17 +260,6 @@ public class ProductService {
     }
 
     /**
-     * Get products by effective date range
-     */
-    public List<ProductSummaryResponse> getProductsByDateRange(LocalDate startDate, LocalDate endDate) {
-        log.info("Fetching products by date range: {} to {}", startDate, endDate);
-
-        return productRepository.findByEffectiveDateRange(startDate, endDate).stream()
-                .map(productMapper::toSummaryResponse)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Update product status
      * Clears relevant caches
      */

@@ -50,15 +50,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCreatedBy(String createdBy);
 
     /**
-     * Find products effective within a date range
-     */
-    @Query("SELECT p FROM Product p WHERE p.effectiveDate <= :endDate")
-    List<Product> findByEffectiveDateRange(
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
-    );
-
-    /**
      * Find currently active products (status=ACTIVE and date is within effective range)
      */
     @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' " +

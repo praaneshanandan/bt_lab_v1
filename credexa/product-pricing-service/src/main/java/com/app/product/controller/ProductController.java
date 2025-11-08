@@ -230,7 +230,7 @@ public class ProductController {
     @GetMapping("/currently-active")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get currently active products", 
-               description = "Retrieves products that are ACTIVE and within their effective date range")
+               description = "Retrieves products that are ACTIVE and have reached their effective date")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Currently active products retrieved successfully")
     })
@@ -238,26 +238,6 @@ public class ProductController {
         
         log.info("REST: Fetching currently active products");
         List<ProductSummaryResponse> response = productService.getCurrentlyActiveProducts();
-        
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @GetMapping("/date-range")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
-    @Operation(summary = "Get products by date range", 
-               description = "Retrieves products effective within a specific date range")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Products retrieved successfully")
-    })
-    public ResponseEntity<ApiResponse<List<ProductSummaryResponse>>> getProductsByDateRange(
-            @Parameter(description = "Start date (yyyy-MM-dd)") 
-            @RequestParam LocalDate startDate,
-            
-            @Parameter(description = "End date (yyyy-MM-dd)") 
-            @RequestParam LocalDate endDate) {
-        
-        log.info("REST: Fetching products by date range: {} to {}", startDate, endDate);
-        List<ProductSummaryResponse> response = productService.getProductsByDateRange(startDate, endDate);
         
         return ResponseEntity.ok(ApiResponse.success(response));
     }
