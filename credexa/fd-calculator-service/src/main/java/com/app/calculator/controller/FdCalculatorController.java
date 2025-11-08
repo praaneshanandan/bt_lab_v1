@@ -53,7 +53,7 @@ public class FdCalculatorController {
      * Calculate FD with categories support and rate capping logic
      */
     @PostMapping("/fd/calculate")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
     @Operation(
         summary = "Calculate FD maturity (Lab L6 + Lab L10 Specification)",
         description = "Lab L10 enhanced endpoint: Calculate FD maturity amount with personalized rates. " +
@@ -138,7 +138,7 @@ public class FdCalculatorController {
     }
     
     @PostMapping("/calculate/standalone")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_ADMIN')")
     @Operation(
         summary = "Calculate FD with standalone inputs",
         description = "Calculate FD maturity amount and interest with manual inputs (no product required). " +
@@ -181,13 +181,13 @@ public class FdCalculatorController {
     }
     
     @PostMapping("/calculate/product-based")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_ADMIN')")
     @Operation(
         summary = "Calculate FD using product defaults",
         description = "Calculate FD maturity using product configuration from product-pricing-service. " +
                      "Fetches interest rates, TDS settings, and other defaults from the selected product. " +
                      "Allows customization within product limits (max 2% additional rate). " +
-                     "Requires CUSTOMER role."
+                     "Requires CUSTOMER, MANAGER, or ADMIN role."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -243,13 +243,13 @@ public class FdCalculatorController {
     }
     
     @PostMapping("/compare")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'ROLE_MANAGER', 'ROLE_ADMIN')")
     @Operation(
         summary = "Compare multiple FD scenarios",
         description = "Compare multiple FD calculation scenarios side-by-side. " +
                      "Provides detailed comparison and identifies the best scenario (highest maturity amount). " +
                      "Useful for evaluating different tenures, interest rates, or calculation types. " +
-                     "Requires CUSTOMER role."
+                     "Requires CUSTOMER, MANAGER, or ADMIN role."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -293,7 +293,7 @@ public class FdCalculatorController {
      * Executes Python script via Runtime.exec() to generate CSV report
      */
     @PostMapping("/report")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
     @Operation(
         summary = "Generate FD Calculation Report (Lab L11)",
         description = "Generate CSV report from FD calculation data using Python script execution. " +

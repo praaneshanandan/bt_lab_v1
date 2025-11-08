@@ -22,7 +22,8 @@ public class CacheConfig {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager(
             "products", 
             "interestRates", 
-            "customerClassifications"
+            "customerClassifications",
+            "customerCategories"
         );
         
         cacheManager.setCaffeine(Caffeine.newBuilder()

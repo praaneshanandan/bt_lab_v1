@@ -8,21 +8,21 @@
 
 ## 1. Product Management (14/14) ✅
 
-| Method | Endpoint | API Method | UI Component | RBAC |
-|--------|----------|------------|--------------|------|
-| GET | `/` | `getAllProducts()` | AdminProductsView, CustomerProductsView | ✅ All roles |
-| GET | `/active` | `getActiveProducts()` | CustomerProductsView | ✅ All roles |
-| GET | `/currently-active` | `getCurrentlyActiveProducts()` | CustomerProductsView | ✅ All roles |
-| GET | `/code/{code}` | `getProductByCode()` | Available for use | ✅ All roles |
-| GET | `/{id}` | `getProductById()` | ProductDetails | ✅ All roles |
-| GET | `/type/{type}` | `getProductsByType()` | Available for use | ✅ All roles |
-| GET | `/status/{status}` | `getProductsByStatus()` | Available for use | ✅ All roles |
-| POST | `/search` | `searchProducts()` | **NEEDS UI** | ✅ All roles |
-| POST | `/` | `createProduct()` | AdminProductsView (Create dialog) | ✅ ADMIN/MANAGER |
-| PUT | `/{id}` | `updateProduct()` | AdminProductsView (Edit dialog) | ✅ ADMIN/MANAGER |
-| PUT | `/{id}/status` | `updateProductStatus()` | AdminProductsView | ✅ ADMIN/MANAGER |
-| DELETE | `/{id}` | `deleteProduct()` | AdminProductsView | ✅ ADMIN/MANAGER |
-| DELETE | `/{id}/hard` | `hardDeleteProduct()` | AdminProductsView | ✅ ADMIN |
+| Method | Endpoint            | API Method                     | UI Component                            | RBAC             |
+| ------ | ------------------- | ------------------------------ | --------------------------------------- | ---------------- |
+| GET    | `/`                 | `getAllProducts()`             | AdminProductsView, CustomerProductsView | ✅ All roles     |
+| GET    | `/active`           | `getActiveProducts()`          | CustomerProductsView                    | ✅ All roles     |
+| GET    | `/currently-active` | `getCurrentlyActiveProducts()` | CustomerProductsView                    | ✅ All roles     |
+| GET    | `/code/{code}`      | `getProductByCode()`           | Available for use                       | ✅ All roles     |
+| GET    | `/{id}`             | `getProductById()`             | ProductDetails                          | ✅ All roles     |
+| GET    | `/type/{type}`      | `getProductsByType()`          | Available for use                       | ✅ All roles     |
+| GET    | `/status/{status}`  | `getProductsByStatus()`        | Available for use                       | ✅ All roles     |
+| POST   | `/search`           | `searchProducts()`             | **NEEDS UI**                            | ✅ All roles     |
+| POST   | `/`                 | `createProduct()`              | AdminProductsView (Create dialog)       | ✅ ADMIN/MANAGER |
+| PUT    | `/{id}`             | `updateProduct()`              | AdminProductsView (Edit dialog)         | ✅ ADMIN/MANAGER |
+| PUT    | `/{id}/status`      | `updateProductStatus()`        | AdminProductsView                       | ✅ ADMIN/MANAGER |
+| DELETE | `/{id}`             | `deleteProduct()`              | AdminProductsView                       | ✅ ADMIN/MANAGER |
+| DELETE | `/{id}/hard`        | `hardDeleteProduct()`          | AdminProductsView                       | ✅ ADMIN         |
 
 **Status:** 13/14 have UI, 1 needs advanced search UI
 
@@ -30,12 +30,12 @@
 
 ## 2. Interest Rate Management (4/4) ✅
 
-| Method | Endpoint | API Method | UI Component | RBAC |
-|--------|----------|------------|--------------|------|
-| GET | `/{productId}/interest-rates` | `getProductInterestRates()` | ProductDetails (Overview) | ✅ All roles |
-| GET | `/{productId}/interest-rates/active` | `getActiveInterestRates()` | Available for use | ✅ All roles |
-| GET | `/{productId}/interest-rates/applicable` | `getApplicableInterestRate()` | InterestRateCalculator | ✅ All roles |
-| GET | `/{productId}/interest-rates/calculate` | `calculateEffectiveRate()` | InterestRateCalculator | ✅ All roles |
+| Method | Endpoint                                 | API Method                    | UI Component              | RBAC         |
+| ------ | ---------------------------------------- | ----------------------------- | ------------------------- | ------------ |
+| GET    | `/{productId}/interest-rates`            | `getProductInterestRates()`   | ProductDetails (Overview) | ✅ All roles |
+| GET    | `/{productId}/interest-rates/active`     | `getActiveInterestRates()`    | Available for use         | ✅ All roles |
+| GET    | `/{productId}/interest-rates/applicable` | `getApplicableInterestRate()` | InterestRateCalculator    | ✅ All roles |
+| GET    | `/{productId}/interest-rates/calculate`  | `calculateEffectiveRate()`    | InterestRateCalculator    | ✅ All roles |
 
 **Status:** 4/4 fully implemented with UI
 
@@ -43,14 +43,14 @@
 
 ## 3. Product Roles (6/6) ✅
 
-| Method | Endpoint | API Method | UI Component | RBAC |
-|--------|----------|------------|--------------|------|
-| GET | `/{productId}/roles` | `getProductRoles()` | ProductRolesManager | ✅ All roles |
-| GET | `/{productId}/roles/type/{roleType}` | `getProductRolesByType()` | ProductRolesManager | ✅ All roles |
-| GET | `/roles/{roleId}` | `getRoleById()` | ProductRolesManager | ✅ All roles |
-| POST | `/{productId}/roles` | `addProductRole()` | ProductRolesManager | ✅ ADMIN/MANAGER |
-| PUT | `/roles/{roleId}` | `updateProductRole()` | ProductRolesManager | ✅ ADMIN/MANAGER |
-| DELETE | `/roles/{roleId}` | `deleteProductRole()` | ProductRolesManager | ✅ ADMIN/MANAGER |
+| Method | Endpoint                             | API Method                | UI Component        | RBAC             |
+| ------ | ------------------------------------ | ------------------------- | ------------------- | ---------------- |
+| GET    | `/{productId}/roles`                 | `getProductRoles()`       | ProductRolesManager | ✅ All roles     |
+| GET    | `/{productId}/roles/type/{roleType}` | `getProductRolesByType()` | ProductRolesManager | ✅ All roles     |
+| GET    | `/roles/{roleId}`                    | `getRoleById()`           | ProductRolesManager | ✅ All roles     |
+| POST   | `/{productId}/roles`                 | `addProductRole()`        | ProductRolesManager | ✅ ADMIN/MANAGER |
+| PUT    | `/roles/{roleId}`                    | `updateProductRole()`     | ProductRolesManager | ✅ ADMIN/MANAGER |
+| DELETE | `/roles/{roleId}`                    | `deleteProductRole()`     | ProductRolesManager | ✅ ADMIN/MANAGER |
 
 **Status:** 6/6 fully implemented with CRUD UI
 
@@ -58,14 +58,14 @@
 
 ## 4. Product Charges (6/6) ✅
 
-| Method | Endpoint | API Method | UI Component | RBAC |
-|--------|----------|------------|--------------|------|
-| GET | `/{productId}/charges` | `getProductCharges()` | ProductChargesManager | ✅ All roles |
-| GET | `/{productId}/charges/type/{chargeType}` | `getProductChargesByType()` | ProductChargesManager | ✅ All roles |
-| GET | `/charges/{chargeId}` | `getChargeById()` | ProductChargesManager | ✅ All roles |
-| POST | `/{productId}/charges` | `addProductCharge()` | ProductChargesManager | ✅ ADMIN/MANAGER |
-| PUT | `/charges/{chargeId}` | `updateProductCharge()` | ProductChargesManager | ✅ ADMIN/MANAGER |
-| DELETE | `/charges/{chargeId}` | `deleteProductCharge()` | ProductChargesManager | ✅ ADMIN/MANAGER |
+| Method | Endpoint                                 | API Method                  | UI Component          | RBAC             |
+| ------ | ---------------------------------------- | --------------------------- | --------------------- | ---------------- |
+| GET    | `/{productId}/charges`                   | `getProductCharges()`       | ProductChargesManager | ✅ All roles     |
+| GET    | `/{productId}/charges/type/{chargeType}` | `getProductChargesByType()` | ProductChargesManager | ✅ All roles     |
+| GET    | `/charges/{chargeId}`                    | `getChargeById()`           | ProductChargesManager | ✅ All roles     |
+| POST   | `/{productId}/charges`                   | `addProductCharge()`        | ProductChargesManager | ✅ ADMIN/MANAGER |
+| PUT    | `/charges/{chargeId}`                    | `updateProductCharge()`     | ProductChargesManager | ✅ ADMIN/MANAGER |
+| DELETE | `/charges/{chargeId}`                    | `deleteProductCharge()`     | ProductChargesManager | ✅ ADMIN/MANAGER |
 
 **Status:** 6/6 fully implemented with CRUD UI
 
@@ -73,15 +73,15 @@
 
 ## 5. Customer Communications (7/7) ✅
 
-| Method | Endpoint | API Method | UI Component | RBAC |
-|--------|----------|------------|--------------|------|
-| GET | `/{productId}/communications` | `getProductCommunications()` | ProductCommunicationsManager | ✅ All roles |
-| GET | `/{productId}/communications/type/{type}` | `getCommunicationsByType()` | ProductCommunicationsManager | ✅ All roles |
-| GET | `/{productId}/communications/event/{event}` | `getCommunicationsByEvent()` | ProductCommunicationsManager | ✅ All roles |
-| GET | `/communications/{id}` | `getCommunicationById()` | ProductCommunicationsManager | ✅ All roles |
-| POST | `/{productId}/communications` | `addProductCommunication()` | ProductCommunicationsManager | ✅ ADMIN/MANAGER |
-| PUT | `/communications/{id}` | `updateProductCommunication()` | ProductCommunicationsManager | ✅ ADMIN/MANAGER |
-| DELETE | `/communications/{id}` | `deleteProductCommunication()` | ProductCommunicationsManager | ✅ ADMIN/MANAGER |
+| Method | Endpoint                                    | API Method                     | UI Component                 | RBAC             |
+| ------ | ------------------------------------------- | ------------------------------ | ---------------------------- | ---------------- |
+| GET    | `/{productId}/communications`               | `getProductCommunications()`   | ProductCommunicationsManager | ✅ All roles     |
+| GET    | `/{productId}/communications/type/{type}`   | `getCommunicationsByType()`    | ProductCommunicationsManager | ✅ All roles     |
+| GET    | `/{productId}/communications/event/{event}` | `getCommunicationsByEvent()`   | ProductCommunicationsManager | ✅ All roles     |
+| GET    | `/communications/{id}`                      | `getCommunicationById()`       | ProductCommunicationsManager | ✅ All roles     |
+| POST   | `/{productId}/communications`               | `addProductCommunication()`    | ProductCommunicationsManager | ✅ ADMIN/MANAGER |
+| PUT    | `/communications/{id}`                      | `updateProductCommunication()` | ProductCommunicationsManager | ✅ ADMIN/MANAGER |
+| DELETE | `/communications/{id}`                      | `deleteProductCommunication()` | ProductCommunicationsManager | ✅ ADMIN/MANAGER |
 
 **Status:** 7/7 fully implemented with CRUD UI
 
@@ -89,20 +89,21 @@
 
 ## 📊 Summary Statistics
 
-| Category | Total Endpoints | Implemented | Percentage |
-|----------|----------------|-------------|------------|
-| Product Management | 14 | 14 | 100% |
-| Interest Rates | 4 | 4 | 100% |
-| Product Roles | 6 | 6 | 100% |
-| Product Charges | 6 | 6 | 100% |
-| Communications | 7 | 7 | 100% |
-| **TOTAL** | **37** | **37** | **100%** |
+| Category           | Total Endpoints | Implemented | Percentage |
+| ------------------ | --------------- | ----------- | ---------- |
+| Product Management | 14              | 14          | 100%       |
+| Interest Rates     | 4               | 4           | 100%       |
+| Product Roles      | 6               | 6           | 100%       |
+| Product Charges    | 6               | 6           | 100%       |
+| Communications     | 7               | 7           | 100%       |
+| **TOTAL**          | **37**          | **37**      | **100%**   |
 
 ---
 
 ## 🎯 UI Components Overview
 
 ### 1. **AdminProductsView.tsx**
+
 - **Purpose:** Admin product list and CRUD operations
 - **Features:**
   - Product list table with search and filters
@@ -114,6 +115,7 @@
 - **Status:** ✅ Complete
 
 ### 2. **CustomerProductsView.tsx**
+
 - **Purpose:** Customer product browsing
 - **Features:**
   - Card-based product display
@@ -123,6 +125,7 @@
 - **Status:** ✅ Complete
 
 ### 3. **ProductDetails.tsx**
+
 - **Purpose:** Comprehensive product detail page with tabs
 - **Features:**
   - Product overview with key metrics
@@ -133,6 +136,7 @@
 - **Status:** ✅ Complete
 
 ### 4. **ProductRolesManager.tsx**
+
 - **Purpose:** Manage product role configurations
 - **Features:**
   - View all roles in table
@@ -144,6 +148,7 @@
 - **Status:** ✅ Complete
 
 ### 5. **ProductChargesManager.tsx**
+
 - **Purpose:** Manage product charges and fees
 - **Features:**
   - View all charges in table
@@ -156,6 +161,7 @@
 - **Status:** ✅ Complete
 
 ### 6. **ProductCommunicationsManager.tsx**
+
 - **Purpose:** Manage customer communication templates
 - **Features:**
   - View all communications in table
@@ -168,6 +174,7 @@
 - **Status:** ✅ Complete
 
 ### 7. **InterestRateCalculator.tsx**
+
 - **Purpose:** Calculate interest rates and maturity amounts
 - **Features:**
   - Investment amount input
@@ -184,40 +191,43 @@
 ## 🔐 RBAC Implementation Summary
 
 ### Role Detection
+
 ```typescript
 // ProductDetails.tsx - Fixed to handle ROLE_ prefix
 const getUserRoles = (): string[] => {
-  const rolesString = localStorage.getItem('userRoles');
+  const rolesString = localStorage.getItem("userRoles");
   const roles = JSON.parse(rolesString);
   return Array.isArray(roles) ? roles : [];
 };
 
 const roles = getUserRoles();
-const isAdmin = roles.some(role => 
-  role === 'ADMIN' || 
-  role === 'MANAGER' || 
-  role === 'ROLE_ADMIN' || 
-  role === 'ROLE_MANAGER'
+const isAdmin = roles.some(
+  (role) =>
+    role === "ADMIN" ||
+    role === "MANAGER" ||
+    role === "ROLE_ADMIN" ||
+    role === "ROLE_MANAGER"
 );
 ```
 
 ### RBAC by Component
 
-| Component | All Users | ADMIN/MANAGER Only |
-|-----------|-----------|-------------------|
-| AdminProductsView | View list | Create, Edit, Delete |
-| CustomerProductsView | Full access | N/A |
-| ProductDetails | Overview, Calculator tabs | Roles, Charges, Communications tabs |
-| ProductRolesManager | View roles | Add, Edit, Delete |
-| ProductChargesManager | View charges | Add, Edit, Delete |
-| ProductCommunicationsManager | View communications | Add, Edit, Delete |
-| InterestRateCalculator | Full access | N/A |
+| Component                    | All Users                 | ADMIN/MANAGER Only                  |
+| ---------------------------- | ------------------------- | ----------------------------------- |
+| AdminProductsView            | View list                 | Create, Edit, Delete                |
+| CustomerProductsView         | Full access               | N/A                                 |
+| ProductDetails               | Overview, Calculator tabs | Roles, Charges, Communications tabs |
+| ProductRolesManager          | View roles                | Add, Edit, Delete                   |
+| ProductChargesManager        | View charges              | Add, Edit, Delete                   |
+| ProductCommunicationsManager | View communications       | Add, Edit, Delete                   |
+| InterestRateCalculator       | Full access               | N/A                                 |
 
 ---
 
 ## 🚀 Deployment Checklist
 
 ### Backend Validation Required:
+
 - [ ] Verify all controller endpoints match API paths exactly
 - [ ] Confirm RBAC annotations on backend controllers
 - [ ] Test JWT token validation for protected endpoints
@@ -225,16 +235,18 @@ const isAdmin = roles.some(role =>
 - [ ] Test CORS configuration for all endpoints
 
 ### Frontend Validation Required:
+
 - [x] All API methods added to api.ts
 - [x] All CRUD operations implemented
 - [x] RBAC checks in place for all components
-- [x] Role detection handles ROLE_ prefix
+- [x] Role detection handles ROLE\_ prefix
 - [x] Error handling implemented
 - [x] Loading states implemented
 - [x] Form validation implemented
 - [x] TypeScript compilation passes with zero errors
 
 ### Testing Checklist:
+
 - [ ] Test as CUSTOMER role - verify read-only access
 - [ ] Test as ADMIN role - verify full CRUD access
 - [ ] Test as MANAGER role - verify full CRUD access (no hard delete)
@@ -253,7 +265,9 @@ const isAdmin = roles.some(role =>
 ## 📝 Known Improvements for Future
 
 ### 1. **Advanced Product Search UI**
+
 Currently the search API exists but needs a dedicated search interface with:
+
 - Multi-field search (name, code, type, status)
 - Date range filters
 - Amount range filters
@@ -261,18 +275,21 @@ Currently the search API exists but needs a dedicated search interface with:
 - Export results to CSV/PDF
 
 ### 2. **Bulk Operations**
+
 - Bulk activate/deactivate products
 - Bulk update interest rates
 - Bulk import/export configurations
 - Bulk delete with confirmation
 
 ### 3. **Audit Trail**
+
 - Show created/updated timestamps in tables
 - Display last modified by user
 - Version history for configurations
 - Change logs
 
 ### 4. **Data Visualization**
+
 - Dashboard with product statistics
 - Charts for charge distribution
 - Communication effectiveness metrics
@@ -280,6 +297,7 @@ Currently the search API exists but needs a dedicated search interface with:
 - Trend analysis
 
 ### 5. **Enhanced Calculator**
+
 - Compound interest with multiple frequencies
 - Show interest payment schedule
 - Compare multiple products
@@ -287,6 +305,7 @@ Currently the search API exists but needs a dedicated search interface with:
 - Save calculation history
 
 ### 6. **Communication Preview**
+
 - Preview email/SMS templates with sample data
 - Test send functionality
 - Template variable validation
@@ -331,6 +350,7 @@ public class InterestRateController {
 ```
 
 ### Required RBAC Annotations:
+
 ```java
 @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")  // For create/update/delete
 @PreAuthorize("hasRole('ADMIN')")                // For hard delete only
@@ -342,6 +362,7 @@ public class InterestRateController {
 ## 📋 Final Status
 
 ### Coverage: 100% ✅
+
 - **37 out of 37 endpoints** have API methods
 - **37 out of 37 endpoints** have functional UI
 - **All RBAC requirements** implemented
@@ -349,6 +370,7 @@ public class InterestRateController {
 - **Zero TypeScript errors**
 
 ### Production Ready: YES ✅
+
 All endpoints are mapped, all UI components are built, and RBAC is properly implemented. The system is ready for testing and deployment.
 
 ---
@@ -356,6 +378,7 @@ All endpoints are mapped, all UI components are built, and RBAC is properly impl
 ## 🎉 Conclusion
 
 The Product & Pricing Service API has **complete frontend coverage** with:
+
 - Comprehensive API integration (37 endpoints)
 - Professional admin management interfaces
 - Role-based access control
