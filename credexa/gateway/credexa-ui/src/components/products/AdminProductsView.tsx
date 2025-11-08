@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { productApi } from '@/services/api';
 import type { Product } from '@/types';
@@ -35,6 +36,7 @@ import {
   Edit, 
   Trash2, 
   Search,
+  Eye,
 } from 'lucide-react';
 
 interface Props {
@@ -44,6 +46,7 @@ interface Props {
 }
 
 export default function AdminProductsView({ products, loading, onRefresh }: Props) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [showDialog, setShowDialog] = useState(false);
@@ -77,7 +80,7 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
     const today = new Date().toISOString().split('T')[0];
     setFormData({
       productType: 'FIXED_DEPOSIT',
-      status: 'DRAFT',
+      status: 'ACTIVE',  // Changed from DRAFT to ACTIVE so customers can see new products
       currencyCode: 'INR',
       bankBranchCode: 'MAIN',
       effectiveDate: today,
@@ -248,7 +251,16 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => navigate(`/products/${product.productId}`)}
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleEdit(product)}
+                            title="Edit Product"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -257,6 +269,7 @@ export default function AdminProductsView({ products, loading, onRefresh }: Prop
                             size="sm"
                             onClick={() => handleDelete(product)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Delete Product"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
