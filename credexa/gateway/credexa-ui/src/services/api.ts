@@ -112,6 +112,7 @@ export const productApi = {
   getProductById: (id: number) => productApiInstance.get(`/api/products/${id}`),
   getProductsByType: (type: string) => productApiInstance.get(`/api/products/type/${type}`),
   getProductsByStatus: (status: string) => productApiInstance.get(`/api/products/status/${status}`),
+  searchProducts: (searchParams: any) => productApiInstance.post('/api/products/search', searchParams),
   
   // Admin operations
   createProduct: (data: any) => productApiInstance.post('/api/products', data),
@@ -126,9 +127,34 @@ export const productApi = {
   
   // Product charges
   getProductCharges: (id: number) => productApiInstance.get(`/api/products/${id}/charges`),
+  getProductChargesByType: (id: number, chargeType: string) => productApiInstance.get(`/api/products/${id}/charges/type/${chargeType}`),
+  getChargeById: (chargeId: number) => productApiInstance.get(`/api/products/charges/${chargeId}`),
+  addProductCharge: (productId: number, data: any) => productApiInstance.post(`/api/products/${productId}/charges`, data),
+  updateProductCharge: (chargeId: number, data: any) => productApiInstance.put(`/api/products/charges/${chargeId}`, data),
+  deleteProductCharge: (chargeId: number) => productApiInstance.delete(`/api/products/charges/${chargeId}`),
   
   // Product roles
   getProductRoles: (id: number) => productApiInstance.get(`/api/products/${id}/roles`),
+  getProductRolesByType: (id: number, roleType: string) => productApiInstance.get(`/api/products/${id}/roles/type/${roleType}`),
+  getRoleById: (roleId: number) => productApiInstance.get(`/api/products/roles/${roleId}`),
+  addProductRole: (productId: number, data: any) => productApiInstance.post(`/api/products/${productId}/roles`, data),
+  updateProductRole: (roleId: number, data: any) => productApiInstance.put(`/api/products/roles/${roleId}`, data),
+  deleteProductRole: (roleId: number) => productApiInstance.delete(`/api/products/roles/${roleId}`),
+  
+  // Interest rate calculations
+  getApplicableInterestRate: (productId: number, amount: number, termInMonths: number, classification: string) => 
+    productApiInstance.get(`/api/products/${productId}/interest-rates/applicable?amount=${amount}&termInMonths=${termInMonths}&customerClassification=${classification}`),
+  calculateEffectiveRate: (productId: number, amount: number, termInMonths: number, classification: string) =>
+    productApiInstance.get(`/api/products/${productId}/interest-rates/calculate?amount=${amount}&termInMonths=${termInMonths}&customerClassification=${classification}`),
+  
+  // Customer communications
+  getProductCommunications: (productId: number) => productApiInstance.get(`/api/products/${productId}/communications`),
+  getCommunicationsByType: (productId: number, type: string) => productApiInstance.get(`/api/products/${productId}/communications/type/${type}`),
+  getCommunicationsByEvent: (productId: number, event: string) => productApiInstance.get(`/api/products/${productId}/communications/event/${event}`),
+  getCommunicationById: (id: number) => productApiInstance.get(`/api/products/communications/${id}`),
+  addProductCommunication: (productId: number, data: any) => productApiInstance.post(`/api/products/${productId}/communications`, data),
+  updateProductCommunication: (id: number, data: any) => productApiInstance.put(`/api/products/communications/${id}`, data),
+  deleteProductCommunication: (id: number) => productApiInstance.delete(`/api/products/communications/${id}`),
 };
 
 // FD Calculator Service APIs

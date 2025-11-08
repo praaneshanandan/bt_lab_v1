@@ -11,6 +11,7 @@ import Customers from './pages/Customers';
 import MyProfile from './pages/MyProfile';
 import Customer360View from './pages/Customer360View';
 import Products from './pages/Products';
+import ProductDetails from './pages/ProductDetails';
 import Calculator from './pages/Calculator';
 import FDAccounts from './pages/FDAccounts';
 import CreateFDAccount from './pages/CreateFDAccount';
@@ -48,6 +49,7 @@ function AppContent() {
                     <Route path="/my-360-view" element={<Customer360View />} />
                     <Route path="/profile" element={<MyProfile />} />
                     <Route path="/products" element={<Products />} />
+                    <Route path="/products/:id" element={<ProductDetails />} />
                     <Route path="/calculator" element={<Calculator />} />
                     <Route path="/accounts" element={<FDAccounts />} />
                     <Route path="/accounts/create" element={<CreateFDAccount />} />
