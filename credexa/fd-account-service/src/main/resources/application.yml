@@ -31,6 +31,27 @@ spring:
       - customers
       - calculationResults
 
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: fd-account-service-group
+      auto-startup: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    template:
+      default-topic: fd-account-events
+    admin:
+      auto-create: false
+      fail-fast: false
+
 # Swagger/OpenAPI Configuration
 springdoc:
   api-docs:
@@ -44,7 +65,7 @@ springdoc:
 
 # JWT Configuration
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  secret: ${JWT_SECRET:mySecretKeyForCredexaApplicationMustBe256BitsLongForHS256AlgorithmToWorkProperly}
   expiration: 3600000
 
 # Service URLs for inter-service communication
@@ -53,7 +74,7 @@ integration:
     url: http://localhost:8084/api/products
     timeout: 5000
   customer-service:
-    url: http://localhost:8083/api/customer
+    url: http://localhost:8082/api/customer
     timeout: 5000
   calculator-service:
     url: http://localhost:8085/api/calculator
@@ -97,6 +118,17 @@ alerts:
   email:
     enabled: true
     gateway-url: http://localhost:9000/email  # Mock email gateway
+
+# Kafka Topics Configuration
+kafka:
+  enabled: false  # Set to true when Kafka is available
+  topics:
+    account-created: account-created-events
+    account-closed: account-closed-events
+    transaction-created: transaction-created-events
+    maturity-processed: maturity-processed-events
+    interest-accrued: interest-accrued-events
+    withdrawal-processed: withdrawal-processed-events
 
 # Cache Configuration
 cache:

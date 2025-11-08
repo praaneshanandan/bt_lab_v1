@@ -51,13 +51,13 @@ public class FDAccountController {
      * @param auth Authentication object (Spring Security injects this automatically)
      * @return Response with FD account number and status
      */
-    @PreAuthorize("hasRole('BANK_OFFICER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @PostMapping("/create")
     @Operation(
         summary = "Create FD Account (Lab L13)",
         description = "Creates a new Fixed Deposit account with automatic account number generation, " +
                      "product validation, rate determination, and customer linking. " +
-                     "Requires BANK_OFFICER or ADMIN role.",
+                     "Requires MANAGER or ADMIN role.",
         security = @SecurityRequirement(name = "bearerAuth")
     )
     public ResponseEntity<?> createFDAccount(
@@ -109,14 +109,14 @@ public class FDAccountController {
      * @param auth Authentication object (Spring Security injects this automatically)
      * @return Response with withdrawal amount and penalty applied
      */
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('MANAGER')")
     @PostMapping("/withdraw")
     @Operation(
         summary = "Withdraw FD Account (Lab L15)",
         description = "Process premature withdrawal from a Fixed Deposit account. " +
                      "Calculates interest accrued till withdrawal date, applies penalty, " +
                      "updates account status to CLOSED, and generates withdrawal transaction. " +
-                     "Requires CUSTOMER (own account) or BANK_OFFICER role.",
+                     "Requires CUSTOMER (own account) or MANAGER role.",
         security = @SecurityRequirement(name = "bearerAuth")
     )
     public ResponseEntity<?> withdrawFD(

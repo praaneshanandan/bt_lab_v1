@@ -35,6 +35,7 @@ public class TransactionService {
 
     private final FdAccountRepository accountRepository;
     private final AccountTransactionRepository transactionRepository;
+    private final EventPublisher eventPublisher;
 
     /**
      * Create a new transaction
@@ -157,6 +158,9 @@ public class TransactionService {
 
         log.info("✅ Created transaction: {} with reference: {}", 
                 savedTransaction.getTransactionType(), savedTransaction.getTransactionReference());
+
+        // 8. Publish transaction created event
+        publishTransactionCreatedEvent(savedAccount, savedTransaction);
 
         return mapToTransactionResponse(savedTransaction);
     }
@@ -367,5 +371,45 @@ public class TransactionService {
                 .relatedTransactionId(transaction.getRelatedTransactionId())
                 .createdAt(transaction.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * Publish transaction created event to Kafka
+     */
+    private void publishTransactionCreatedEvent(FdAccount account, AccountTransaction transaction) {
+        try {
+            // Get primary customer ID
+            Long customerId = account.getRoles().stream()
+                    .filter(role -> Boolean.TRUE.equals(role.getIsPrimary()) && Boolean.TRUE.equals(role.getIsActive()))
+                    .findFirst()
+                    .map(role -> role.getCustomerId())
+                    .orElse(null);
+
+            com.app.fdaccount.event.TransactionCreatedEvent event = com.app.fdaccount.event.TransactionCreatedEvent.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .customerId(customerId)
+                    .transactionId(transaction.getId())
+                    .transactionReference(transaction.getTransactionReference())
+                    .transactionType(transaction.getTransactionType().toString())
+                    .amount(transaction.getAmount())
+                    .transactionDate(transaction.getTransactionDate())
+                    .valueDate(transaction.getValueDate())
+                    .description(transaction.getDescription())
+                    .principalBalanceAfter(transaction.getPrincipalBalanceAfter())
+                    .interestBalanceAfter(transaction.getInterestBalanceAfter())
+                    .totalBalanceAfter(transaction.getTotalBalanceAfter())
+                    .performedBy(transaction.getPerformedBy())
+                    .isReversed(transaction.getIsReversed())
+                    .build();
+
+            eventPublisher.publishTransactionCreated(event);
+            log.debug("Published TransactionCreatedEvent for transaction: {}", transaction.getTransactionReference());
+            
+        } catch (Exception e) {
+            log.error("Failed to publish TransactionCreatedEvent for transaction {}: {}", 
+                    transaction.getTransactionReference(), e.getMessage(), e);
+            // Don't fail the transaction if event publishing fails
+        }
     }
 }

@@ -44,15 +44,15 @@ public class ReportController {
     private final ReportService reportService;
 
     /**
-     * Get FD Summary Report (Admin/Bank Officer only)
+     * Get FD Summary Report (Admin/Manager only)
      * Aggregated data grouped by product code
      */
-    @PreAuthorize("hasRole('BANK_OFFICER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @GetMapping("/fd-summary")
     @Operation(
         summary = "Get FD Summary Report",
         description = "Get aggregated FD account statistics grouped by product code. " +
-                     "Accessible by BANK_OFFICER and ADMIN roles only."
+                     "Accessible by MANAGER and ADMIN roles only."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -104,15 +104,15 @@ public class ReportController {
     }
 
     /**
-     * Get Customer Portfolio by Customer ID (Admin/Bank Officer)
+     * Get Customer Portfolio by Customer ID (Admin/Manager)
      * View any customer's portfolio
      */
-    @PreAuthorize("hasRole('BANK_OFFICER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @GetMapping("/customer-portfolio/admin")
     @Operation(
         summary = "Get Customer Portfolio (Admin)",
         description = "Get FD portfolio for any customer by customer ID. " +
-                     "Accessible by BANK_OFFICER and ADMIN roles only."
+                     "Accessible by MANAGER and ADMIN roles only."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -168,9 +168,9 @@ public class ReportController {
     }
 
     /**
-     * Get Interest Transaction History for any customer (Admin/Bank Officer)
+     * Get Interest Transaction History for any customer (Admin/Manager)
      */
-    @PreAuthorize("hasRole('BANK_OFFICER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @GetMapping("/interest-history/admin")
     @Operation(
         summary = "Get Interest Transaction History (Admin)",
@@ -202,15 +202,15 @@ public class ReportController {
     }
 
     /**
-     * Get Maturity Summary Report (Admin/Bank Officer)
+     * Get Maturity Summary Report (Admin/Manager)
      * Accounts maturing within date range
      */
-    @PreAuthorize("hasRole('BANK_OFFICER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @GetMapping("/maturity-summary")
     @Operation(
         summary = "Get Maturity Summary Report",
         description = "Get all active accounts maturing within the specified date range. " +
-                     "Accessible by BANK_OFFICER and ADMIN roles only."
+                     "Accessible by MANAGER and ADMIN roles only."
     )
     @ApiResponses(value = {
         @ApiResponse(

@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Batch Controller
  * Provides endpoints for manually triggering batch jobs
- * Access restricted to ADMIN and BANK_OFFICER roles
+ * Access restricted to ADMIN and MANAGER roles
  */
 @Slf4j
 @RestController
@@ -54,7 +54,7 @@ public class BatchController {
      * Manually trigger daily interest calculation batch
      */
     @PostMapping("/interest-calculation")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Trigger Interest Calculation Batch",
             description = "Manually triggers the daily interest calculation batch job for all active FD accounts",
@@ -94,7 +94,7 @@ public class BatchController {
      * Manually trigger interest capitalization for a specific account
      */
     @PostMapping("/capitalize-interest")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Capitalize Interest for Account",
             description = "Manually capitalizes accrued interest to principal for a specific FD account",
@@ -134,7 +134,7 @@ public class BatchController {
      * Manually trigger interest payout for a specific account
      */
     @PostMapping("/payout-interest")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Process Interest Payout for Account",
             description = "Manually processes interest payout for a specific FD account",
@@ -173,7 +173,7 @@ public class BatchController {
      * Manually trigger maturity processing batch
      */
     @PostMapping("/maturity-processing")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Trigger Maturity Processing Batch",
             description = "Manually triggers the maturity processing batch job for all matured FD accounts",
@@ -213,7 +213,7 @@ public class BatchController {
      * Manually trigger maturity notice batch
      */
     @PostMapping("/maturity-notice")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Trigger Maturity Notice Batch",
             description = "Manually triggers the maturity notice batch job to send notices for upcoming maturities",
@@ -253,7 +253,7 @@ public class BatchController {
      * Manually trigger daily statement generation batch
      */
     @PostMapping("/generate-daily-statements")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Generate Daily Statements",
             description = "Manually triggers daily statement generation for all active FD accounts",
@@ -293,7 +293,7 @@ public class BatchController {
      * Manually trigger monthly statement generation batch
      */
     @PostMapping("/generate-monthly-statements")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Generate Monthly Statements",
             description = "Manually triggers monthly statement generation for all active FD accounts",
@@ -333,7 +333,7 @@ public class BatchController {
      * Get batch job status and statistics
      */
     @GetMapping("/status")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Get Batch Job Status",
             description = "Returns current statistics for batch processing",

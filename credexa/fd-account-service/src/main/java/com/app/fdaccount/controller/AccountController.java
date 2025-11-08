@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for FD Account operations
- * Security: BANK_OFFICER role required for account creation
+ * Security: MANAGER role required for account creation
  *          Customers can view only their own accounts
  */
 @Slf4j
@@ -50,12 +50,12 @@ public class AccountController {
 
     /**
      * Create a new FD account with values inherited from product
-     * Security: Only BANK_OFFICER role can create FD accounts
+     * Security: Only MANAGER role can create FD accounts
      */
     @PostMapping
-    @PreAuthorize("hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(summary = "Create FD Account", 
-               description = "Create a new Fixed Deposit account with values inherited from the product. Requires BANK_OFFICER role.",
+               description = "Create a new Fixed Deposit account with values inherited from the product. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<AccountResponse> createAccount(
             @Valid @RequestBody CreateAccountRequest request) {
@@ -67,12 +67,12 @@ public class AccountController {
 
     /**
      * Create a new FD account with customized values
-     * Security: Only BANK_OFFICER role can create FD accounts
+     * Security: Only MANAGER role can create FD accounts
      */
     @PostMapping("/customize")
-    @PreAuthorize("hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Create Customized FD Account",
-               description = "Create a new Fixed Deposit account with customized values within product limits. Requires BANK_OFFICER role.",
+               description = "Create a new Fixed Deposit account with customized values within product limits. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<AccountResponse> createCustomizedAccount(
             @Valid @RequestBody CustomizeAccountRequest request) {
@@ -84,10 +84,10 @@ public class AccountController {
 
     /**
      * Get account by identifier (account number, IBAN, or ID)
-     * Security: BANK_OFFICER can view all accounts, CUSTOMER can view only their own
+     * Security: MANAGER can view all accounts, CUSTOMER can view only their own
      */
     @GetMapping("/{identifier}")
-    @PreAuthorize("hasAnyRole('BANK_OFFICER', 'CUSTOMER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get Account",
                description = "Get FD account details by account number, IBAN, or internal ID. Customers can view only their own accounts.",
                security = @SecurityRequirement(name = "bearerAuth"))
@@ -103,10 +103,10 @@ public class AccountController {
 
     /**
      * Get account summary by account number
-     * Security: BANK_OFFICER can view all accounts, CUSTOMER can view only their own
+     * Security: MANAGER can view all accounts, CUSTOMER can view only their own
      */
     @GetMapping("/{accountNumber}/summary")
-    @PreAuthorize("hasAnyRole('BANK_OFFICER', 'CUSTOMER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get Account Summary",
                description = "Get summarized account details for list view. Customers can view only their own accounts.",
                security = @SecurityRequirement(name = "bearerAuth"))
@@ -119,11 +119,11 @@ public class AccountController {
     }
 
     /**
-     * Get all accounts for a customer
-     * Security: BANK_OFFICER can view any customer's accounts, CUSTOMER can view only their own
+     * Get all accounts for a specific customer
+     * Security: MANAGER can view any customer's accounts, CUSTOMER can view only their own
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('BANK_OFFICER', 'CUSTOMER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     @Operation(summary = "Get Customer Accounts",
                description = "Get all FD accounts for a specific customer. Customers can only view their own accounts.",
                security = @SecurityRequirement(name = "bearerAuth"))
@@ -136,13 +136,13 @@ public class AccountController {
     }
 
     /**
-     * Search accounts with criteria
-     * Security: Only BANK_OFFICER can search accounts
+     * Search accounts with multiple criteria
+     * Security: Only MANAGER can search accounts
      */
     @PostMapping("/search")
-    @PreAuthorize("hasRole('BANK_OFFICER')")
-    @Operation(summary = "Search Accounts",
-               description = "Search FD accounts with multiple criteria and pagination. Requires BANK_OFFICER role.",
+    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Search FD Accounts",
+               description = "Search FD accounts with multiple criteria and pagination. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Page<AccountSummaryResponse>> searchAccounts(
             @Valid @RequestBody SearchAccountRequest request) {
@@ -154,12 +154,12 @@ public class AccountController {
 
     /**
      * Get accounts maturing in next N days
-     * Security: Only BANK_OFFICER can access this report
+     * Security: Only MANAGER can access this report
      */
     @GetMapping("/maturing")
-    @PreAuthorize("hasRole('BANK_OFFICER')")
-    @Operation(summary = "Get Accounts Maturing Soon",
-               description = "Get accounts that will mature in the next N days. Requires BANK_OFFICER role.",
+    @PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Get Maturing Accounts",
+               description = "Get accounts that will mature in the next N days. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<AccountSummaryResponse>> getAccountsMaturingInDays(
             @Parameter(description = "Number of days to look ahead")
@@ -172,12 +172,12 @@ public class AccountController {
 
     /**
      * Get accounts by product code
-     * Security: Only BANK_OFFICER can access this report
+     * Security: Only MANAGER can access this report
      */
     @GetMapping("/product/{productCode}")
-    @PreAuthorize("hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Get Accounts by Product",
-               description = "Get all accounts for a specific FD product. Requires BANK_OFFICER role.",
+               description = "Get all accounts for a specific FD product. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<AccountSummaryResponse>> getAccountsByProduct(
             @PathVariable String productCode) {
@@ -189,12 +189,12 @@ public class AccountController {
 
     /**
      * Get accounts by branch code
-     * Security: Only BANK_OFFICER can access this report
+     * Security: Only MANAGER can access this report
      */
     @GetMapping("/branch/{branchCode}")
-    @PreAuthorize("hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Get Accounts by Branch",
-               description = "Get all accounts for a specific branch. Requires BANK_OFFICER role.",
+               description = "Get all accounts for a specific branch. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<AccountSummaryResponse>> getAccountsByBranch(
             @PathVariable String branchCode) {
@@ -206,12 +206,12 @@ public class AccountController {
 
     /**
      * Check if account number exists
-     * Security: Only BANK_OFFICER can check account existence
+     * Security: Only MANAGER can check account existence
      */
     @GetMapping("/exists/{accountNumber}")
-    @PreAuthorize("hasRole('BANK_OFFICER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Check Account Exists",
-               description = "Check if an account number already exists. Requires BANK_OFFICER role.",
+               description = "Check if an account number already exists. Requires MANAGER role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Boolean> accountExists(@PathVariable String accountNumber) {
         log.info("REST: Checking if account exists: {}", accountNumber);
@@ -221,14 +221,14 @@ public class AccountController {
 
     /**
      * Manually close a matured FD account (Lab L19)
-     * Security: Only BANK_OFFICER or ADMIN role can manually close accounts
+     * Security: Only MANAGER or ADMIN role can manually close accounts
      */
     @PostMapping("/manual-close")
-    @PreAuthorize("hasRole('BANK_OFFICER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @Operation(summary = "Manual Maturity Closure",
                description = "Manually close a matured FD account and process final payout. " +
                              "Validates maturity date, calculates final amount, creates payout transaction. " +
-                             "Requires BANK_OFFICER or ADMIN role.",
+                             "Requires MANAGER or ADMIN role.",
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<MaturityClosureService.MaturityClosureResponse> closeMaturedAccount(
             @RequestParam @Parameter(description = "FD account number to close") String accountNumber,

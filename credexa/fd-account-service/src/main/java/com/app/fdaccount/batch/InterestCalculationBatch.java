@@ -15,6 +15,7 @@ import com.app.fdaccount.entity.AccountTransaction;
 import com.app.fdaccount.entity.FdAccount;
 import com.app.fdaccount.enums.TransactionType;
 import com.app.fdaccount.repository.FdAccountRepository;
+import com.app.fdaccount.service.EventPublisher;
 import com.app.fdaccount.service.integration.CalculatorServiceClient;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class InterestCalculationBatch {
 
     private final FdAccountRepository accountRepository;
     private final CalculatorServiceClient calculatorServiceClient;
+    private final EventPublisher eventPublisher;
 
     /**
      * Calculate and accrue interest for all active FD accounts
@@ -120,6 +122,10 @@ public class InterestCalculationBatch {
                     accountRepository.save(account);
 
                     log.debug("✅ Accrued interest {} for account: {}", interestForDay, account.getAccountNumber());
+                    
+                    // Publish interest accrued event
+                    publishInterestAccruedEvent(account, interestForDay, today, newInterest);
+                    
                     successCount++;
                 } else {
                     skippedCount++;
@@ -181,5 +187,48 @@ public class InterestCalculationBatch {
     private String generateTransactionReference() {
         return "TXN-" + LocalDate.now().toString().replace("-", "") + "-" +
                 UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    /**
+     * Publish interest accrued event to Kafka
+     */
+    private void publishInterestAccruedEvent(FdAccount account, BigDecimal interestAmount, 
+                                             LocalDate accrualDate, BigDecimal totalInterest) {
+        try {
+            // Get primary customer ID
+            Long customerId = account.getRoles().stream()
+                    .filter(role -> Boolean.TRUE.equals(role.getIsPrimary()) && Boolean.TRUE.equals(role.getIsActive()))
+                    .findFirst()
+                    .map(role -> role.getCustomerId())
+                    .orElse(null);
+
+            long daysCompleted = ChronoUnit.DAYS.between(account.getEffectiveDate(), accrualDate);
+            long totalDays = ChronoUnit.DAYS.between(account.getEffectiveDate(), account.getMaturityDate());
+
+            BigDecimal principalBalance = getCurrentBalance(account, "PRINCIPAL");
+
+            com.app.fdaccount.event.InterestAccruedEvent event = com.app.fdaccount.event.InterestAccruedEvent.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .customerId(customerId)
+                    .interestAmount(interestAmount)
+                    .accrualDate(accrualDate)
+                    .interestRate(account.getCustomInterestRate() != null ? 
+                            account.getCustomInterestRate() : account.getInterestRate())
+                    .calculationMethod(account.getInterestCalculationMethod())
+                    .principalBalance(principalBalance)
+                    .totalInterestAccrued(totalInterest)
+                    .totalBalance(principalBalance.add(totalInterest))
+                    .daysCompleted((int) daysCompleted)
+                    .totalDays((int) totalDays)
+                    .build();
+
+            eventPublisher.publishInterestAccrued(event);
+            
+        } catch (Exception e) {
+            log.error("Failed to publish InterestAccruedEvent for account {}: {}", 
+                    account.getAccountNumber(), e.getMessage());
+            // Don't fail the batch if event publishing fails
+        }
     }
 }

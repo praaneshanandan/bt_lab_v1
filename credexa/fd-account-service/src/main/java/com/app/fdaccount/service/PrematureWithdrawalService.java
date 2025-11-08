@@ -36,6 +36,7 @@ public class PrematureWithdrawalService {
     private final ProductServiceClient productServiceClient;
     private final CalculatorServiceClient calculatorServiceClient;
     private final TransactionService transactionService;
+    private final EventPublisher eventPublisher;
 
     @Value("${transaction.premature-withdrawal-penalty:2.0}")
     private BigDecimal defaultPenaltyPercentage;
@@ -219,6 +220,9 @@ public class PrematureWithdrawalService {
         log.info("✅ Processed premature withdrawal for account: {} with penalty: {}", 
                 accountNumber, inquiry.getPenaltyAmount());
 
+        // 7. Publish withdrawal processed event
+        publishWithdrawalProcessedEvent(account, inquiry, withdrawalResponse.getTransactionReference(), remarks);
+
         return withdrawalResponse;
     }
 
@@ -239,5 +243,108 @@ public class PrematureWithdrawalService {
                 .message(message)
                 .isEligible(false)
                 .build();
+    }
+
+    /**
+     * Publish withdrawal processed event to Kafka
+     */
+    private void publishWithdrawalProcessedEvent(FdAccount account, 
+                                                  PrematureWithdrawalInquiryResponse inquiry,
+                                                  String transactionReference,
+                                                  String remarks) {
+        try {
+            // Get primary customer details
+            var primaryRole = account.getRoles().stream()
+                    .filter(role -> Boolean.TRUE.equals(role.getIsPrimary()) && Boolean.TRUE.equals(role.getIsActive()))
+                    .findFirst()
+                    .orElse(account.getRoles().stream()
+                            .filter(role -> Boolean.TRUE.equals(role.getIsActive()))
+                            .findFirst()
+                            .orElse(null));
+
+            if (primaryRole == null) {
+                log.warn("No active role found for account: {}", account.getAccountNumber());
+                return;
+            }
+
+            com.app.fdaccount.event.WithdrawalProcessedEvent event = com.app.fdaccount.event.WithdrawalProcessedEvent.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .accountName(account.getAccountName())
+                    .customerId(primaryRole.getCustomerId())
+                    .customerName(primaryRole.getCustomerName())
+                    .withdrawalDate(inquiry.getProposedWithdrawalDate())
+                    .withdrawalReason(remarks != null ? remarks : "Customer request")
+                    .isPremature(true)
+                    .principalAmount(inquiry.getPrincipalAmount())
+                    .interestEarned(inquiry.getInterestEarned())
+                    .penaltyAmount(inquiry.getPenaltyAmount())
+                    .penaltyPercentage(inquiry.getPenaltyPercentage())
+                    .netAmount(inquiry.getNetPayable())
+                    .daysCompleted(inquiry.getDaysHeld())
+                    .termDays(inquiry.getTotalTermDays())
+                    .accountStatusAfter(AccountStatus.CLOSED.toString())
+                    .processedBy(account.getUpdatedBy())
+                    .transactionReference(transactionReference)
+                    .build();
+
+            eventPublisher.publishWithdrawalProcessed(event);
+            log.debug("Published WithdrawalProcessedEvent for account: {}", account.getAccountNumber());
+
+            // Also publish account closed event
+            publishAccountClosedEvent(account, inquiry);
+            
+        } catch (Exception e) {
+            log.error("Failed to publish WithdrawalProcessedEvent for account {}: {}", 
+                    account.getAccountNumber(), e.getMessage(), e);
+            // Don't fail the transaction if event publishing fails
+        }
+    }
+
+    /**
+     * Publish account closed event to Kafka
+     */
+    private void publishAccountClosedEvent(FdAccount account, PrematureWithdrawalInquiryResponse inquiry) {
+        try {
+            // Get primary customer details
+            var primaryRole = account.getRoles().stream()
+                    .filter(role -> Boolean.TRUE.equals(role.getIsPrimary()) && Boolean.TRUE.equals(role.getIsActive()))
+                    .findFirst()
+                    .orElse(account.getRoles().stream()
+                            .filter(role -> Boolean.TRUE.equals(role.getIsActive()))
+                            .findFirst()
+                            .orElse(null));
+
+            if (primaryRole == null) {
+                log.warn("No active role found for account: {}", account.getAccountNumber());
+                return;
+            }
+
+            com.app.fdaccount.event.AccountClosedEvent event = com.app.fdaccount.event.AccountClosedEvent.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .accountName(account.getAccountName())
+                    .customerId(primaryRole.getCustomerId())
+                    .customerName(primaryRole.getCustomerName())
+                    .closureDate(account.getClosureDate())
+                    .closureReason("Premature withdrawal")
+                    .closureType("PREMATURE")
+                    .principalAmount(inquiry.getPrincipalAmount())
+                    .interestEarned(inquiry.getInterestEarned())
+                    .penaltyAmount(inquiry.getPenaltyAmount())
+                    .netPayoutAmount(inquiry.getNetPayable())
+                    .daysCompleted(inquiry.getDaysHeld())
+                    .totalDays(inquiry.getTotalTermDays())
+                    .closedBy(account.getUpdatedBy())
+                    .build();
+
+            eventPublisher.publishAccountClosed(event);
+            log.debug("Published AccountClosedEvent for account: {}", account.getAccountNumber());
+            
+        } catch (Exception e) {
+            log.error("Failed to publish AccountClosedEvent for account {}: {}", 
+                    account.getAccountNumber(), e.getMessage(), e);
+            // Don't fail the transaction if event publishing fails
+        }
     }
 }

@@ -16,6 +16,7 @@ import com.app.fdaccount.enums.AccountStatus;
 import com.app.fdaccount.enums.MaturityInstruction;
 import com.app.fdaccount.enums.TransactionType;
 import com.app.fdaccount.repository.FdAccountRepository;
+import com.app.fdaccount.service.EventPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MaturityProcessingBatch {
 
     private final FdAccountRepository accountRepository;
+    private final EventPublisher eventPublisher;
 
     /**
      * Process all accounts that matured today
@@ -115,6 +117,9 @@ public class MaturityProcessingBatch {
      * Close account and payout full amount
      */
     private void processClosureAndPayout(FdAccount account, BigDecimal amount, LocalDate date) {
+        BigDecimal currentPrincipal = getCurrentBalance(account, "PRINCIPAL");
+        BigDecimal currentInterest = getCurrentBalance(account, "INTEREST_ACCRUED");
+        
         // Create maturity payout transaction
         AccountTransaction transaction = AccountTransaction.builder()
                 .transactionReference(generateTransactionReference())
@@ -144,6 +149,10 @@ public class MaturityProcessingBatch {
         accountRepository.save(account);
 
         log.info("Account {} closed with payout: {}", account.getAccountNumber(), amount);
+        
+        // Publish maturity processed event
+        publishMaturityProcessedEvent(account, currentPrincipal, currentInterest, amount, 
+                BigDecimal.ZERO, false, null, null, null);
     }
 
     /**
@@ -200,6 +209,10 @@ public class MaturityProcessingBatch {
 
         log.info("Account {} renewed with principal: {}, interest payout: {}",
                 account.getAccountNumber(), principal, interest);
+        
+        // Publish maturity processed event
+        publishMaturityProcessedEvent(account, principal, interest, interest, 
+                principal, true, date.plusMonths(account.getTermMonths()), account.getTermMonths(), null);
     }
 
     /**
@@ -237,6 +250,12 @@ public class MaturityProcessingBatch {
         accountRepository.save(account);
 
         log.info("Account {} renewed with total amount: {}", account.getAccountNumber(), totalAmount);
+        
+        // Publish maturity processed event
+        BigDecimal principal = account.getPrincipalAmount();
+        BigDecimal interest = totalAmount.subtract(principal);
+        publishMaturityProcessedEvent(account, principal, interest, BigDecimal.ZERO, 
+                totalAmount, true, date.plusMonths(account.getTermMonths()), account.getTermMonths(), null);
     }
 
     /**
@@ -322,5 +341,63 @@ public class MaturityProcessingBatch {
     private String generateTransactionReference() {
         return "TXN-" + LocalDate.now().toString().replace("-", "") + "-" +
                 UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    /**
+     * Publish maturity processed event to Kafka
+     */
+    private void publishMaturityProcessedEvent(FdAccount account, 
+                                               BigDecimal principalAmount,
+                                               BigDecimal interestEarned,
+                                               BigDecimal payoutAmount,
+                                               BigDecimal renewalAmount,
+                                               Boolean isRenewed,
+                                               LocalDate newMaturityDate,
+                                               Integer newTermMonths,
+                                               String transferToAccount) {
+        try {
+            // Get primary customer details
+            var primaryRole = account.getRoles().stream()
+                    .filter(role -> Boolean.TRUE.equals(role.getIsPrimary()) && Boolean.TRUE.equals(role.getIsActive()))
+                    .findFirst()
+                    .orElse(account.getRoles().stream()
+                            .filter(role -> Boolean.TRUE.equals(role.getIsActive()))
+                            .findFirst()
+                            .orElse(null));
+
+            if (primaryRole == null) {
+                log.warn("No active role found for account: {}", account.getAccountNumber());
+                return;
+            }
+
+            com.app.fdaccount.event.MaturityProcessedEvent event = com.app.fdaccount.event.MaturityProcessedEvent.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .accountName(account.getAccountName())
+                    .customerId(primaryRole.getCustomerId())
+                    .customerName(primaryRole.getCustomerName())
+                    .maturityDate(account.getMaturityDate())
+                    .maturityInstruction(account.getMaturityInstruction() != null ? 
+                            account.getMaturityInstruction().toString() : "HOLD")
+                    .principalAmount(principalAmount)
+                    .interestEarned(interestEarned)
+                    .totalAmount(principalAmount.add(interestEarned))
+                    .payoutAmount(payoutAmount)
+                    .renewalAmount(renewalAmount)
+                    .isRenewed(isRenewed != null ? isRenewed : false)
+                    .newMaturityDate(newMaturityDate)
+                    .newTermMonths(newTermMonths)
+                    .transferToAccount(transferToAccount)
+                    .processedBy("SYSTEM-BATCH")
+                    .build();
+
+            eventPublisher.publishMaturityProcessed(event);
+            log.debug("Published MaturityProcessedEvent for account: {}", account.getAccountNumber());
+            
+        } catch (Exception e) {
+            log.error("Failed to publish MaturityProcessedEvent for account {}: {}", 
+                    account.getAccountNumber(), e.getMessage());
+            // Don't fail the batch if event publishing fails
+        }
     }
 }

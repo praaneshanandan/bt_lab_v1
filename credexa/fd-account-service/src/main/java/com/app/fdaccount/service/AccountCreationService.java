@@ -19,6 +19,7 @@ import com.app.fdaccount.dto.RoleResponse;
 import com.app.fdaccount.dto.external.CalculationResultDto;
 import com.app.fdaccount.dto.external.CustomerDto;
 import com.app.fdaccount.dto.external.ProductDto;
+import com.app.fdaccount.dto.external.ProductRoleDto;
 import com.app.fdaccount.entity.AccountBalance;
 import com.app.fdaccount.entity.AccountRole;
 import com.app.fdaccount.entity.AccountTransaction;
@@ -48,6 +49,7 @@ public class AccountCreationService {
     private final ProductServiceClient productServiceClient;
     private final CustomerServiceClient customerServiceClient;
     private final CalculatorServiceClient calculatorServiceClient;
+    private final EventPublisher eventPublisher;
 
     @Value("${account-number.generator.iban.country-code:IN}")
     private String ibanCountryCode;
@@ -72,10 +74,17 @@ public class AccountCreationService {
             // 1a. Validate account roles against product requirements
             validateAccountRoles(product, request.getRoles());
 
-            // 2. Validate all customers
+            // 2. Validate all customers and auto-populate customer names if not provided
             for (AccountRoleRequest roleRequest : request.getRoles()) {
                 log.debug("Fetching customer: {}", roleRequest.getCustomerId());
                 CustomerDto customer = customerServiceClient.getCustomerById(roleRequest.getCustomerId());
+                
+                // Auto-populate customer name if not provided
+                if (roleRequest.getCustomerName() == null || roleRequest.getCustomerName().isBlank()) {
+                    roleRequest.setCustomerName(customer.getCustomerName());
+                    log.debug("Auto-populated customer name: {}", customer.getCustomerName());
+                }
+                
                 log.debug("Validated customer: {} - {}", customer.getCustomerId(), customer.getCustomerName());
             }
 
@@ -182,6 +191,9 @@ public class AccountCreationService {
             log.info("✅ Created FD account: {} for customer with principal: {}", 
                     savedAccount.getAccountNumber(), savedAccount.getPrincipalAmount());
 
+            // 10. Publish account created event
+            publishAccountCreatedEvent(savedAccount, product);
+
             return mapToAccountResponse(savedAccount);
             
         } catch (Exception e) {
@@ -206,9 +218,16 @@ public class AccountCreationService {
         // 2a. Validate account roles against product requirements
         validateAccountRoles(product, request.getRoles());
 
-        // 3. Validate all customers
+        // 3. Validate all customers and auto-populate customer names if not provided
         for (AccountRoleRequest roleRequest : request.getRoles()) {
             CustomerDto customer = customerServiceClient.getCustomerById(roleRequest.getCustomerId());
+            
+            // Auto-populate customer name if not provided
+            if (roleRequest.getCustomerName() == null || roleRequest.getCustomerName().isBlank()) {
+                roleRequest.setCustomerName(customer.getCustomerName());
+                log.debug("Auto-populated customer name: {}", customer.getCustomerName());
+            }
+            
             log.debug("Validated customer: {} - {}", customer.getCustomerId(), customer.getCustomerName());
         }
 
@@ -317,6 +336,9 @@ public class AccountCreationService {
         log.info("✅ Created customized FD account: {} with custom rate: {}%, term: {} months", 
                 savedAccount.getAccountNumber(), interestRate, termMonths);
 
+        // 12. Publish account created event
+        publishAccountCreatedEvent(savedAccount, product);
+
         return mapToAccountResponse(savedAccount);
     }
 
@@ -338,12 +360,15 @@ public class AccountCreationService {
         for (AccountRoleRequest accountRole : accountRoles) {
             String requestedRole = accountRole.getRoleType().toString();
             boolean isAllowed = product.getAllowedRoles().stream()
-                    .anyMatch(allowedRole -> allowedRole.equalsIgnoreCase(requestedRole));
+                    .anyMatch(allowedRole -> allowedRole.getRoleType().equalsIgnoreCase(requestedRole));
             
             if (!isAllowed) {
+                String allowedRolesList = product.getAllowedRoles().stream()
+                        .map(ProductRoleDto::getRoleType)
+                        .collect(java.util.stream.Collectors.joining(", "));
                 throw new IllegalArgumentException(
                         String.format("Role '%s' is not allowed for this product. Allowed roles: %s", 
-                                accountRole.getRoleType(), String.join(", ", product.getAllowedRoles())));
+                                accountRole.getRoleType(), allowedRolesList));
             }
         }
 
@@ -485,5 +510,57 @@ public class AccountCreationService {
                         .description(balance.getDescription())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Publish account created event to Kafka
+     */
+    private void publishAccountCreatedEvent(FdAccount account, ProductDto product) {
+        try {
+            // Get primary customer details
+            AccountRole primaryRole = account.getRoles().stream()
+                    .filter(role -> Boolean.TRUE.equals(role.getIsPrimary()) && Boolean.TRUE.equals(role.getIsActive()))
+                    .findFirst()
+                    .orElse(account.getRoles().stream()
+                            .filter(AccountRole::getIsActive)
+                            .findFirst()
+                            .orElse(null));
+
+            if (primaryRole == null) {
+                log.warn("No active role found for account: {}", account.getAccountNumber());
+                return;
+            }
+
+            com.app.fdaccount.event.AccountCreatedEvent event = com.app.fdaccount.event.AccountCreatedEvent.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .iban(account.getIbanNumber())
+                    .accountName(account.getAccountName())
+                    .customerId(primaryRole.getCustomerId())
+                    .customerName(primaryRole.getCustomerName())
+                    .productCode(product.getProductCode())
+                    .productName(product.getProductName())
+                    .principalAmount(account.getPrincipalAmount())
+                    .termMonths(account.getTermMonths())
+                    .interestRate(account.getCustomInterestRate() != null ? 
+                            account.getCustomInterestRate() : account.getInterestRate())
+                    .interestCalculationMethod(account.getInterestCalculationMethod())
+                    .effectiveDate(account.getEffectiveDate())
+                    .maturityDate(account.getMaturityDate())
+                    .maturityAmount(account.getMaturityAmount())
+                    .maturityInstruction(account.getMaturityInstruction() != null ? 
+                            account.getMaturityInstruction().toString() : null)
+                    .branchCode(account.getBranchCode())
+                    .createdBy(account.getCreatedBy())
+                    .build();
+
+            eventPublisher.publishAccountCreated(event);
+            log.debug("Published AccountCreatedEvent for account: {}", account.getAccountNumber());
+            
+        } catch (Exception e) {
+            log.error("Failed to publish AccountCreatedEvent for account {}: {}", 
+                    account.getAccountNumber(), e.getMessage(), e);
+            // Don't fail the transaction if event publishing fails
+        }
     }
 }
