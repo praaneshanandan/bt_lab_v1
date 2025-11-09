@@ -126,6 +126,9 @@ export default function Login() {
       setFailedAttempts(0);
       setIsAccountLocked(false);
       
+      // Clear any stale customer data from previous sessions
+      localStorage.removeItem('customerId');
+      
       // Store authentication data
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('authToken', data.token);

@@ -4,11 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.app.account.dto.external.CustomerDto;
 import com.app.common.dto.ApiResponse;
 
+import jakarta.servlet.http.HttpServletRequest;
 import reactor.core.publisher.Mono;
 
 /**
@@ -93,8 +96,16 @@ public class CustomerServiceClient {
         logger.info("🔍 Fetching customer by username: {}", username);
 
         try {
+            // Extract JWT token from current request
+            String jwtToken = getCurrentJwtToken();
+            if (jwtToken == null) {
+                logger.error("❌ No JWT token found in current request context");
+                return null;
+            }
+
             CustomerDto customer = webClient.get()
                     .uri("/username/{username}", username)
+                    .header("Authorization", "Bearer " + jwtToken)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError(), 
                             clientResponse -> {
@@ -119,5 +130,24 @@ public class CustomerServiceClient {
             logger.error("❌ Error fetching customer by username {}: {}", username, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Extract JWT token from current HTTP request
+     */
+    private String getCurrentJwtToken() {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+                String authHeader = request.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    return authHeader.substring(7);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error extracting JWT token from request: {}", e.getMessage());
+        }
+        return null;
     }
 }

@@ -56,6 +56,7 @@ export function Sidebar() {
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
       localStorage.removeItem('userRoles');
+      localStorage.removeItem('customerId');
       navigate('/login');
     }
   };
