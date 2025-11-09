@@ -12,7 +12,7 @@ import {
   Eye,
   AlertCircle
 } from 'lucide-react';
-import { accountServiceApi } from '../services/api';
+import { accountServiceApi, customerApi } from '../services/api';
 import { isManagerOrAdmin, getUserRoles, decodeToken } from '../utils/auth';
 import type { FDAccount, AccountBalanceResponse, CreateDefaultAccountRequest, CreateCustomAccountRequest } from '../types';
 
@@ -55,14 +55,48 @@ const Accounts: React.FC = () => {
         response = await accountServiceApi.getAllAccounts();
       } else {
         // Customer can only see their own accounts
-        if (!customerId) {
-          throw new Error('Customer ID not found. Please complete your profile.');
+        // First, get customer's profile to get their customer ID
+        let customerIdToUse = customerId;
+        
+        if (!customerIdToUse) {
+          try {
+            const profileResponse = await customerApi.getOwnProfile();
+            console.log('🔍 DEBUG - Profile Response:', profileResponse);
+            console.log('🔍 DEBUG - Profile Data:', profileResponse.data);
+            console.log('🔍 DEBUG - Profile Data.data:', profileResponse.data?.data);
+            
+            // Try multiple possible paths for customer ID
+            customerIdToUse = 
+              profileResponse.data?.data?.id?.toString() ||
+              profileResponse.data?.data?.customerId?.toString() ||
+              profileResponse.data?.id?.toString() ||
+              profileResponse.data?.customerId?.toString();
+            
+            console.log('🔍 DEBUG - Extracted Customer ID:', customerIdToUse);
+            
+            if (customerIdToUse) {
+              // Save it to localStorage for future use
+              localStorage.setItem('customerId', customerIdToUse);
+            }
+          } catch (profileErr) {
+            console.error('Error fetching customer profile:', profileErr);
+            throw new Error('Unable to fetch your profile. Please ensure you have a customer profile created.');
+          }
         }
-        response = await accountServiceApi.getAccountsByCustomerId(parseInt(customerId));
+        
+        if (!customerIdToUse) {
+          throw new Error('Customer ID not found in your profile. Please contact support.');
+        }
+        
+        response = await accountServiceApi.getAccountsByCustomerId(parseInt(customerIdToUse));
       }
       
       // Extract accounts array from paginated response: response.data.data.content
       const accountsData = response.data?.data?.content || response.data?.data || [];
+      if (accountsData.length > 0) {
+        console.log('🔍 DEBUG - Sample account object:', accountsData[0]);
+        console.log('🔍 DEBUG - Account keys:', Object.keys(accountsData[0]));
+      }
       setAccounts(Array.isArray(accountsData) ? accountsData : []);
     } catch (err: any) {
       console.error('Error fetching accounts:', err);
@@ -98,13 +132,18 @@ const Accounts: React.FC = () => {
       account.accountNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       account.productCode.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'ALL' || account.accountStatus === statusFilter;
+    // Check both accountStatus and status fields, default to 'ACTIVE' if not set
+    const accountStatusValue = account.accountStatus || (account as any).status || 'ACTIVE';
+    const matchesStatus = statusFilter === 'ALL' || accountStatusValue === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
   // Format currency
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '₹0.00';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -156,14 +195,16 @@ const Accounts: React.FC = () => {
           </p>
         </div>
         
-        {/* Create Account Button - All users can create */}
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Create Account
-        </button>
+        {/* Create Account Button - Only for MANAGER/ADMIN */}
+        {hasAdminAccess && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Create Account
+          </button>
+        )}
       </div>
 
       {/* Search and Filters */}
@@ -234,7 +275,10 @@ const Accounts: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Active Accounts</p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {filteredAccounts.filter(a => a.accountStatus === 'ACTIVE').length}
+                {filteredAccounts.filter(a => {
+                  const status = a.accountStatus || (a as any).status || 'ACTIVE';
+                  return status === 'ACTIVE';
+                }).length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -284,6 +328,9 @@ const Accounts: React.FC = () => {
                   Account Number
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
+                  Customer ID
+                </th>
+                <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
                   Product
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-muted-foreground">
@@ -306,7 +353,7 @@ const Accounts: React.FC = () => {
             <tbody className="divide-y divide-border">
               {filteredAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
                     <Info className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <p>No accounts found</p>
                   </td>
@@ -320,6 +367,11 @@ const Accounts: React.FC = () => {
                     <td className="p-4">
                       <span className="font-mono text-sm text-foreground">
                         {account.accountNumber}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm font-medium text-primary">
+                        {account.customerId}
                       </span>
                     </td>
                     <td className="p-4">
@@ -341,8 +393,8 @@ const Accounts: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(account.accountStatus)}`}>
-                        {account.accountStatus}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(account.accountStatus || (account as any).status || 'ACTIVE')}`}>
+                        {account.accountStatus || (account as any).status || 'ACTIVE'}
                       </span>
                     </td>
                     <td className="p-4">
@@ -463,8 +515,8 @@ const Accounts: React.FC = () => {
                 )}
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full mt-1 ${getStatusColor(selectedAccount.accountStatus)}`}>
-                    {selectedAccount.accountStatus}
+                  <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full mt-1 ${getStatusColor(selectedAccount.accountStatus || (selectedAccount as any).status || 'ACTIVE')}`}>
+                    {selectedAccount.accountStatus || (selectedAccount as any).status || 'ACTIVE'}
                   </span>
                 </div>
               </div>
@@ -642,7 +694,7 @@ const CreateAccountModal: React.FC<{
               type="number"
               required
               min="1000"
-              step="100"
+              step="0.01"
               value={formData.principalAmount}
               onChange={(e) => setFormData({ ...formData, principalAmount: e.target.value })}
               className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"

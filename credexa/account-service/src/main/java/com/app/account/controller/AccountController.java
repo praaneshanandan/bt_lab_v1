@@ -67,7 +67,8 @@ public class AccountController {
     @Operation(
         summary = "Create FD Account with Default Values",
         description = "Creates a new FD account using all default values from the product configuration. " +
-                      "Interest rate, calculation type, and other parameters are taken from the product."
+                      "Interest rate, calculation type, and other parameters are taken from the product. " +
+                      "Only ADMIN, MANAGER, or CUSTOMER_MANAGER can create accounts."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Account created successfully"),
@@ -96,13 +97,14 @@ public class AccountController {
      * Create FD Account - VERSION 2: Customized values within product purview
      */
     @PostMapping("/create/custom")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CUSTOMER_MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN') or hasRole('CUSTOMER_MANAGER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "Create FD Account with Custom Values",
         description = "Creates a new FD account with customized interest rate and calculation parameters. " +
                       "Custom rate must be within ±2% of the product's base rate. " +
-                      "Allows customization of calculation type and compounding frequency."
+                      "Allows customization of calculation type and compounding frequency. " +
+                      "Only MANAGER, ADMIN, or CUSTOMER_MANAGER can create accounts with custom parameters."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Account created successfully"),
@@ -256,7 +258,7 @@ public class AccountController {
      * List accounts by customer
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "List Accounts by Customer",

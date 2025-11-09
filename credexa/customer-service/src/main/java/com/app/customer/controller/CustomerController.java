@@ -65,6 +65,18 @@ public class CustomerController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Get customer by username - accessible to other services
+     */
+    @GetMapping("/username/{username}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get customer by username", description = "Retrieve customer profile by username. Used by other services for customer verification.")
+    public ResponseEntity<CustomerResponse> getCustomerByUsername(@PathVariable String username) {
+        log.info("Retrieving customer profile for username: {}", username);
+        CustomerResponse response = customerService.getOwnProfile(username);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
     @Operation(summary = "Create new customer", description = "Create a new customer profile. Regular customers can only create for themselves, admins can create for any user.")

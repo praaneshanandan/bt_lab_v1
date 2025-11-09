@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ProfileCompletion } from '@/components/ProfileCompletion';
-import { User, Edit2, Save, X, Loader2, Plus } from 'lucide-react';
+import { User, Edit2, Save, X, Loader2, Plus, Shield } from 'lucide-react';
+import { isManagerOrAdmin, decodeToken, getUserRoles } from '@/utils/auth';
 
 export default function MyProfile() {
   const [profile, setProfile] = useState<Customer | null>(null);
@@ -18,6 +19,7 @@ export default function MyProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const isAdmin = isManagerOrAdmin();
   
   const [createForm, setCreateForm] = useState<CreateCustomerRequest>({
     fullName: '',
@@ -52,6 +54,13 @@ export default function MyProfile() {
     try {
       setLoading(true);
       setError(null);
+      
+      // Admin users don't have customer profiles, skip fetching
+      if (isAdmin) {
+        setLoading(false);
+        return;
+      }
+      
       const response = await customerApi.getOwnProfile();
       setProfile(response.data);
       // Initialize edit form with current values
@@ -187,6 +196,122 @@ export default function MyProfile() {
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
           <div className="text-lg text-muted-foreground">Loading your profile...</div>
         </div>
+      </div>
+    );
+  }
+
+  // Admin Profile View
+  if (isAdmin) {
+    const token = localStorage.getItem('authToken');
+    const decodedToken = token ? decodeToken(token) : null;
+    const username = decodedToken?.sub || 'admin';
+    const roles = getUserRoles();
+    
+    return (
+      <div className="p-8 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <Shield className="h-8 w-8 text-primary" />
+            Admin Profile
+          </h1>
+          <p className="text-muted-foreground mt-2">System administrator account information</p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-6 w-6" />
+              Account Information
+            </CardTitle>
+            <CardDescription>
+              Administrator account details and permissions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Username</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={username}
+                    readOnly
+                    className="bg-muted"
+                  />
+                  <Badge variant="default" className="whitespace-nowrap">
+                    {roles.includes('ROLE_ADMIN') ? 'Admin' : roles.includes('ROLE_MANAGER') ? 'Manager' : 'Staff'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Account Type</Label>
+                <Input
+                  value="System Administrator"
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Roles & Permissions</Label>
+                <div className="flex flex-wrap gap-2">
+                  {roles.map((role) => (
+                    <Badge key={role} variant="secondary">
+                      {role.replace('ROLE_', '')}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Access Level</Label>
+                <Input
+                  value="Full System Access"
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+            </div>
+
+            <Alert>
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Administrator Account:</strong> This account has full access to all system features including customer management, 
+                account creation, transactions, and system configuration. Admin users do not have customer profiles as they are bank staff members.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-lg font-semibold">System Capabilities</h3>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  Create and manage customer accounts
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  View all FD accounts across customers
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  Process transactions and redemptions
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  Manage products and pricing
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  Access batch management features
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  Customize interest rates and terms
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -7,6 +7,10 @@ spring:
   application:
     name: account-service
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
   datasource:
     url: jdbc:mysql://localhost:3306/account_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
@@ -85,19 +89,19 @@ logging:
 # Batch Processing Configuration (enabled for testing)
 batch:
   interest-accrual:
-    enabled: true  # Enabled for testing
-    cron: "0 0 1 * * ?"  # Run at 1:00 AM daily
+    enabled: true # Enabled for testing
+    cron: "0 0 1 * * ?" # Run at 1:00 AM daily
   interest-capitalization:
-    enabled: true  # Enabled for testing
-    cron: "0 0 2 1 1,4,7,10 ?"  # Run at 2:00 AM on 1st of Jan, Apr, Jul, Oct
+    enabled: true # Enabled for testing
+    cron: "0 0 2 1 1,4,7,10 ?" # Run at 2:00 AM on 1st of Jan, Apr, Jul, Oct
   maturity-processing:
-    enabled: true  # Enabled for testing
-    cron: "0 0 3 * * ?"  # 3:00 AM daily
+    enabled: true # Enabled for testing
+    cron: "0 0 3 * * ?" # 3:00 AM daily
 
-# Kafka Configuration (enabled - KRaft mode)
+# Kafka Configuration (TEMPORARILY DISABLED for testing)
 kafka:
-  enabled: true  # Kafka running in KRaft mode (no Zookeeper needed)
-  bootstrap-servers: localhost:9092  # Change this to your Kafka broker
+  enabled: false # Kafka DISABLED temporarily
+  bootstrap-servers: localhost:9092 # Change this to your Kafka broker
   topics:
     account-created: account-created
     transaction: account-transaction
