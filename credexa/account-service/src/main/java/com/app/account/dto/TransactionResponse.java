@@ -35,6 +35,9 @@ public class TransactionResponse {
     @Schema(description = "Account name", example = "John Doe FD Account")
     private String accountName;
 
+    @Schema(description = "Customer ID", example = "1")
+    private Long customerId;
+
     @Schema(description = "Transaction type", example = "INTEREST_CREDIT")
     private TransactionType transactionType;
 

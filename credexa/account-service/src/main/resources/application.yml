@@ -67,3 +67,16 @@ logging:
     org.springframework.security: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Batch Processing Configuration (enabled for testing)
+batch:
+  interest-accrual:
+    enabled: true  # Enabled for testing
+    cron: "0 0 1 * * ?"  # Run at 1:00 AM daily
+  interest-capitalization:
+    enabled: true  # Enabled for testing
+    cron: "0 0 2 1 1,4,7,10 ?"  # Run at 2:00 AM on 1st of Jan, Apr, Jul, Oct
+  maturity-processing:
+    enabled: true  # Enabled for testing
+    cron: "0 0 3 * * ?"  # 3:00 AM daily
+

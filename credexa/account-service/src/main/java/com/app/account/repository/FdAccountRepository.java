@@ -1,5 +1,7 @@
 package com.app.account.repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -39,4 +41,19 @@ public interface FdAccountRepository extends JpaRepository<FdAccount, Long> {
      * Check if account number exists
      */
     boolean existsByAccountNumber(String accountNumber);
+
+    /**
+     * Find all accounts by status (for batch processing)
+     */
+    List<FdAccount> findByStatus(FdAccount.AccountStatus status);
+
+    /**
+     * Find accounts by status and calculation type (for batch processing)
+     */
+    List<FdAccount> findByStatusAndCalculationType(FdAccount.AccountStatus status, String calculationType);
+
+    /**
+     * Find accounts by status and maturity date less than or equal to (for batch processing)
+     */
+    List<FdAccount> findByStatusAndMaturityDateLessThanEqual(FdAccount.AccountStatus status, LocalDate maturityDate);
 }

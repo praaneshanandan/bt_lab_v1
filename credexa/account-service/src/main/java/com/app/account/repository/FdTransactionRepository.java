@@ -101,4 +101,16 @@ public interface FdTransactionRepository extends JpaRepository<FdTransaction, Lo
      */
     Optional<FdTransaction> findFirstByAccountNumberAndTransactionTypeOrderByTransactionDateDesc(
             String accountNumber, FdTransaction.TransactionType transactionType);
+
+    /**
+     * Find transactions by account, type, and date range (for batch processing)
+     */
+    @Query("SELECT t FROM FdTransaction t WHERE t.account = :account " +
+           "AND t.transactionType = :transactionType " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate")
+    List<FdTransaction> findByAccountAndTransactionTypeAndTransactionDateBetween(
+            @Param("account") com.app.account.entity.FdAccount account,
+            @Param("transactionType") FdTransaction.TransactionType transactionType,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 }

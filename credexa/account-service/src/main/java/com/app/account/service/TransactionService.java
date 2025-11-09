@@ -310,6 +310,7 @@ public class TransactionService {
                 .transactionId(transaction.getTransactionId())
                 .accountNumber(transaction.getAccountNumber())
                 .accountName(accountName)
+                .customerId(transaction.getAccount() != null ? transaction.getAccount().getCustomerId() : null)
                 .transactionType(transaction.getTransactionType())
                 .amount(transaction.getAmount())
                 .balanceBefore(transaction.getBalanceBefore())

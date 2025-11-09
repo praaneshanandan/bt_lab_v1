@@ -434,4 +434,44 @@ public class AccountService {
         CustomerDto customer = customerServiceClient.getCustomerByUsername(username);
         return customer != null ? customer.getId() : null;
     }
+
+    /**
+     * Get account by account number (for RBAC checks)
+     */
+    public AccountResponse getAccountByAccountNumber(String accountNumber) {
+        FdAccount account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
+        return mapToAccountResponse(account);
+    }
+
+    /**
+     * Get account by ID type and value (for RBAC checks)
+     */
+    public AccountResponse getAccountByIdType(AccountInquiryRequest.AccountIdType idType, String idValue) {
+        FdAccount account;
+        
+        switch (idType) {
+            case ACCOUNT_NUMBER:
+                account = accountRepository.findByAccountNumber(idValue)
+                        .orElseThrow(() -> new RuntimeException("Account not found with account number: " + idValue));
+                break;
+            case IBAN:
+                account = accountRepository.findByIbanNumber(idValue)
+                        .orElseThrow(() -> new RuntimeException("Account not found with IBAN: " + idValue));
+                break;
+            case INTERNAL_ID:
+                try {
+                    Long internalId = Long.parseLong(idValue);
+                    account = accountRepository.findById(internalId)
+                            .orElseThrow(() -> new RuntimeException("Account not found with internal ID: " + idValue));
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("Invalid internal ID format: " + idValue);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported account ID type: " + idType);
+        }
+        
+        return mapToAccountResponse(account);
+    }
 }
