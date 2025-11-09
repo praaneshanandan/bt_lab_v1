@@ -104,15 +104,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:3000",  // React (CRA)
-            "http://localhost:4200",  // Angular
-            "http://localhost:5173",  // Vite
-            "http://localhost:8080"   // Gateway
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",     // All localhost ports
+            "https://*.ngrok-free.app", // ngrok domains
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok.io"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
