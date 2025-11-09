@@ -16,13 +16,10 @@ import type { BatchStatusResponse, TimeTravelStatusResponse } from '../types';
 
 const BatchManagement: React.FC = () => {
   const [timeTravelStatus, setTimeTravelStatus] = useState<TimeTravelStatusResponse | null>(null);
-  const [batchStatuses, setBatchStatuses] = useState<{
-    maturity?: BatchStatusResponse;
-    capitalization?: BatchStatusResponse;
-    accrual?: BatchStatusResponse;
-  }>({});
+  const [batchStatus, setBatchStatus] = useState<BatchStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
   
   // Time travel form
@@ -43,24 +40,24 @@ const BatchManagement: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      setSuccess(null);
       
-      const [ttStatus, mStatus] = await Promise.allSettled([
+      const [ttStatus, bStatus] = await Promise.allSettled([
         accountServiceApi.getTimeTravelStatus(),
-        accountServiceApi.getMaturityProcessingStatus(),
+        accountServiceApi.getBatchStatus(),
       ]);
 
       if (ttStatus.status === 'fulfilled') {
         setTimeTravelStatus(ttStatus.value.data);
       }
 
-      setBatchStatuses({
-        maturity: mStatus.status === 'fulfilled' ? mStatus.value.data : undefined,
-        // Note: You may need separate endpoints for each batch type
-        // For now using generic batch status
-      });
-    } catch (err: any) {
+      if (bStatus.status === 'fulfilled') {
+        setBatchStatus(bStatus.value.data);
+      }
+    } catch (err: unknown) {
       console.error('Error fetching statuses:', err);
-      setError('Failed to load batch statuses');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load batch statuses');
     } finally {
       setLoading(false);
     }
@@ -78,13 +75,17 @@ const BatchManagement: React.FC = () => {
     
     try {
       setProcessing('time-travel');
-      await accountServiceApi.setTimeTravel({ targetDate });
+      setError(null);
+      // Date input already gives YYYY-MM-DD format
+      const response = await accountServiceApi.setTimeTravel(targetDate);
+      setSuccess(response.data.message || 'Time travel activated successfully');
       setShowTimeTravelModal(false);
       setTargetDate('');
       await fetchStatuses();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error setting time travel:', err);
-      alert(err.response?.data?.message || 'Failed to set time travel');
+      const error = err as { response?: { data?: { message?: string; error?: string } } };
+      setError(error.response?.data?.error || error.response?.data?.message || 'Failed to set time travel');
     } finally {
       setProcessing(null);
     }
@@ -98,11 +99,14 @@ const BatchManagement: React.FC = () => {
     
     try {
       setProcessing('clear-time-travel');
-      await accountServiceApi.clearTimeTravel();
+      setError(null);
+      const response = await accountServiceApi.clearTimeTravel();
+      setSuccess(response.data.message || 'Time travel cleared successfully');
       await fetchStatuses();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error clearing time travel:', err);
-      alert(err.response?.data?.message || 'Failed to clear time travel');
+      const error = err as { response?: { data?: { message?: string; error?: string } } };
+      setError(error.response?.data?.error || error.response?.data?.message || 'Failed to clear time travel');
     } finally {
       setProcessing(null);
     }
@@ -115,26 +119,31 @@ const BatchManagement: React.FC = () => {
     
     try {
       setProcessing(batchType);
+      setError(null);
       
+      let response;
       switch (batchType) {
         case 'maturity':
-          await accountServiceApi.triggerMaturityProcessing();
+          response = await accountServiceApi.triggerMaturityProcessing();
           break;
         case 'capitalization':
-          await accountServiceApi.triggerInterestCapitalization();
+          response = await accountServiceApi.triggerInterestCapitalization();
           break;
         case 'accrual':
-          await accountServiceApi.triggerInterestAccrual();
+          response = await accountServiceApi.triggerInterestAccrual();
           break;
       }
       
-      // Wait a bit for processing to start
+      setSuccess(response.data.message || `${batchType} processing completed successfully`);
+      
+      // Wait a bit for processing to complete
       setTimeout(() => {
         fetchStatuses();
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(`Error triggering ${batchType}:`, err);
-      alert(err.response?.data?.message || `Failed to trigger ${batchType} processing`);
+      const error = err as { response?: { data?: { message?: string; error?: string } } };
+      setError(error.response?.data?.error || error.response?.data?.message || `Failed to trigger ${batchType} processing`);
     } finally {
       setProcessing(null);
     }
@@ -180,11 +189,31 @@ const BatchManagement: React.FC = () => {
         </button>
       </div>
 
+      {/* Success Message */}
+      {success && (
+        <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 rounded-lg p-4 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 flex-shrink-0" />
+          <p>{success}</p>
+          <button
+            onClick={() => setSuccess(null)}
+            className="ml-auto text-green-800 dark:text-green-400 hover:opacity-70"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && (
         <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <p>{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-destructive hover:opacity-70"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -203,7 +232,7 @@ const BatchManagement: React.FC = () => {
             </div>
           </div>
           
-          {timeTravelStatus?.enabled ? (
+          {timeTravelStatus?.timeTravelActive ? (
             <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-sm font-semibold">
               <AlertTriangle className="w-4 h-4" />
               Active
@@ -221,25 +250,25 @@ const BatchManagement: React.FC = () => {
             <div className="bg-muted rounded-lg p-4">
               <p className="text-sm text-muted-foreground mb-1">Actual System Date</p>
               <p className="text-lg font-bold text-foreground">
-                {formatDate(timeTravelStatus.actualSystemDate)}
+                {formatDate(timeTravelStatus.currentSystemDate)}
               </p>
             </div>
             
-            {timeTravelStatus.enabled && timeTravelStatus.currentSimulatedDate && (
+            {timeTravelStatus.timeTravelActive && timeTravelStatus.overrideDate && (
               <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-4">
                 <p className="text-sm text-yellow-800 dark:text-yellow-400 mb-1">
-                  Simulated Date
+                  Simulated Date (Override)
                 </p>
                 <p className="text-lg font-bold text-yellow-900 dark:text-yellow-300">
-                  {formatDate(timeTravelStatus.currentSimulatedDate)}
+                  {formatDate(timeTravelStatus.overrideDate)}
                 </p>
               </div>
             )}
             
             <div className="bg-muted rounded-lg p-4">
-              <p className="text-sm text-muted-foreground mb-1">Status</p>
-              <p className="text-sm text-foreground">
-                {timeTravelStatus.message}
+              <p className="text-sm text-muted-foreground mb-1">Current Batch Date</p>
+              <p className="text-lg font-bold text-foreground">
+                {formatDate(timeTravelStatus.batchDate)}
               </p>
             </div>
           </div>
@@ -252,10 +281,10 @@ const BatchManagement: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             <Calendar className="w-5 h-5" />
-            {timeTravelStatus?.enabled ? 'Change Date' : 'Enable Time Travel'}
+            {timeTravelStatus?.timeTravelActive ? 'Change Date' : 'Enable Time Travel'}
           </button>
           
-          {timeTravelStatus?.enabled && (
+          {timeTravelStatus?.timeTravelActive && (
             <button
               onClick={handleClearTimeTravel}
               disabled={processing !== null}
@@ -283,22 +312,14 @@ const BatchManagement: React.FC = () => {
             Process accounts that have reached maturity date
           </p>
           
-          {batchStatuses.maturity && (
+          {batchStatus && (
             <div className="space-y-2 mb-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
-                <span className="font-semibold text-foreground">
-                  {batchStatuses.maturity.status}
+                <span className="text-muted-foreground">Enabled:</span>
+                <span className={`font-semibold ${batchStatus.maturityProcessingEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                  {batchStatus.maturityProcessingEnabled ? 'Yes' : 'No'}
                 </span>
               </div>
-              {batchStatuses.maturity.lastRunTime && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Last Run:</span>
-                  <span className="text-foreground">
-                    {formatDate(batchStatuses.maturity.lastRunTime)}
-                  </span>
-                </div>
-              )}
             </div>
           )}
           
@@ -334,12 +355,12 @@ const BatchManagement: React.FC = () => {
             Add accumulated interest to principal
           </p>
           
-          {batchStatuses.capitalization && (
+          {batchStatus && (
             <div className="space-y-2 mb-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
-                <span className="font-semibold text-foreground">
-                  {batchStatuses.capitalization.status}
+                <span className="text-muted-foreground">Enabled:</span>
+                <span className={`font-semibold ${batchStatus.interestCapitalizationEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                  {batchStatus.interestCapitalizationEnabled ? 'Yes' : 'No'}
                 </span>
               </div>
             </div>
@@ -377,12 +398,12 @@ const BatchManagement: React.FC = () => {
             Calculate and accrue daily interest
           </p>
           
-          {batchStatuses.accrual && (
+          {batchStatus && (
             <div className="space-y-2 mb-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
-                <span className="font-semibold text-foreground">
-                  {batchStatuses.accrual.status}
+                <span className="text-muted-foreground">Enabled:</span>
+                <span className={`font-semibold ${batchStatus.interestAccrualEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                  {batchStatus.interestAccrualEnabled ? 'Yes' : 'No'}
                 </span>
               </div>
             </div>
@@ -442,7 +463,7 @@ const BatchManagement: React.FC = () => {
                   Target Date
                 </label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   value={targetDate}
                   onChange={(e) => setTargetDate(e.target.value)}
                   className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"

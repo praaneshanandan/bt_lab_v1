@@ -315,14 +315,16 @@ export const accountServiceApi = {
   createCustomAccount: (data: import('../types').CreateCustomAccountRequest) => 
     newAccountApiInstance.post('/create/custom', data),
 
-  // ===== BATCH MANAGEMENT (8 endpoints - Admin/Manager only) =====
+  // ===== BATCH MANAGEMENT (8 endpoints - Admin only) =====
   
   // Time Travel Status
   getTimeTravelStatus: () => newAccountApiInstance.get('/batch/time-travel/status'),
   
-  // Set Time Travel (simulate date)
-  setTimeTravel: (data: import('../types').SetTimeTravelRequest) => 
-    newAccountApiInstance.post('/batch/time-travel/set', data),
+  // Set Time Travel (simulate date) - expects query param
+  setTimeTravel: (date: string) => 
+    newAccountApiInstance.post('/batch/time-travel/set', null, {
+      params: { date }
+    }),
   
   // Clear Time Travel (reset to real date)
   clearTimeTravel: () => newAccountApiInstance.post('/batch/time-travel/clear'),
@@ -333,10 +335,6 @@ export const accountServiceApi = {
   // Trigger maturity processing batch
   triggerMaturityProcessing: () => 
     newAccountApiInstance.post('/batch/maturity-processing/trigger'),
-  
-  // Get maturity processing status
-  getMaturityProcessingStatus: () => 
-    newAccountApiInstance.get('/batch/maturity-processing/status'),
   
   // Trigger interest capitalization batch
   triggerInterestCapitalization: () => 
