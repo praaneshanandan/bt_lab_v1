@@ -62,7 +62,7 @@ const Redemptions: React.FC = () => {
         idValue: idValue,
         redemptionType: "FULL",
         redemptionDate: redemptionDate || undefined,
-        reason: reason || undefined,
+        remarks: reason || undefined,
       });
       console.log(response.data)
       setProcessResult(response.data.data);
@@ -207,7 +207,7 @@ const Redemptions: React.FC = () => {
 
           <div className="space-y-6">
             {/* Warning if premature */}
-            {inquiryResult.isPremature && (
+            {inquiryResult.redemptionType === 'PREMATURE' && (
               <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-800 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
@@ -216,7 +216,7 @@ const Redemptions: React.FC = () => {
                       Premature Withdrawal
                     </h4>
                     <p className="text-sm text-yellow-800 dark:text-yellow-400">
-                      This is a premature withdrawal. Penalty charges will apply.
+                      {inquiryResult.penaltyDescription || 'This is a premature withdrawal. Penalty charges will apply.'}
                     </p>
                   </div>
                 </div>
@@ -271,17 +271,33 @@ const Redemptions: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Redemption Date</p>
+                <p className="text-sm text-muted-foreground">Inquiry Date</p>
                 <p className="font-semibold text-foreground mt-1">
-                  {formatDate(inquiryResult.redemptionDate)}
+                  {formatDate(inquiryResult.inquiryDate)}
                 </p>
               </div>
             </div>
 
-            {/* Message */}
-            {inquiryResult.message && (
+            {/* Additional Info */}
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+              <div>
+                <p className="text-sm text-muted-foreground">Days Elapsed</p>
+                <p className="font-semibold text-foreground mt-1">{inquiryResult.daysElapsed}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Days Remaining</p>
+                <p className="font-semibold text-foreground mt-1">{inquiryResult.daysRemaining}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Redemption Type</p>
+                <p className="font-semibold text-foreground mt-1">{inquiryResult.redemptionType}</p>
+              </div>
+            </div>
+
+            {/* Remarks */}
+            {inquiryResult.remarks && (
               <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm text-foreground">{inquiryResult.message}</p>
+                <p className="text-sm text-foreground">{inquiryResult.remarks}</p>
               </div>
             )}
 
@@ -370,9 +386,9 @@ const Redemptions: React.FC = () => {
               <p className="text-3xl font-bold text-primary">
                 {formatCurrency(processResult.netRedemptionAmount)}
               </p>
-              {processResult.penaltyApplied > 0 && (
+              {processResult.penaltyAmount > 0 && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                  (Penalty: {formatCurrency(processResult.penaltyApplied)})
+                  (Penalty: {formatCurrency(processResult.penaltyAmount)})
                 </p>
               )}
             </div>

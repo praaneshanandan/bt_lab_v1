@@ -369,20 +369,26 @@ export const accountServiceApi = {
     newAccountApiInstance.get(`/transactions/${id}`),
   
   // Get transactions by type
-  getTransactionsByType: (type: string) => 
-    newAccountApiInstance.get(`/transactions/type/${type}`),
+  getTransactionsByType: (type: string, page = 0, size = 100) => 
+    newAccountApiInstance.get(`/transactions/type/${type}`, {
+      params: { page, size }
+    }),
   
   // Get transactions by status
-  getTransactionsByStatus: (status: string) => 
-    newAccountApiInstance.get(`/transactions/status/${status}`),
+  getTransactionsByStatus: (status: string, page = 0, size = 100) => 
+    newAccountApiInstance.get(`/transactions/status/${status}`, {
+      params: { page, size }
+    }),
   
   // List transactions by account number
-  getTransactionsByAccount: (accountNumber: string) => 
-    newAccountApiInstance.get(`/transactions/account/${accountNumber}`),
+  getTransactionsByAccount: (accountNumber: string, page = 0, size = 100) => 
+    newAccountApiInstance.get(`/transactions/account/${accountNumber}`, {
+      params: { page, size }
+    }),
   
   // Count transactions by account
   countTransactionsByAccount: (accountNumber: string) => 
-    newAccountApiInstance.get(`/transactions/account/${accountNumber}/count`),
+    newAccountApiInstance.get(`/transactions/count/${accountNumber}`),
   
   // Transaction inquiry (search with filters)
   inquireTransactions: (data: import('../types').TransactionInquiryRequest) => 
@@ -391,9 +397,6 @@ export const accountServiceApi = {
   // Create transaction
   createTransaction: (data: import('../types').CreateTransactionRequest) => 
     newAccountApiInstance.post('/transactions', data),
-  
-  // Get all transactions (Admin/Manager only)
-  getAllTransactions: () => newAccountApiInstance.get('/transactions/list'),
 };
 
 export default loginApi;

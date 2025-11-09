@@ -68,6 +68,10 @@ public class Product {
     @Column(nullable = false)
     private LocalDate effectiveDate;
     
+    @NotBlank(message = "Bank/Branch code is required")
+    @Column(name = "bank_branch_code", nullable = false, length = 50)
+    private String bankBranchCode;  // Bank or Branch code
+    
     @NotBlank(message = "Currency code is required")
     @Column(nullable = false, length = 3)
     private String currencyCode;  // ISO currency code (USD, EUR, INR, etc.)

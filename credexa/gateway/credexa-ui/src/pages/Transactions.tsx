@@ -35,22 +35,39 @@ const Transactions: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      let response;
-      if (hasAdminAccess) {
-        // Admin/Manager can see all transactions
-        response = await accountServiceApi.getAllTransactions();
-      } else {
-        // Customer sees transactions from their accounts
-        // Note: In real implementation, you'd need to first get customer's accounts
-        // then fetch transactions for those accounts
-        response = await accountServiceApi.getAllTransactions();
-        // Filter by customer's accounts on frontend (backend should do this)
+      // First, get all FD accounts
+      const accountsResponse = await accountServiceApi.getAllAccounts();
+      const accounts = accountsResponse.data?.data?.content || accountsResponse.data?.content || [];
+      
+      if (accounts.length === 0) {
+        setTransactions([]);
+        setLoading(false);
+        return;
       }
       
-      setTransactions(response.data || []);
-    } catch (err: any) {
+      // Fetch transactions for each account and combine them
+      const allTransactions: FDTransaction[] = [];
+      
+      for (const account of accounts) {
+        try {
+          const txnResponse = await accountServiceApi.getTransactionsByAccount(
+            account.accountNumber, 
+            0, 
+            100
+          );
+          const txns = txnResponse.data?.data?.content || txnResponse.data?.content || [];
+          allTransactions.push(...txns);
+        } catch (err) {
+          console.warn(`Failed to fetch transactions for account ${account.accountNumber}:`, err);
+          // Continue with other accounts
+        }
+      }
+      
+      setTransactions(allTransactions);
+    } catch (err: unknown) {
       console.error('Error fetching transactions:', err);
-      setError(err.response?.data?.message || 'Failed to load transactions');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load transactions');
     } finally {
       setLoading(false);
     }
@@ -63,11 +80,12 @@ const Transactions: React.FC = () => {
   // Filter transactions
   const filteredTransactions = transactions.filter(txn => {
     const matchesSearch = 
-      txn.transactionReference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      txn.accountNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      txn.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      txn.accountNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (txn.referenceNumber && txn.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesType = typeFilter === 'ALL' || txn.transactionType === typeFilter;
-    const matchesStatus = statusFilter === 'ALL' || txn.transactionStatus === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || txn.status === statusFilter;
     
     return matchesSearch && matchesType && matchesStatus;
   });
@@ -95,13 +113,17 @@ const Transactions: React.FC = () => {
   // Get transaction type icon
   const getTransactionIcon = (type: string) => {
     switch (type) {
-      case 'OPENING':
+      case 'DEPOSIT':
       case 'INTEREST_CREDIT':
+      case 'MATURITY_CREDIT':
         return <ArrowDownLeft className="w-5 h-5 text-green-600 dark:text-green-400" />;
-      case 'MATURITY':
-      case 'PREMATURE_WITHDRAWAL':
+      case 'TDS_DEDUCTION':
+      case 'WITHDRAWAL':
       case 'CLOSURE':
         return <ArrowUpRight className="w-5 h-5 text-red-600 dark:text-red-400" />;
+      case 'REVERSAL':
+      case 'ADJUSTMENT':
+        return <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       default:
         return <RefreshCw className="w-5 h-5 text-muted-foreground" />;
     }
@@ -202,11 +224,14 @@ const Transactions: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
             >
               <option value="ALL">All Types</option>
-              <option value="OPENING">Opening</option>
+              <option value="DEPOSIT">Deposit</option>
               <option value="INTEREST_CREDIT">Interest Credit</option>
-              <option value="MATURITY">Maturity</option>
-              <option value="PREMATURE_WITHDRAWAL">Premature Withdrawal</option>
+              <option value="TDS_DEDUCTION">TDS Deduction</option>
+              <option value="WITHDRAWAL">Withdrawal</option>
+              <option value="MATURITY_CREDIT">Maturity Credit</option>
               <option value="CLOSURE">Closure</option>
+              <option value="REVERSAL">Reversal</option>
+              <option value="ADJUSTMENT">Adjustment</option>
             </select>
           </div>
 
@@ -220,8 +245,10 @@ const Transactions: React.FC = () => {
             >
               <option value="ALL">All Status</option>
               <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
               <option value="COMPLETED">Completed</option>
               <option value="FAILED">Failed</option>
+              <option value="REJECTED">Rejected</option>
               <option value="REVERSED">Reversed</option>
             </select>
           </div>
@@ -263,7 +290,7 @@ const Transactions: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Completed</p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {filteredTransactions.filter(t => t.transactionStatus === 'COMPLETED').length}
+                {filteredTransactions.filter(t => t.status === 'COMPLETED').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -277,7 +304,7 @@ const Transactions: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Pending</p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {filteredTransactions.filter(t => t.transactionStatus === 'PENDING').length}
+                {filteredTransactions.filter(t => t.status === 'PENDING').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
@@ -291,7 +318,7 @@ const Transactions: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Failed</p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {filteredTransactions.filter(t => t.transactionStatus === 'FAILED').length}
+                {filteredTransactions.filter(t => t.status === 'FAILED').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
@@ -354,7 +381,7 @@ const Transactions: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <span className="font-mono text-xs text-foreground">
-                        {txn.transactionReference}
+                        {txn.transactionId}
                       </span>
                     </td>
                     <td className="p-4">
@@ -364,7 +391,7 @@ const Transactions: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(txn.transactionAmount)}
+                        {formatCurrency(txn.amount)}
                       </span>
                     </td>
                     <td className="p-4">
@@ -373,7 +400,7 @@ const Transactions: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4">
-                      {getStatusBadge(txn.transactionStatus)}
+                      {getStatusBadge(txn.status)}
                     </td>
                     <td className="p-4">
                       <button
@@ -417,21 +444,21 @@ const Transactions: React.FC = () => {
                   </p>
                 </div>
                 <div className="ml-auto">
-                  {getStatusBadge(selectedTransaction.transactionStatus)}
+                  {getStatusBadge(selectedTransaction.status)}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Transaction ID</p>
-                  <p className="text-foreground font-semibold mt-1">
-                    {selectedTransaction.id}
+                  <p className="font-mono text-xs text-foreground font-semibold mt-1">
+                    {selectedTransaction.transactionId}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Reference</p>
                   <p className="font-mono text-xs text-foreground font-semibold mt-1">
-                    {selectedTransaction.transactionReference}
+                    {selectedTransaction.referenceNumber || 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -443,7 +470,22 @@ const Transactions: React.FC = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Amount</p>
                   <p className="text-xl font-bold text-primary mt-1">
-                    {formatCurrency(selectedTransaction.transactionAmount)}
+                    {formatCurrency(selectedTransaction.amount)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Balance Before</p>
+                  <p className="text-foreground font-semibold mt-1">
+                    {formatCurrency(selectedTransaction.balanceBefore)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Balance After</p>
+                  <p className="text-foreground font-semibold mt-1">
+                    {formatCurrency(selectedTransaction.balanceAfter)}
                   </p>
                 </div>
               </div>
@@ -455,26 +497,47 @@ const Transactions: React.FC = () => {
                 </div>
               )}
 
-              {selectedTransaction.performedBy && (
+              {selectedTransaction.remarks && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Performed By</p>
-                  <p className="text-foreground mt-1">{selectedTransaction.performedBy}</p>
+                  <p className="text-sm text-muted-foreground">Remarks</p>
+                  <p className="text-foreground mt-1">{selectedTransaction.remarks}</p>
+                </div>
+              )}
+
+              {(selectedTransaction.initiatedBy || selectedTransaction.approvedBy) && (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedTransaction.initiatedBy && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Initiated By</p>
+                      <p className="text-foreground mt-1">{selectedTransaction.initiatedBy}</p>
+                    </div>
+                  )}
+                  {selectedTransaction.approvedBy && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Approved By</p>
+                      <p className="text-foreground mt-1">{selectedTransaction.approvedBy}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground pt-4 border-t border-border">
-                <div>
-                  <p>Created At</p>
-                  <p className="text-foreground mt-1">
-                    {formatDate(selectedTransaction.createdAt)}
-                  </p>
-                </div>
-                <div>
-                  <p>Updated At</p>
-                  <p className="text-foreground mt-1">
-                    {formatDate(selectedTransaction.updatedAt)}
-                  </p>
-                </div>
+                {selectedTransaction.valueDate && (
+                  <div>
+                    <p>Value Date</p>
+                    <p className="text-foreground mt-1">
+                      {formatDate(selectedTransaction.valueDate)}
+                    </p>
+                  </div>
+                )}
+                {selectedTransaction.approvalDate && (
+                  <div>
+                    <p>Approval Date</p>
+                    <p className="text-foreground mt-1">
+                      {formatDate(selectedTransaction.approvalDate)}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
