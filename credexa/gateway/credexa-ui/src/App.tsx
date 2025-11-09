@@ -16,6 +16,10 @@ import ProductDetails from './pages/ProductDetails';
 import Calculator from './pages/Calculator';
 import FDAccounts from './pages/FDAccounts';
 import CreateFDAccount from './pages/CreateFDAccount';
+import Accounts from './pages/Accounts';
+import Transactions from './pages/Transactions';
+import BatchManagement from './pages/BatchManagement';
+import Redemptions from './pages/Redemptions';
 import './App.css';
 
 // Session manager wrapper that must be inside Router
@@ -54,6 +58,10 @@ function AppContent() {
                     <Route path="/calculator" element={<Calculator />} />
                     <Route path="/accounts" element={<FDAccounts />} />
                     <Route path="/accounts/create" element={<CreateFDAccount />} />
+                    <Route path="/fd-accounts" element={<Accounts />} />
+                    <Route path="/transactions" element={<Transactions />} />
+                    <Route path="/redemptions" element={<Redemptions />} />
+                    <Route path="/batch-management" element={<BatchManagement />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

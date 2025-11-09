@@ -31,8 +31,6 @@ import com.app.common.dto.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +40,7 @@ import jakarta.validation.Valid;
  * REST Controller for FD Account Management
  */
 @RestController
-@RequestMapping("/accounts")
+@RequestMapping("/")
 @Tag(name = "Account Management", description = "APIs for Fixed Deposit Account operations")
 public class AccountController {
 
@@ -64,7 +62,7 @@ public class AccountController {
      * Create FD Account - VERSION 1: Default values from product
      */
     @PostMapping("/create/default")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER_MANAGER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "Create FD Account with Default Values",
@@ -81,7 +79,7 @@ public class AccountController {
             @Valid @RequestBody CreateAccountRequest request) {
         try {
             String currentUser = getCurrentUsername();
-            logger.info("📝 Creating account with defaults by user: {}", currentUser);
+            logger.info("� Creating account with defaults by user: {}", currentUser);
 
             AccountResponse response = accountService.createAccountWithDefaults(request, currentUser);
             
@@ -98,7 +96,7 @@ public class AccountController {
      * Create FD Account - VERSION 2: Customized values within product purview
      */
     @PostMapping("/create/custom")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CUSTOMER_MANAGER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "Create FD Account with Custom Values",
@@ -217,7 +215,7 @@ public class AccountController {
      * List all accounts with pagination
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CUSTOMER_MANAGER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "List All Accounts",

@@ -4,11 +4,14 @@ import {
   Users, 
   Package, 
   Calculator, 
-  Wallet,
   Menu,
   X,
   LogOut,
-  User
+  User,
+  Landmark,
+  Receipt,
+  Settings,
+  Coins
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +25,10 @@ const navigation = [
   { name: 'Customers', href: '/customers', icon: Users, requiresManagerOrAdmin: true },
   { name: 'Products', href: '/products', icon: Package, requiresManagerOrAdmin: false },
   { name: 'FD Calculator', href: '/calculator', icon: Calculator, requiresManagerOrAdmin: false },
-  { name: 'FD Accounts', href: '/accounts', icon: Wallet, requiresManagerOrAdmin: false },
+  { name: 'FD Accounts', href: '/fd-accounts', icon: Landmark, requiresManagerOrAdmin: false },
+  { name: 'Transactions', href: '/transactions', icon: Receipt, requiresManagerOrAdmin: false },
+  { name: 'Redemptions', href: '/redemptions', icon: Coins, requiresManagerOrAdmin: false },
+  { name: 'Batch Management', href: '/batch-management', icon: Settings, requiresManagerOrAdmin: true },
 ];
 
 export function Sidebar() {

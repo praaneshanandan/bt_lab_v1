@@ -515,3 +515,171 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+// ==================== ACCOUNT SERVICE TYPES (Port 8087) ====================
+
+// Account Management Types
+export interface FDAccount {
+  accountNumber: string;
+  customerId: number;
+  productCode: string;
+  principalAmount: number;
+  interestRate: number;
+  tenure: number;
+  tenureUnit: 'DAYS' | 'MONTHS' | 'YEARS';
+  maturityDate: string;
+  maturityAmount: number;
+  nomineeDetails?: string;
+  accountStatus: 'ACTIVE' | 'MATURED' | 'CLOSED' | 'SUSPENDED';
+  openingDate: string;
+  lastInterestCreditDate?: string;
+  accruedInterest?: number;
+  closingDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDefaultAccountRequest {
+  accountName: string;
+  customerId: number;
+  productCode: string;
+  principalAmount: number;
+  termMonths: number;
+  effectiveDate: string; // ISO format: YYYY-MM-DD
+  branchCode?: string;
+  branchName?: string;
+  remarks?: string;
+}
+
+export interface CreateCustomAccountRequest {
+  accountName: string;
+  customerId: number;
+  productCode: string;
+  principalAmount: number;
+  termMonths: number;
+  effectiveDate: string; // ISO format: YYYY-MM-DD
+  interestRate?: number;
+  branchCode?: string;
+  branchName?: string;
+  remarks?: string;
+}
+
+export interface AccountInquiryRequest {
+  accountNumber?: string;
+  customerId?: number;
+  productCode?: string;
+  status?: 'ACTIVE' | 'MATURED' | 'CLOSED' | 'SUSPENDED';
+}
+
+export interface AccountBalanceResponse {
+  accountNumber: string;
+  principalAmount: number;
+  accruedInterest: number;
+  totalBalance: number;
+  maturityAmount: number;
+  accountStatus: string;
+}
+
+// Transaction Types
+export interface FDTransaction {
+  id: number;
+  transactionReference: string;
+  accountNumber: string;
+  transactionType: 'OPENING' | 'INTEREST_CREDIT' | 'MATURITY' | 'PREMATURE_WITHDRAWAL' | 'CLOSURE';
+  transactionAmount: number;
+  transactionDate: string;
+  transactionStatus: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
+  description?: string;
+  performedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTransactionRequest {
+  accountNumber: string;
+  transactionType: 'OPENING' | 'INTEREST_CREDIT' | 'MATURITY' | 'PREMATURE_WITHDRAWAL' | 'CLOSURE';
+  transactionAmount: number;
+  description?: string;
+}
+
+export interface TransactionInquiryRequest {
+  accountNumber?: string;
+  transactionType?: string;
+  transactionStatus?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// Batch Management Types
+export interface BatchStatusResponse {
+  batchType: 'MATURITY_PROCESSING' | 'INTEREST_CAPITALIZATION' | 'INTEREST_ACCRUAL';
+  status: 'IDLE' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  lastRunTime?: string;
+  nextScheduledTime?: string;
+  processedCount?: number;
+  failedCount?: number;
+  message?: string;
+}
+
+export interface TimeTravelStatusResponse {
+  enabled: boolean;
+  currentSimulatedDate?: string;
+  actualSystemDate: string;
+  message: string;
+}
+
+export interface SetTimeTravelRequest {
+  targetDate: string; // ISO date string
+}
+
+// Interest Calculation Types
+export interface InterestCalculationRequest {
+  accountNumber: string;
+  calculationDate?: string; // Optional, defaults to today
+}
+
+export interface InterestCalculationResponse {
+  accountNumber: string;
+  calculatedInterest: number;
+  accruedInterest: number;
+  lastCreditDate?: string;
+  nextCreditDate?: string;
+  calculationDate: string;
+  credited: boolean;
+  message: string;
+}
+
+// Redemption Types
+export interface RedemptionInquiryRequest {
+  accountNumber: string;
+  redemptionDate?: string; // Optional, defaults to today
+}
+
+export interface RedemptionInquiryResponse {
+  accountNumber: string;
+  principalAmount: number;
+  accruedInterest: number;
+  penaltyAmount: number;
+  netRedemptionAmount: number;
+  maturityDate: string;
+  redemptionDate: string;
+  isPremature: boolean;
+  message: string;
+}
+
+export interface ProcessRedemptionRequest {
+  accountNumber: string;
+  redemptionDate?: string;
+  reason?: string;
+}
+
+export interface ProcessRedemptionResponse {
+  accountNumber: string;
+  transactionReference: string;
+  redemptionAmount: number;
+  penaltyApplied: number;
+  status: 'COMPLETED' | 'FAILED';
+  message: string;
+  processedAt: string;
+}
+

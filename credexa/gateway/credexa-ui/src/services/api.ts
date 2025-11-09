@@ -61,6 +61,14 @@ const calculatorApiInstance = axios.create({
   },
 });
 
+// Create axios instance for NEW Account Service (Port 8087)
+const newAccountApiInstance = axios.create({
+  baseURL: 'http://localhost:8087/api/accounts',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Add token interceptor to all instances
 const addAuthInterceptor = (instance: any) => {
   instance.interceptors.request.use((config: any) => {
@@ -77,6 +85,7 @@ addAuthInterceptor(customerApiInstance);
 addAuthInterceptor(accountApiInstance);
 addAuthInterceptor(productApiInstance);
 addAuthInterceptor(calculatorApiInstance);
+addAuthInterceptor(newAccountApiInstance);
 
 // Auth/Login Service APIs (context-path is /api/auth)
 export const authApi = {
@@ -272,6 +281,122 @@ export const fdAccountApi = {
   
   deactivateRole: (roleId: number) =>
     accountApiInstance.delete(`/api/fd-accounts/roles/${roleId}`),
+};
+
+// ==================== NEW ACCOUNT SERVICE API (Port 8087) ====================
+
+export const accountServiceApi = {
+  // ===== ACCOUNT MANAGEMENT (8 endpoints) =====
+  
+  // List all accounts (Admin/Manager only)
+  getAllAccounts: () => newAccountApiInstance.get('/'),
+  
+  // Get account by account number
+  getAccountByNumber: (accountNumber: string) => 
+    newAccountApiInstance.get(`/${accountNumber}`),
+  
+  // Get account balance
+  getAccountBalance: (accountNumber: string) => 
+    newAccountApiInstance.get(`/${accountNumber}/balance`),
+  
+  // Health check
+  accountsHealth: () => newAccountApiInstance.get('/health'),
+  
+  // Get accounts by customer ID
+  getAccountsByCustomerId: (customerId: number) => 
+    newAccountApiInstance.get(`/customer/${customerId}`),
+  
+  // Account inquiry (search with filters)
+  inquireAccounts: (data: import('../types').AccountInquiryRequest) => 
+    newAccountApiInstance.post('/inquiry', data),
+  
+  // Create default account (uses product defaults)
+  createDefaultAccount: (data: import('../types').CreateDefaultAccountRequest) => 
+    newAccountApiInstance.post('/create/default', data),
+  
+  // Create custom account (custom rates/tenure)
+  createCustomAccount: (data: import('../types').CreateCustomAccountRequest) => 
+    newAccountApiInstance.post('/create/custom', data),
+
+  // ===== BATCH MANAGEMENT (8 endpoints - Admin/Manager only) =====
+  
+  // Time Travel Status
+  getTimeTravelStatus: () => newAccountApiInstance.get('/batch/time-travel/status'),
+  
+  // Set Time Travel (simulate date)
+  setTimeTravel: (data: import('../types').SetTimeTravelRequest) => 
+    newAccountApiInstance.post('/batch/time-travel/set', data),
+  
+  // Clear Time Travel (reset to real date)
+  clearTimeTravel: () => newAccountApiInstance.post('/batch/time-travel/clear'),
+  
+  // Get overall batch status
+  getBatchStatus: () => newAccountApiInstance.get('/batch/status'),
+  
+  // Trigger maturity processing batch
+  triggerMaturityProcessing: () => 
+    newAccountApiInstance.post('/batch/maturity-processing/trigger'),
+  
+  // Get maturity processing status
+  getMaturityProcessingStatus: () => 
+    newAccountApiInstance.get('/batch/maturity-processing/status'),
+  
+  // Trigger interest capitalization batch
+  triggerInterestCapitalization: () => 
+    newAccountApiInstance.post('/batch/interest-capitalization/trigger'),
+  
+  // Trigger interest accrual batch
+  triggerInterestAccrual: () => 
+    newAccountApiInstance.post('/batch/interest-accrual/trigger'),
+
+  // ===== INTEREST CALCULATION (1 endpoint - Admin/Manager only) =====
+  
+  // Calculate and credit interest
+  calculateInterest: (data: import('../types').InterestCalculationRequest) => 
+    newAccountApiInstance.post('/interest/calculate', data),
+
+  // ===== REDEMPTION MANAGEMENT (2 endpoints) =====
+  
+  // Inquire redemption (Customer can inquire their own, Admin/Manager can inquire any)
+  inquireRedemption: (data: import('../types').RedemptionInquiryRequest) => 
+    newAccountApiInstance.post('/redemptions/inquiry', data),
+  
+  // Process redemption (Admin/Manager only)
+  processRedemption: (data: import('../types').ProcessRedemptionRequest) => 
+    newAccountApiInstance.post('/redemptions/process', data),
+
+  // ===== TRANSACTION MANAGEMENT (8 endpoints) =====
+  
+  // Get transaction by ID
+  getTransactionById: (id: number) => 
+    newAccountApiInstance.get(`/transactions/${id}`),
+  
+  // Get transactions by type
+  getTransactionsByType: (type: string) => 
+    newAccountApiInstance.get(`/transactions/type/${type}`),
+  
+  // Get transactions by status
+  getTransactionsByStatus: (status: string) => 
+    newAccountApiInstance.get(`/transactions/status/${status}`),
+  
+  // List transactions by account number
+  getTransactionsByAccount: (accountNumber: string) => 
+    newAccountApiInstance.get(`/transactions/account/${accountNumber}`),
+  
+  // Count transactions by account
+  countTransactionsByAccount: (accountNumber: string) => 
+    newAccountApiInstance.get(`/transactions/account/${accountNumber}/count`),
+  
+  // Transaction inquiry (search with filters)
+  inquireTransactions: (data: import('../types').TransactionInquiryRequest) => 
+    newAccountApiInstance.post('/transactions/inquiry', data),
+  
+  // Create transaction
+  createTransaction: (data: import('../types').CreateTransactionRequest) => 
+    newAccountApiInstance.post('/transactions', data),
+  
+  // Get all transactions (Admin/Manager only)
+  getAllTransactions: () => newAccountApiInstance.get('/transactions'),
 };
 
 export default loginApi;
