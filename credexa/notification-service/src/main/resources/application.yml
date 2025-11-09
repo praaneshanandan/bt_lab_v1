@@ -1,0 +1,62 @@
+server:
+  port: 8096
+  servlet:
+    context-path: /api/notifications
+
+spring:
+  application:
+    name: notification-service
+  
+  # Email Configuration (Gmail)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: credexaservice.bt@gmail.com
+    password: bcls lhpo noyu qpyt
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  
+  # Kafka Consumer Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true
+      max-poll-records: 10
+
+# Kafka Topics
+kafka:
+  topics:
+    account-created: account-created
+    transaction: account-transaction
+    alert: customer-alert
+
+# Email Configuration
+notification:
+  email:
+    from: credexaservice.bt@gmail.com
+    from-name: Credexa Banking
+    enabled: true
+    retry:
+      max-attempts: 3
+      delay-ms: 1000
+
+# Logging
+logging:
+  level:
+    com.app.notification: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.mail: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
