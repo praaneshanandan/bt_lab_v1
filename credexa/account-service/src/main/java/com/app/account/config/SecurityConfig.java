@@ -63,7 +63,12 @@ public class SecurityConfig {
         logger.debug("🔧 Configuring CORS...");
         
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*",     // All localhost ports
+            "https://*.ngrok-free.app", // ngrok domains
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok.io"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));

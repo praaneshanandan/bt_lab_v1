@@ -24,15 +24,16 @@ public class WebConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:3000",  // React (CRA)
-            "http://localhost:4200",  // Angular
-            "http://localhost:5173",  // Vite
-            "http://localhost:8080"   // Gateway
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",     // All localhost ports
+            "https://*.ngrok-free.app", // ngrok domains
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok.io"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -54,16 +55,16 @@ public class WebConfig {
                 
                 String origin = request.getHeader("Origin");
                 if (origin != null && (
-                    origin.equals("http://localhost:3000") ||
-                    origin.equals("http://localhost:4200") ||
-                    origin.equals("http://localhost:5173") ||
-                    origin.equals("http://localhost:8080"))) {
+                    origin.startsWith("http://localhost:") ||
+                    origin.matches("https://.*\\.ngrok-free\\.(app|dev)") ||
+                    origin.matches("https://.*\\.ngrok\\.io"))) {
                     
                     response.setHeader("Access-Control-Allow-Origin", origin);
                     response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
                     response.setHeader("Access-Control-Allow-Headers", "*");
                     response.setHeader("Access-Control-Allow-Credentials", "true");
                     response.setHeader("Access-Control-Max-Age", "3600");
+                    response.setHeader("Access-Control-Expose-Headers", "Authorization");
                 }
                 
                 // For OPTIONS requests, return 200 immediately without further processing

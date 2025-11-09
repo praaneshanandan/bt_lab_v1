@@ -19,10 +19,12 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow React UI origin
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",
-            "http://localhost:3000"
+        // Allow React UI origin and ngrok domains
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*",     // All localhost ports
+            "https://*.ngrok-free.app", // ngrok domains
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok.io"
         ));
         
         // Allow all HTTP methods
@@ -32,6 +34,9 @@ public class CorsConfig {
         
         // Allow all headers
         configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Expose Authorization header
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         
         // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);
