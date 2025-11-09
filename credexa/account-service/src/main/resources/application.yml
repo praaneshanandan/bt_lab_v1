@@ -28,14 +28,14 @@ jwt:
   expiration: 3600000
 
 # Service URLs for Integration
-services:
-  customer:
+integration:
+  customer-service:
     url: http://localhost:8082/api/customer
     timeout: 5000
-  product:
+  product-service:
     url: http://localhost:8084/api/products
     timeout: 5000
-  calculator:
+  calculator-service:
     url: http://localhost:8085/api/calculator
     timeout: 10000
 

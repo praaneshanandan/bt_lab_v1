@@ -17,8 +17,9 @@ import com.app.account.dto.RedemptionInquiryRequest;
 import com.app.account.dto.RedemptionInquiryResponse;
 import com.app.account.dto.RedemptionProcessRequest;
 import com.app.account.dto.RedemptionProcessResponse;
+import com.app.account.service.AccountService;
 import com.app.account.service.RedemptionService;
-import com.app.account.util.ApiResponse;
+import com.app.common.dto.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,15 +34,18 @@ import jakarta.validation.Valid;
  * Provides endpoints for redemption inquiry and processing
  */
 @RestController
-@RequestMapping("/api/redemptions")
+@RequestMapping("/redemptions")
 @Tag(name = "Redemption Management", description = "APIs for FD account redemption inquiry and processing")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "Bearer Authentication")
 public class RedemptionController {
 
     private static final Logger logger = LoggerFactory.getLogger(RedemptionController.class);
 
     @Autowired
     private RedemptionService redemptionService;
+
+    @Autowired
+    private AccountService accountService;
 
     /**
      * Get redemption inquiry details for an account
@@ -53,7 +57,7 @@ public class RedemptionController {
     @PreAuthorize("hasAnyRole('CUSTOMER', 'MANAGER', 'ADMIN')")
     @Operation(
         summary = "Get redemption inquiry details",
-        description = "Retrieve complete redemption calculation including interest earned, TDS, penalties, and net redemption amount. Supports flexible account identification using ACCOUNT_NUMBER, IBAN, or INTERNAL_ID."
+        description = "Retrieve complete redemption calculation including interest earned, TDS, penalties, and net redemption amount. Supports flexible account identification using ACCOUNT_NUMBER, IBAN, or INTERNAL_ID. Customers can only access their own accounts, while Managers and Admins can access all accounts."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -72,21 +76,37 @@ public class RedemptionController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "401",
             description = "Unauthorized - invalid or missing JWT token"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - customers can only access their own accounts"
         )
     })
     public ResponseEntity<ApiResponse<RedemptionInquiryResponse>> getRedemptionInquiry(
             @Valid @RequestBody RedemptionInquiryRequest request) {
         
         try {
-            logger.info("📊 Redemption inquiry request received: idType={}, idValue={}", 
-                    request.getIdTypeOrDefault(), request.getIdValue());
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            logger.info("📊 Redemption inquiry request received: idType={}, idValue={}, user={}", 
+                    request.getIdTypeOrDefault(), request.getIdValue(), username);
 
             RedemptionInquiryResponse response = redemptionService.getRedemptionInquiry(request);
 
+            // Check if customer can access this account
+            if (!canAccessRedemptionInquiry(response, authentication)) {
+                logger.warn("⚠️ User {} attempted unauthorized access to account belonging to customerId: {}", 
+                        username, response.getCustomerId());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("Access denied: You can only view redemption details for your own accounts")
+                );
+            }
+
             return ResponseEntity.ok(
                 ApiResponse.success(
-                    response, 
-                    "Redemption inquiry retrieved successfully"
+                    "Redemption inquiry retrieved successfully",
+                    response
                 )
             );
 
@@ -162,8 +182,8 @@ public class RedemptionController {
 
             return ResponseEntity.ok(
                 ApiResponse.success(
-                    response, 
-                    "Redemption processed successfully. Transaction ID: " + response.getRedemptionTransactionId()
+                    "Redemption processed successfully. Transaction ID: " + response.getRedemptionTransactionId(),
+                    response
                 )
             );
 
@@ -191,5 +211,58 @@ public class RedemptionController {
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null ? authentication.getName() : "system";
+    }
+
+    /**
+     * Check if user is ADMIN or MANAGER
+     */
+    private boolean isAdminOrManager(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN") || 
+                                 auth.getAuthority().equals("ROLE_MANAGER"));
+    }
+
+    /**
+     * Get customer ID for the authenticated user
+     * Returns null if user is not a customer or customer not found
+     */
+    private Long getCustomerIdForUser(String username) {
+        try {
+            return accountService.getCustomerIdByUsername(username);
+        } catch (Exception e) {
+            logger.error("❌ Error getting customer ID for user {}: {}", username, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Verify if the authenticated user can access the redemption inquiry
+     * Customers can only access their own accounts
+     * Managers and Admins can access all accounts
+     */
+    private boolean canAccessRedemptionInquiry(RedemptionInquiryResponse response, Authentication authentication) {
+        if (isAdminOrManager(authentication)) {
+            return true;
+        }
+        
+        // For customers, check if account belongs to them
+        String username = authentication.getName();
+        Long userCustomerId = getCustomerIdForUser(username);
+        
+        if (userCustomerId == null) {
+            logger.warn("⚠️ Customer ID not found for user: {}", username);
+            return false;
+        }
+        
+        boolean hasAccess = response.getCustomerId().equals(userCustomerId);
+        if (!hasAccess) {
+            logger.warn("⚠️ User {} (customerId: {}) attempted to access redemption inquiry for customerId: {}", 
+                    username, userCustomerId, response.getCustomerId());
+        }
+        
+        return hasAccess;
     }
 }

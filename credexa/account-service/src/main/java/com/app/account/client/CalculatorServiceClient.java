@@ -31,8 +31,8 @@ public class CalculatorServiceClient {
      * Calculate FD maturity details
      */
     public CalculationResponse calculateMaturity(CalculationRequest request) {
-        logger.info("🔍 Calculating FD maturity: Principal={}, Rate={}, Tenure={} months", 
-                request.getPrincipalAmount(), request.getInterestRate(), request.getTenureMonths());
+        logger.info("🔍 Calculating FD maturity: Principal={}, Rate={}, Tenure={} {}", 
+                request.getPrincipalAmount(), request.getInterestRate(), request.getTenure(), request.getTenureUnit());
 
         try {
             ApiResponse<CalculationResponse> response = webClient.post()

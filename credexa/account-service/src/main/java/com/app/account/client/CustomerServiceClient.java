@@ -32,20 +32,39 @@ public class CustomerServiceClient {
      * Get customer details by ID
      */
     public CustomerDto getCustomerById(Long customerId) {
-        logger.info("🔍 Fetching customer details for ID: {}", customerId);
+        logger.info("🔍 Fetching customer details for ID: {} from URL: {}/{}", customerId, customerServiceUrl, customerId);
 
         try {
-            ApiResponse<CustomerDto> response = webClient.get()
-                    .uri("/customers/{id}", customerId)
+            CustomerDto customer = webClient.get()
+                    .uri("/{id}", customerId)
                     .retrieve()
-                    .bodyToMono(new org.springframework.core.ParameterizedTypeReference<ApiResponse<CustomerDto>>() {})
+                    .onStatus(status -> status.is4xxClientError(), 
+                            clientResponse -> {
+                                logger.error("❌ 4xx error from customer-service: {} {}", clientResponse.statusCode(), clientResponse.statusCode().value());
+                                return clientResponse.bodyToMono(String.class)
+                                        .flatMap(body -> {
+                                            logger.error("❌ 4xx Error Response Body: {}", body);
+                                            return Mono.error(new RuntimeException("Customer service returned " + clientResponse.statusCode() + ": " + body));
+                                        });
+                            })
+                    .onStatus(status -> status.is5xxServerError(),
+                            clientResponse -> {
+                                logger.error("❌ 5xx error from customer-service: {} {}", clientResponse.statusCode(), clientResponse.statusCode().value());
+                                return clientResponse.bodyToMono(String.class)
+                                        .flatMap(body -> {
+                                            logger.error("❌ 5xx Error Response Body: {}", body);
+                                            return Mono.error(new RuntimeException("Customer service error " + clientResponse.statusCode() + ": " + body));
+                                        });
+                            })
+                    .bodyToMono(CustomerDto.class)
+                    .doOnError(error -> logger.error("❌ WebClient error before response: {}", error.getMessage()))
                     .block();
 
-            if (response != null && response.isSuccess() && response.getData() != null) {
-                logger.info("✅ Customer details fetched successfully: {}", response.getData().getFullName());
-                return response.getData();
+            if (customer != null) {
+                logger.info("✅ Customer details fetched successfully: {}", customer.getFullName());
+                return customer;
             } else {
-                logger.error("❌ Customer not found or invalid response for ID: {}", customerId);
+                logger.error("❌ Customer not found or null response for ID: {}", customerId);
                 throw new RuntimeException("Customer not found with ID: " + customerId);
             }
         } catch (Exception e) {
@@ -64,6 +83,41 @@ public class CustomerServiceClient {
         } catch (Exception e) {
             logger.error("❌ Customer validation failed for ID: {}", customerId);
             return false;
+        }
+    }
+
+    /**
+     * Get customer by username
+     */
+    public CustomerDto getCustomerByUsername(String username) {
+        logger.info("🔍 Fetching customer by username: {}", username);
+
+        try {
+            CustomerDto customer = webClient.get()
+                    .uri("/username/{username}", username)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError(), 
+                            clientResponse -> {
+                                logger.error("❌ 4xx error from customer-service: {} {}", clientResponse.statusCode(), clientResponse.statusCode().value());
+                                return clientResponse.bodyToMono(String.class)
+                                        .flatMap(body -> {
+                                            logger.error("❌ 4xx Error Response Body: {}", body);
+                                            return Mono.error(new RuntimeException("Customer service returned " + clientResponse.statusCode() + ": " + body));
+                                        });
+                            })
+                    .bodyToMono(CustomerDto.class)
+                    .block();
+
+            if (customer != null) {
+                logger.info("✅ Customer fetched successfully: {}", customer.getFullName());
+                return customer;
+            } else {
+                logger.error("❌ Customer not found for username: {}", username);
+                return null;
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error fetching customer by username {}: {}", username, e.getMessage());
+            return null;
         }
     }
 }

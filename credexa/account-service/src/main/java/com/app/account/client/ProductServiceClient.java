@@ -34,7 +34,7 @@ public class ProductServiceClient {
 
         try {
             ApiResponse<ProductDto> response = webClient.get()
-                    .uri("/products/code/{productCode}", productCode)
+                    .uri("/code/{code}", productCode)
                     .retrieve()
                     .bodyToMono(new org.springframework.core.ParameterizedTypeReference<ApiResponse<ProductDto>>() {})
                     .block();
@@ -62,7 +62,7 @@ public class ProductServiceClient {
             if (product == null) {
                 return false;
             }
-            if (product.getActive() == null || !product.getActive()) {
+            if (product.getCurrentlyActive() == null || !product.getCurrentlyActive()) {
                 logger.warn("⚠️ Product {} is not active", productCode);
                 return false;
             }

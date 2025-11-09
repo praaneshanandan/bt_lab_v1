@@ -150,15 +150,23 @@ public class AccountController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Account found"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Cannot access other customer's account")
     })
     public ResponseEntity<ApiResponse<AccountResponse>> accountInquiry(
-            @RequestBody AccountInquiryRequest inquiryRequest) {
+            @RequestBody AccountInquiryRequest inquiryRequest,
+            Authentication authentication) {
         try {
             logger.info("🔍 Account inquiry: Type={}, Value={}", 
                     inquiryRequest.getIdTypeOrDefault(), inquiryRequest.getIdValue());
 
             AccountResponse response = accountService.getAccountByInquiry(inquiryRequest);
+            
+            // Security check: Customers can only inquire their own accounts
+            if (!canAccessAccount(response, authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("Access Denied: You don't have permission to view this account"));
+            }
             
             return ResponseEntity.ok(ApiResponse.success("Account found", response));
         } catch (Exception e) {
@@ -181,13 +189,22 @@ public class AccountController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Account found"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Cannot access other customer's account")
     })
     public ResponseEntity<ApiResponse<AccountResponse>> getAccount(
             @Parameter(description = "Account number", example = "FD-20251108123456-1234-5")
-            @PathVariable String accountNumber) {
+            @PathVariable String accountNumber,
+            Authentication authentication) {
         try {
             AccountResponse response = accountService.getAccountByNumber(accountNumber);
+            
+            // Security check: Customers can only view their own accounts
+            if (!canAccessAccount(response, authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("Access Denied: You don't have permission to view this account"));
+            }
+            
             return ResponseEntity.ok(ApiResponse.success("Account retrieved successfully", response));
         } catch (Exception e) {
             logger.error("❌ Error fetching account {}: {}", accountNumber, e.getMessage());
@@ -249,7 +266,8 @@ public class AccountController {
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Accounts retrieved successfully"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Cannot access other customer's accounts")
     })
     public ResponseEntity<ApiResponse<Page<AccountResponse>>> listAccountsByCustomer(
             @Parameter(description = "Customer ID", example = "1")
@@ -257,8 +275,22 @@ public class AccountController {
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
         try {
+            // Security check: Customers can only view their own accounts
+            if (!isAdminOrManager(authentication)) {
+                String username = authentication.getName();
+                Long userCustomerId = getCustomerIdForUser(username);
+                
+                if (userCustomerId == null || !userCustomerId.equals(customerId)) {
+                    logger.warn("⚠️ User {} (customerId: {}) attempted to access accounts for customerId: {}", 
+                            username, userCustomerId, customerId);
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(ApiResponse.error("Access Denied: You can only view your own accounts"));
+                }
+            }
+            
             Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
             Page<AccountResponse> accounts = accountService.listAccountsByCustomer(customerId, pageable);
             
@@ -289,8 +321,18 @@ public class AccountController {
     })
     public ResponseEntity<ApiResponse<BalanceResponse>> getBalance(
             @Parameter(description = "Account number", example = "FD-20251108123456-1234-5")
-            @PathVariable String accountNumber) {
+            @PathVariable String accountNumber,
+            Authentication authentication) {
         try {
+            // First get the account to check ownership
+            AccountResponse account = accountService.getAccountByNumber(accountNumber);
+            
+            // Security check: Customers can only view their own account balance
+            if (!canAccessAccount(account, authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("Access Denied: You don't have permission to view this account balance"));
+            }
+            
             BalanceResponse response = accountService.getAccountBalance(accountNumber);
             return ResponseEntity.ok(ApiResponse.success("Balance retrieved successfully", response));
         } catch (Exception e) {
@@ -306,5 +348,58 @@ public class AccountController {
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null ? authentication.getName() : "system";
+    }
+
+    /**
+     * Check if current user has ADMIN or MANAGER role
+     */
+    private boolean isAdminOrManager(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN") || 
+                                 auth.getAuthority().equals("ROLE_MANAGER"));
+    }
+
+    /**
+     * Get customer ID for the authenticated user
+     * Returns null if user is not a customer or customer not found
+     */
+    private Long getCustomerIdForUser(String username) {
+        try {
+            return accountService.getCustomerIdByUsername(username);
+        } catch (Exception e) {
+            logger.error("❌ Error getting customer ID for user {}: {}", username, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Verify if the authenticated user can access the account
+     * Customers can only access their own accounts
+     * Managers and Admins can access all accounts
+     */
+    private boolean canAccessAccount(AccountResponse account, Authentication authentication) {
+        if (isAdminOrManager(authentication)) {
+            return true;
+        }
+        
+        // For customers, check if account belongs to them
+        String username = authentication.getName();
+        Long userCustomerId = getCustomerIdForUser(username);
+        
+        if (userCustomerId == null) {
+            logger.warn("⚠️ Customer ID not found for user: {}", username);
+            return false;
+        }
+        
+        boolean hasAccess = account.getCustomerId().equals(userCustomerId);
+        if (!hasAccess) {
+            logger.warn("⚠️ User {} (customerId: {}) attempted to access account belonging to customerId: {}", 
+                    username, userCustomerId, account.getCustomerId());
+        }
+        
+        return hasAccess;
     }
 }

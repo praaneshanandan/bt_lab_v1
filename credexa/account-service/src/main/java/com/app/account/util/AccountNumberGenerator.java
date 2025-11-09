@@ -120,6 +120,7 @@ public class AccountNumberGenerator {
 
     /**
      * Calculate IBAN check digits (mod 97 algorithm)
+     * Uses chunking to handle large numbers that exceed Long.MAX_VALUE
      */
     private int calculateIBANCheckDigit(String baseIBAN) {
         // Convert letters to numbers (A=10, B=11, ..., Z=35)
@@ -135,8 +136,15 @@ public class AccountNumberGenerator {
         // Add country code numeric value (IN = 1823) and 00 for check digits
         numericIBAN.append("1823").append("00");
         
-        // Calculate mod 97
-        long mod = Long.parseLong(numericIBAN.toString()) % 97;
+        // Calculate mod 97 using chunking to avoid Long overflow
+        String ibanString = numericIBAN.toString();
+        long mod = 0;
+        
+        // Process in chunks to avoid overflow
+        for (int i = 0; i < ibanString.length(); i++) {
+            mod = (mod * 10 + Character.getNumericValue(ibanString.charAt(i))) % 97;
+        }
+        
         int checkDigit = (int) (98 - mod);
         
         return checkDigit;

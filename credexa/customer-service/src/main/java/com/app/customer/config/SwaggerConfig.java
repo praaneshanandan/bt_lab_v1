@@ -30,7 +30,7 @@ public class SwaggerConfig {
                                 .email("support@credexa.com")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8083/api/customer")
+                                .url("http://localhost:8082/api/customer")
                                 .description("Local Development Server")))
                 .components(new Components()
                         .addSecuritySchemes("Bearer Authentication",

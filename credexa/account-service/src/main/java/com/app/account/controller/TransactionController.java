@@ -25,6 +25,7 @@ import com.app.account.dto.CreateTransactionRequest;
 import com.app.account.dto.TransactionInquiryRequest;
 import com.app.account.dto.TransactionResponse;
 import com.app.account.entity.FdTransaction;
+import com.app.account.service.AccountService;
 import com.app.account.service.TransactionService;
 import com.app.common.dto.ApiResponse;
 
@@ -47,6 +48,9 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
+
+    @Autowired
+    private AccountService accountService;
 
     /**
      * Create Transaction - Using Account ID type and value
@@ -96,20 +100,34 @@ public class TransactionController {
     @Operation(
         summary = "Transaction Inquiry",
         description = "Find a specific transaction using account ID type (ACCOUNT_NUMBER, IBAN, INTERNAL_ID) " +
-                      "and transaction ID. Verifies the transaction belongs to the specified account."
+                      "and transaction ID. Verifies the transaction belongs to the specified account. " +
+                      "Customers can only access their own transactions, while Managers and Admins can access all transactions."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transaction found"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Transaction or account not found"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - customers can only access their own transactions")
     })
     public ResponseEntity<ApiResponse<TransactionResponse>> transactionInquiry(
             @RequestBody TransactionInquiryRequest inquiryRequest) {
         try {
-            logger.info("🔍 Transaction inquiry: Account ID Type={}, ID Value={}, Transaction ID={}", 
-                    inquiryRequest.getIdTypeOrDefault(), inquiryRequest.getIdValue(), inquiryRequest.getTransactionId());
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            logger.info("🔍 Transaction inquiry: Account ID Type={}, ID Value={}, Transaction ID={}, User={}", 
+                    inquiryRequest.getIdTypeOrDefault(), inquiryRequest.getIdValue(), inquiryRequest.getTransactionId(), username);
 
             TransactionResponse response = transactionService.getTransactionByInquiry(inquiryRequest);
+            
+            // Check if customer can access this transaction
+            if (!canAccessTransaction(response, authentication)) {
+                logger.warn("⚠️ User {} attempted unauthorized access to transaction {} belonging to customerId: {}", 
+                        username, response.getTransactionId(), response.getCustomerId());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("Access denied: You can only view your own transactions")
+                );
+            }
             
             return ResponseEntity.ok(ApiResponse.success("Transaction found", response));
         } catch (Exception e) {
@@ -127,18 +145,32 @@ public class TransactionController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "Get Transaction by ID",
-        description = "Retrieve transaction details using transaction ID"
+        description = "Retrieve transaction details using transaction ID. Customers can only access their own transactions, while Managers and Admins can access all transactions."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transaction found"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Transaction not found"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - customers can only access their own transactions")
     })
     public ResponseEntity<ApiResponse<TransactionResponse>> getTransaction(
             @Parameter(description = "Transaction ID", example = "TXN-20251108120000-1001")
             @PathVariable String transactionId) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
             TransactionResponse response = transactionService.getTransactionById(transactionId);
+            
+            // Check if customer can access this transaction
+            if (!canAccessTransaction(response, authentication)) {
+                logger.warn("⚠️ User {} attempted unauthorized access to transaction {} belonging to customerId: {}", 
+                        username, response.getTransactionId(), response.getCustomerId());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("Access denied: You can only view your own transactions")
+                );
+            }
+            
             return ResponseEntity.ok(ApiResponse.success("Transaction retrieved successfully", response));
         } catch (Exception e) {
             logger.error("❌ Error fetching transaction {}: {}", transactionId, e.getMessage());
@@ -156,12 +188,14 @@ public class TransactionController {
     @Operation(
         summary = "List Transactions by Account",
         description = "Get paginated list of transactions for a specific account. " +
-                      "Supports flexible account ID types (ACCOUNT_NUMBER, IBAN, INTERNAL_ID)."
+                      "Supports flexible account ID types (ACCOUNT_NUMBER, IBAN, INTERNAL_ID). " +
+                      "Customers can only access their own account transactions, while Managers and Admins can access all accounts."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transactions retrieved successfully"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - customers can only access their own account transactions")
     })
     public ResponseEntity<ApiResponse<Page<TransactionResponse>>> listTransactionsByAccount(
             @Parameter(description = "Account ID type (ACCOUNT_NUMBER, IBAN, INTERNAL_ID)", example = "ACCOUNT_NUMBER")
@@ -177,6 +211,18 @@ public class TransactionController {
             @Parameter(description = "Sort direction (ASC or DESC)", example = "DESC")
             @RequestParam(defaultValue = "DESC") String sortDir) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            // Check if customer can access this account
+            if (!canAccessAccountByIdValue(idType, idValue, authentication)) {
+                logger.warn("⚠️ User {} attempted unauthorized access to account {} ({})", 
+                        username, idValue, idType);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("Access denied: You can only view transactions for your own accounts")
+                );
+            }
+            
             Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
             Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -201,12 +247,13 @@ public class TransactionController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "List Transactions by Account Number",
-        description = "Get paginated list of transactions for a specific account number"
+        description = "Get paginated list of transactions for a specific account number. Customers can only access their own account transactions, while Managers and Admins can access all accounts."
     )
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transactions retrieved successfully"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Account not found"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - customers can only access their own account transactions")
     })
     public ResponseEntity<ApiResponse<Page<TransactionResponse>>> listTransactionsByAccountNumber(
             @Parameter(description = "Account number", example = "FD-20251108120000-1234-5")
@@ -216,6 +263,18 @@ public class TransactionController {
             @Parameter(description = "Page size", example = "10")
             @RequestParam(defaultValue = "10") int size) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            // Check if customer can access this account
+            if (!canAccessAccountByAccountNumber(accountNumber, authentication)) {
+                logger.warn("⚠️ User {} attempted unauthorized access to account {}", 
+                        username, accountNumber);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("Access denied: You can only view transactions for your own accounts")
+                );
+            }
+            
             Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
             Page<TransactionResponse> transactions = transactionService.listTransactionsByAccountNumber(accountNumber, pageable);
             
@@ -307,12 +366,29 @@ public class TransactionController {
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
         summary = "Get Transaction Count",
-        description = "Get total number of transactions for an account"
+        description = "Get total number of transactions for an account. Customers can only access their own account transaction counts, while Managers and Admins can access all accounts."
     )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Transaction count retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - customers can only access their own account transaction counts")
+    })
     public ResponseEntity<ApiResponse<Long>> getTransactionCount(
             @Parameter(description = "Account number", example = "FD-20251108120000-1234-5")
             @PathVariable String accountNumber) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            // Check if customer can access this account
+            if (!canAccessAccountByAccountNumber(accountNumber, authentication)) {
+                logger.warn("⚠️ User {} attempted unauthorized access to account {}", 
+                        username, accountNumber);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("Access denied: You can only view transaction count for your own accounts")
+                );
+            }
+            
             long count = transactionService.getTransactionCount(accountNumber);
             return ResponseEntity.ok(ApiResponse.success(
                     String.format("Account %s has %d transactions", accountNumber, count), count));
@@ -329,5 +405,122 @@ public class TransactionController {
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null ? authentication.getName() : "system";
+    }
+
+    /**
+     * Check if user is ADMIN or MANAGER
+     */
+    private boolean isAdminOrManager(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN") || 
+                                 auth.getAuthority().equals("ROLE_MANAGER"));
+    }
+
+    /**
+     * Get customer ID for the authenticated user
+     * Returns null if user is not a customer or customer not found
+     */
+    private Long getCustomerIdForUser(String username) {
+        try {
+            return accountService.getCustomerIdByUsername(username);
+        } catch (Exception e) {
+            logger.error("❌ Error getting customer ID for user {}: {}", username, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Verify if the authenticated user can access the transaction
+     * Customers can only access their own transactions
+     * Managers and Admins can access all transactions
+     */
+    private boolean canAccessTransaction(TransactionResponse transaction, Authentication authentication) {
+        if (isAdminOrManager(authentication)) {
+            return true;
+        }
+        
+        // For customers, check if transaction belongs to their account
+        String username = authentication.getName();
+        Long userCustomerId = getCustomerIdForUser(username);
+        
+        if (userCustomerId == null) {
+            logger.warn("⚠️ Customer ID not found for user: {}", username);
+            return false;
+        }
+        
+        boolean hasAccess = transaction.getCustomerId().equals(userCustomerId);
+        if (!hasAccess) {
+            logger.warn("⚠️ User {} (customerId: {}) attempted to access transaction belonging to customerId: {}", 
+                    username, userCustomerId, transaction.getCustomerId());
+        }
+        
+        return hasAccess;
+    }
+
+    /**
+     * Verify if the authenticated user can access the account by account number
+     */
+    private boolean canAccessAccountByAccountNumber(String accountNumber, Authentication authentication) {
+        if (isAdminOrManager(authentication)) {
+            return true;
+        }
+        
+        try {
+            // Get account details to check customerId
+            var account = accountService.getAccountByAccountNumber(accountNumber);
+            String username = authentication.getName();
+            Long userCustomerId = getCustomerIdForUser(username);
+            
+            if (userCustomerId == null) {
+                logger.warn("⚠️ Customer ID not found for user: {}", username);
+                return false;
+            }
+            
+            boolean hasAccess = account.getCustomerId().equals(userCustomerId);
+            if (!hasAccess) {
+                logger.warn("⚠️ User {} (customerId: {}) attempted to access account {} belonging to customerId: {}", 
+                        username, userCustomerId, accountNumber, account.getCustomerId());
+            }
+            
+            return hasAccess;
+        } catch (Exception e) {
+            logger.error("❌ Error checking account access: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Verify if the authenticated user can access the account by ID type and value
+     */
+    private boolean canAccessAccountByIdValue(AccountIdType idType, String idValue, Authentication authentication) {
+        if (isAdminOrManager(authentication)) {
+            return true;
+        }
+        
+        try {
+            // Get account details to check customerId
+            var account = accountService.getAccountByIdType(idType, idValue);
+            String username = authentication.getName();
+            Long userCustomerId = getCustomerIdForUser(username);
+            
+            if (userCustomerId == null) {
+                logger.warn("⚠️ Customer ID not found for user: {}", username);
+                return false;
+            }
+            
+            boolean hasAccess = account.getCustomerId().equals(userCustomerId);
+            if (!hasAccess) {
+                logger.warn("⚠️ User {} (customerId: {}) attempted to access account {} ({}) belonging to customerId: {}", 
+                        username, userCustomerId, idValue, idType, account.getCustomerId());
+            }
+            
+            return hasAccess;
+        } catch (Exception e) {
+            logger.error("❌ Error checking account access: {}", e.getMessage());
+            return false;
+        }
     }
 }

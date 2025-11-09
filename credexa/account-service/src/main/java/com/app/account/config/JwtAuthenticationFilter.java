@@ -2,6 +2,9 @@ package com.app.account.config;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,13 +61,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtUtil.validateToken(jwt, username)) {
                     logger.debug("✅ JWT token is valid for user: {}", username);
 
-                    // Extract roles from JWT
-                    String roles = jwtUtil.extractRoles(jwt);
-                    logger.debug("🔍 Extracted roles: {}", roles);
+            // Extract roles from JWT
+            List<String> roles = jwtUtil.extractRoles(jwt);
+            logger.debug("🔍 Extracted roles: {}", roles);
 
-                    // Create authentication token
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            username, null, new ArrayList<>());
+            // Convert roles to GrantedAuthority
+            List<SimpleGrantedAuthority> authorities = roles == null ?
+                new ArrayList<>() :
+                roles.stream()
+                 .map(r -> new SimpleGrantedAuthority(r.startsWith("ROLE_") ? r : "ROLE_" + r))
+                 .collect(Collectors.toList());
+
+            // Create authentication token with authorities
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                username, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);

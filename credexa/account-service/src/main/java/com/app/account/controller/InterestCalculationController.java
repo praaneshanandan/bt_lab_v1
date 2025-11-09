@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.app.account.dto.InterestCalculationRequest;
 import com.app.account.dto.InterestCalculationResponse;
 import com.app.account.service.InterestCalculationService;
-import com.app.account.util.ApiResponse;
+import com.app.common.dto.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,9 +31,9 @@ import jakarta.validation.Valid;
  * Provides endpoint for calculating and crediting interest on FD accounts
  */
 @RestController
-@RequestMapping("/api/interest")
+@RequestMapping("/interest")
 @Tag(name = "Interest Calculation", description = "APIs for FD account interest calculation and crediting")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "Bearer Authentication")
 public class InterestCalculationController {
 
     private static final Logger logger = LoggerFactory.getLogger(InterestCalculationController.class);
@@ -99,8 +99,8 @@ public class InterestCalculationController {
 
             return ResponseEntity.ok(
                 ApiResponse.success(
-                    response, 
-                    successMessage
+                    successMessage,
+                    response
                 )
             );
 

@@ -28,7 +28,7 @@ public class OpenApiConfig {
                                 .name("Credexa Banking Platform")
                                 .email("support@credexa.com")))
                 .addServersItem(new Server()
-                        .url("http://localhost:8087")
+                        .url("http://localhost:8087/api/accounts")
                         .description("Local Development Server"))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components()

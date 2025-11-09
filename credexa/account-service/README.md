@@ -147,6 +147,9 @@ Account Service is a simplified, clean implementation for managing Fixed Deposit
 - `POST /api/redemptions/inquiry` - Get redemption calculation details (ALL ROLES)
 - `POST /api/redemptions/process` - Process full or partial redemption (MANAGER/ADMIN)
 
+#### Interest Calculation
+- `POST /api/interest/calculate` - Calculate and credit interest with optional TDS (MANAGER/ADMIN)
+
 ## Quick Start
 
 ### Prerequisites
@@ -187,6 +190,8 @@ See [SWAGGER-TESTING-GUIDE.md](SWAGGER-TESTING-GUIDE.md) for comprehensive accou
 See [TRANSACTION-TESTING-GUIDE.md](TRANSACTION-TESTING-GUIDE.md) for transaction management testing.
 
 See [REDEMPTION-TESTING-GUIDE.md](REDEMPTION-TESTING-GUIDE.md) for redemption features testing.
+
+See [INTEREST-CALCULATION-TESTING-GUIDE.md](INTEREST-CALCULATION-TESTING-GUIDE.md) for interest calculation testing.
 
 ### Quick Test Sequence
 1. **Login**: Get JWT from login-service as MANAGER/ADMIN
@@ -264,6 +269,14 @@ See [REDEMPTION-TESTING-GUIDE.md](REDEMPTION-TESTING-GUIDE.md) for redemption fe
 - **Minimum Balance**: 10% of principal amount for partial redemptions
 - **Redemption Types**: PREMATURE (before maturity), ON_MATURITY (on maturity date), POST_MATURITY (after maturity)
 - **Net Amount**: Calculated as Current Balance + Interest Earned - TDS Deducted - Penalty Amount
+
+### Interest Calculation
+- **Formula**: Simple Interest = (Principal × Rate × Days) / (100 × 365)
+- **Period Detection**: Automatic detection from last interest credit date or manual specification
+- **Crediting**: Optional crediting creates INTEREST_CREDIT transaction
+- **TDS**: Automatic TDS_DEDUCTION transaction if applicable
+- **Balance Tracking**: Maintains balance chain through transactions
+- **Historical Summary**: Shows total interest and TDS credited till date
 
 ## Key Differences from fd-account-service
 
@@ -381,7 +394,8 @@ account-service/
 │   ├── controller/                         # REST endpoints
 │   │   ├── AccountController.java
 │   │   ├── TransactionController.java
-│   │   └── RedemptionController.java
+│   │   ├── RedemptionController.java
+│   │   └── InterestCalculationController.java
 │   ├── dto/                                # Request/Response DTOs
 │   │   ├── CreateAccountRequest.java
 │   │   ├── AccountResponse.java
@@ -394,6 +408,8 @@ account-service/
 │   │   ├── RedemptionInquiryResponse.java
 │   │   ├── RedemptionProcessRequest.java
 │   │   ├── RedemptionProcessResponse.java
+│   │   ├── InterestCalculationRequest.java
+│   │   ├── InterestCalculationResponse.java
 │   │   └── external/                       # External service DTOs
 │   │       ├── CustomerDto.java
 │   │       ├── ProductDto.java
@@ -408,7 +424,8 @@ account-service/
 │   ├── service/                            # Business logic
 │   │   ├── AccountService.java
 │   │   ├── TransactionService.java
-│   │   └── RedemptionService.java
+│   │   ├── RedemptionService.java
+│   │   └── InterestCalculationService.java
 │   └── util/                               # Utilities
 │       └── AccountNumberGenerator.java
 ├── src/main/resources/
@@ -419,6 +436,7 @@ account-service/
 ├── SWAGGER-TESTING-GUIDE.md               # Account testing guide
 ├── TRANSACTION-TESTING-GUIDE.md           # Transaction testing guide
 ├── REDEMPTION-TESTING-GUIDE.md            # Redemption testing guide
+├── INTEREST-CALCULATION-TESTING-GUIDE.md  # Interest calculation testing guide
 └── TRANSACTION-IMPLEMENTATION-SUMMARY.md  # Transaction features summary
 ```
 

@@ -66,7 +66,7 @@ public class AccountService {
 
         // 2. Validate and fetch product
         ProductDto product = productServiceClient.getProductByCode(request.getProductCode());
-        if (product == null || !product.getActive()) {
+        if (product == null || product.getCurrentlyActive() == null || !product.getCurrentlyActive()) {
             throw new RuntimeException("Product not found or inactive: " + request.getProductCode());
         }
 
@@ -81,14 +81,13 @@ public class AccountService {
         CalculationRequest calculationRequest = CalculationRequest.builder()
                 .principalAmount(request.getPrincipalAmount())
                 .interestRate(product.getBaseInterestRate()) // Use product's base rate
-                .tenureMonths(request.getTermMonths())
+                .tenure(request.getTermMonths())
+                .tenureUnit("MONTHS")
                 .calculationType(product.getInterestCalculationMethod() != null ? 
                         product.getInterestCalculationMethod() : "SIMPLE")
                 .compoundingFrequency("QUARTERLY") // Default
-                .startDate(request.getEffectiveDate())
-                .tdsApplicable(product.getTdsApplicable() != null ? product.getTdsApplicable() : false)
                 .tdsRate(product.getTdsRate() != null ? product.getTdsRate() : BigDecimal.ZERO)
-                .customerId(customer.getId())
+                .customerClassifications(null) // TODO: Get from customer if available
                 .build();
 
         CalculationResponse calculation = calculatorServiceClient.calculateMaturity(calculationRequest);
@@ -102,7 +101,7 @@ public class AccountService {
                 .customerId(customer.getId())
                 .customerName(customer.getFullName())
                 .customerEmail(customer.getEmail())
-                .customerMobile(customer.getMobile())
+                .customerMobile(customer.getMobileNumber())
                 // Product details (denormalized)
                 .productCode(product.getProductCode())
                 .productName(product.getProductName())
@@ -160,7 +159,7 @@ public class AccountService {
 
         // 2. Validate and fetch product
         ProductDto product = productServiceClient.getProductByCode(request.getProductCode());
-        if (product == null || !product.getActive()) {
+        if (product == null || product.getCurrentlyActive() == null || !product.getCurrentlyActive()) {
             throw new RuntimeException("Product not found or inactive: " + request.getProductCode());
         }
 
@@ -178,14 +177,13 @@ public class AccountService {
         CalculationRequest calculationRequest = CalculationRequest.builder()
                 .principalAmount(request.getPrincipalAmount())
                 .interestRate(finalInterestRate)
-                .tenureMonths(request.getTermMonths())
+                .tenure(request.getTermMonths())
+                .tenureUnit("MONTHS")
                 .calculationType(customCalculationType != null ? customCalculationType : 
                         (product.getInterestCalculationMethod() != null ? product.getInterestCalculationMethod() : "SIMPLE"))
                 .compoundingFrequency(customCompoundingFrequency != null ? customCompoundingFrequency : "QUARTERLY")
-                .startDate(request.getEffectiveDate())
-                .tdsApplicable(product.getTdsApplicable() != null ? product.getTdsApplicable() : false)
                 .tdsRate(product.getTdsRate() != null ? product.getTdsRate() : BigDecimal.ZERO)
-                .customerId(customer.getId())
+                .customerClassifications(null) // TODO: Get from customer if available
                 .build();
 
         CalculationResponse calculation = calculatorServiceClient.calculateMaturity(calculationRequest);
@@ -199,7 +197,7 @@ public class AccountService {
                 .customerId(customer.getId())
                 .customerName(customer.getFullName())
                 .customerEmail(customer.getEmail())
-                .customerMobile(customer.getMobile())
+                .customerMobile(customer.getMobileNumber())
                 // Product details
                 .productCode(product.getProductCode())
                 .productName(product.getProductName())
@@ -427,5 +425,13 @@ public class AccountService {
                 .createdAt(account.getCreatedAt())
                 .updatedAt(account.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * Get customer ID by username
+     */
+    public Long getCustomerIdByUsername(String username) {
+        CustomerDto customer = customerServiceClient.getCustomerByUsername(username);
+        return customer != null ? customer.getId() : null;
     }
 }
