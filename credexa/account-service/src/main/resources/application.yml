@@ -22,6 +22,20 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${kafka.bootstrap-servers:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: 1
+      retries: 3
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: account-service-group
+      auto-offset-reset: earliest
+
 # JWT Configuration (same as all other services)
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForCredexaApplicationMustBe256BitsLongForHS256AlgorithmToWorkProperly}
@@ -80,3 +94,11 @@ batch:
     enabled: true  # Enabled for testing
     cron: "0 0 3 * * ?"  # 3:00 AM daily
 
+# Kafka Configuration (enabled - KRaft mode)
+kafka:
+  enabled: true  # Kafka running in KRaft mode (no Zookeeper needed)
+  bootstrap-servers: localhost:9092  # Change this to your Kafka broker
+  topics:
+    account-created: account-created
+    transaction: account-transaction
+    alert: customer-alert

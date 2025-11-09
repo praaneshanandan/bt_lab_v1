@@ -22,6 +22,8 @@ import com.app.account.dto.TransactionResponse;
 import com.app.account.entity.FdAccount;
 import com.app.account.entity.FdTransaction;
 import com.app.account.entity.FdTransaction.TransactionStatus;
+import com.app.account.event.AlertEvent;
+import com.app.account.event.TransactionEvent;
 import com.app.account.repository.FdAccountRepository;
 import com.app.account.repository.FdTransactionRepository;
 
@@ -44,6 +46,9 @@ public class TransactionService {
 
     @Autowired(required = false)
     private HttpServletRequest httpServletRequest;
+
+    @Autowired(required = false)
+    private EventPublisher eventPublisher;
 
     /**
      * Create transaction using Account ID type
@@ -98,6 +103,9 @@ public class TransactionService {
                 savedTransaction.getTransactionId(), 
                 savedTransaction.getTransactionType(), 
                 savedTransaction.getAmount());
+
+        // 8. Publish events (if Kafka enabled)
+        publishTransactionEvents(savedTransaction, account);
 
         return mapToTransactionResponse(savedTransaction, account.getAccountName());
     }
@@ -328,5 +336,74 @@ public class TransactionService {
                 .branchCode(transaction.getBranchCode())
                 .ipAddress(transaction.getIpAddress())
                 .build();
+    }
+
+    /**
+     * Publish transaction events (Kafka)
+     * Gracefully skips if Kafka is disabled
+     */
+    private void publishTransactionEvents(FdTransaction transaction, FdAccount account) {
+        if (eventPublisher == null) {
+            logger.debug("⏭️ Kafka disabled - skipping event publishing");
+            return;
+        }
+
+        try {
+            // 1. Publish TransactionEvent
+            TransactionEvent transactionEvent = TransactionEvent.builder()
+                    .transactionId(transaction.getTransactionId())
+                    .accountNumber(transaction.getAccountNumber())
+                    .customerId(account.getCustomerId())
+                    .transactionType(transaction.getTransactionType().toString())
+                    .amount(transaction.getAmount())
+                    .balanceBefore(transaction.getBalanceBefore())
+                    .balanceAfter(transaction.getBalanceAfter())
+                    .status(transaction.getStatus().toString())
+                    .description(transaction.getDescription())
+                    .transactionDate(transaction.getTransactionDate())
+                    .eventType("TRANSACTION_COMPLETED")
+                    .build();
+            eventPublisher.publishTransaction(transactionEvent);
+
+            // 2. Publish AlertEvent for significant transactions
+            if (shouldAlertCustomer(transaction)) {
+                AlertEvent alertEvent = AlertEvent.builder()
+                        .customerId(account.getCustomerId())
+                        .customerEmail(account.getCustomerEmail())
+                        .alertType("TRANSACTION_COMPLETED")
+                        .subject(String.format("Transaction %s - ₹%s", transaction.getTransactionType(), transaction.getAmount()))
+                        .message(String.format("Transaction %s completed on account %s for amount ₹%s",
+                                transaction.getTransactionType(), account.getAccountNumber(), transaction.getAmount()))
+                        .accountNumber(account.getAccountNumber())
+                        .severity(getSeverityForTransaction(transaction))
+                        .timestamp(transaction.getTransactionDate())
+                        .eventType("ALERT")
+                        .build();
+                eventPublisher.publishAlert(alertEvent);
+            }
+
+        } catch (Exception e) {
+            // Don't fail transaction if event publishing fails
+            logger.error("❌ Error publishing transaction events (non-critical): {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Determine if customer should be alerted for this transaction
+     */
+    private boolean shouldAlertCustomer(FdTransaction transaction) {
+        // Alert for all customer-initiated transactions, skip batch system transactions
+        return !transaction.getInitiatedBy().startsWith("SYSTEM");
+    }
+
+    /**
+     * Get severity level for transaction alert
+     */
+    private String getSeverityForTransaction(FdTransaction transaction) {
+        // High value transactions or withdrawals are warnings
+        if (transaction.getAmount().compareTo(BigDecimal.valueOf(100000)) > 0) {
+            return "WARNING";
+        }
+        return "INFO";
     }
 }

@@ -25,6 +25,8 @@ import com.app.account.dto.external.CalculationResponse;
 import com.app.account.dto.external.CustomerDto;
 import com.app.account.dto.external.ProductDto;
 import com.app.account.entity.FdAccount;
+import com.app.account.event.AccountCreatedEvent;
+import com.app.account.event.AlertEvent;
 import com.app.account.repository.FdAccountRepository;
 import com.app.account.util.AccountNumberGenerator;
 
@@ -50,6 +52,9 @@ public class AccountService {
 
     @Autowired
     private AccountNumberGenerator accountNumberGenerator;
+
+    @Autowired(required = false)
+    private EventPublisher eventPublisher;
 
     /**
      * Create FD Account - VERSION 1: All values defaulted from product
@@ -136,6 +141,9 @@ public class AccountService {
         // 7. Save account
         FdAccount savedAccount = accountRepository.save(account);
         logger.info("✅ Account created successfully: {} (IBAN: {})", savedAccount.getAccountNumber(), savedAccount.getIbanNumber());
+
+        // 8. Publish events (if Kafka enabled)
+        publishAccountCreatedEvents(savedAccount);
 
         return mapToAccountResponse(savedAccount);
     }
@@ -232,6 +240,9 @@ public class AccountService {
         // 8. Save account
         FdAccount savedAccount = accountRepository.save(account);
         logger.info("✅ Account created with customization: {} (Rate: {}%)", savedAccount.getAccountNumber(), finalInterestRate);
+
+        // 9. Publish events (if Kafka enabled)
+        publishAccountCreatedEvents(savedAccount);
 
         return mapToAccountResponse(savedAccount);
     }
@@ -473,5 +484,53 @@ public class AccountService {
         }
         
         return mapToAccountResponse(account);
+    }
+
+    /**
+     * Publish account created events (Kafka)
+     * Gracefully skips if Kafka is disabled
+     */
+    private void publishAccountCreatedEvents(FdAccount account) {
+        if (eventPublisher == null) {
+            logger.debug("⏭️ Kafka disabled - skipping event publishing");
+            return;
+        }
+
+        try {
+            // 1. Publish AccountCreatedEvent
+            AccountCreatedEvent accountEvent = AccountCreatedEvent.builder()
+                    .accountNumber(account.getAccountNumber())
+                    .accountName(account.getAccountName())
+                    .customerId(account.getCustomerId())
+                    .customerEmail(account.getCustomerEmail())
+                    .productCode(account.getProductCode())
+                    .principalAmount(account.getPrincipalAmount())
+                    .interestRate(account.getInterestRate().doubleValue())
+                    .termMonths(account.getTermMonths())
+                    .status(account.getStatus().toString())
+                    .createdAt(account.getCreatedAt())
+                    .eventType("ACCOUNT_CREATED")
+                    .build();
+            eventPublisher.publishAccountCreated(accountEvent);
+
+            // 2. Publish AlertEvent for customer
+            AlertEvent alertEvent = AlertEvent.builder()
+                    .customerId(account.getCustomerId())
+                    .customerEmail(account.getCustomerEmail())
+                    .alertType("ACCOUNT_CREATED")
+                    .subject("FD Account Created Successfully")
+                    .message(String.format("Your Fixed Deposit account %s has been created with principal amount ₹%s",
+                            account.getAccountNumber(), account.getPrincipalAmount()))
+                    .accountNumber(account.getAccountNumber())
+                    .severity("INFO")
+                    .timestamp(account.getCreatedAt())
+                    .eventType("ALERT")
+                    .build();
+            eventPublisher.publishAlert(alertEvent);
+
+        } catch (Exception e) {
+            // Don't fail account creation if event publishing fails
+            logger.error("❌ Error publishing account events (non-critical): {}", e.getMessage());
+        }
     }
 }
