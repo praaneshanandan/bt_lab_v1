@@ -12,7 +12,7 @@ import { isManagerOrAdmin } from '../utils/auth';
 import type { RedemptionInquiryResponse, ProcessRedemptionResponse } from '../types';
 
 const Redemptions: React.FC = () => {
-  const [accountNumber, setAccountNumber] = useState('');
+  const [idValue, setAccountNumber] = useState('');
   const [redemptionDate, setRedemptionDate] = useState('');
   const [reason, setReason] = useState('');
   const [inquiryResult, setInquiryResult] = useState<RedemptionInquiryResponse | null>(null);
@@ -33,10 +33,11 @@ const Redemptions: React.FC = () => {
     
     try {
       const response = await accountServiceApi.inquireRedemption({
-        accountNumber,
+        idValue,
         redemptionDate: redemptionDate || undefined,
       });
-      setInquiryResult(response.data);
+      console.log(response.data.data)
+      setInquiryResult(response.data.data);
     } catch (err: any) {
       console.error('Error inquiring redemption:', err);
       setError(err.response?.data?.message || 'Failed to inquire redemption');
@@ -49,7 +50,7 @@ const Redemptions: React.FC = () => {
   const handleProcess = async () => {
     if (!inquiryResult) return;
     
-    if (!confirm(`Are you sure you want to process redemption for account ${accountNumber}? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to process redemption for account ${idValue}? This action cannot be undone.`)) {
       return;
     }
     
@@ -58,11 +59,13 @@ const Redemptions: React.FC = () => {
     
     try {
       const response = await accountServiceApi.processRedemption({
-        accountNumber,
+        idValue: idValue,
+        redemptionType: "FULL",
         redemptionDate: redemptionDate || undefined,
         reason: reason || undefined,
       });
-      setProcessResult(response.data);
+      console.log(response.data)
+      setProcessResult(response.data.data);
       setInquiryResult(null);
     } catch (err: any) {
       console.error('Error processing redemption:', err);
@@ -122,7 +125,7 @@ const Redemptions: React.FC = () => {
             <input
               type="text"
               required
-              value={accountNumber}
+              value={idValue}
               onChange={(e) => setAccountNumber(e.target.value)}
               placeholder="Enter FD account number"
               className="w-full px-4 py-2 border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
@@ -232,7 +235,7 @@ const Redemptions: React.FC = () => {
               <div className="bg-muted rounded-lg p-4">
                 <p className="text-sm text-muted-foreground mb-1">Accrued Interest</p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(inquiryResult.accruedInterest)}
+                  {formatCurrency(inquiryResult.interestEarned)}
                 </p>
               </div>
 
@@ -318,26 +321,26 @@ const Redemptions: React.FC = () => {
       {/* Process Result */}
       {processResult && (
         <div className={`border rounded-lg p-6 ${
-          processResult.status === 'COMPLETED' 
+          processResult.redemptionStatus === 'COMPLETED' 
             ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-800' 
             : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-800'
         }`}>
           <div className="flex items-center gap-3 mb-4">
-            {processResult.status === 'COMPLETED' ? (
+            {processResult.redemptionStatus === 'COMPLETED' ? (
               <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
             ) : (
               <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
             )}
             <div>
               <h2 className={`text-xl font-bold ${
-                processResult.status === 'COMPLETED' 
+                processResult.redemptionStatus === 'COMPLETED' 
                   ? 'text-green-900 dark:text-green-300' 
                   : 'text-red-900 dark:text-red-300'
               }`}>
-                Redemption {processResult.status === 'COMPLETED' ? 'Successful' : 'Failed'}
+                Redemption {processResult.redemptionStatus === 'COMPLETED' ? 'Successful' : 'Failed'}
               </h2>
               <p className={`text-sm ${
-                processResult.status === 'COMPLETED' 
+                processResult.redemptionStatus === 'COMPLETED' 
                   ? 'text-green-700 dark:text-green-400' 
                   : 'text-red-700 dark:text-red-400'
               }`}>
@@ -357,7 +360,7 @@ const Redemptions: React.FC = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Transaction Reference</p>
                 <p className="font-mono text-sm font-semibold text-foreground mt-1">
-                  {processResult.transactionReference}
+                  {processResult.redemptionTransactionId}
                 </p>
               </div>
             </div>
@@ -365,7 +368,7 @@ const Redemptions: React.FC = () => {
             <div className="bg-white dark:bg-gray-950 rounded-lg p-4">
               <p className="text-sm text-muted-foreground mb-1">Redemption Amount</p>
               <p className="text-3xl font-bold text-primary">
-                {formatCurrency(processResult.redemptionAmount)}
+                {formatCurrency(processResult.netRedemptionAmount)}
               </p>
               {processResult.penaltyApplied > 0 && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
@@ -377,7 +380,7 @@ const Redemptions: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Processed At</p>
               <p className="font-semibold text-foreground mt-1">
-                {formatDate(processResult.processedAt)}
+                {formatDate(processResult.redemptionDate)}
               </p>
             </div>
 

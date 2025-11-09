@@ -86,8 +86,10 @@ public class RedemptionController {
             @Valid @RequestBody RedemptionInquiryRequest request) {
         
         try {
+            
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
+
             
             logger.info("📊 Redemption inquiry request received: idType={}, idValue={}, user={}", 
                     request.getIdTypeOrDefault(), request.getIdValue(), username);

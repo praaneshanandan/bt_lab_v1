@@ -644,14 +644,14 @@ export interface InterestCalculationResponse {
 
 // Redemption Types
 export interface RedemptionInquiryRequest {
-  accountNumber: string;
-  redemptionDate?: string; // Optional, defaults to today
+  idValue: string;
+  redemptionDate?: string;
 }
 
 export interface RedemptionInquiryResponse {
   accountNumber: string;
   principalAmount: number;
-  accruedInterest: number;
+  interestEarned: number;
   penaltyAmount: number;
   netRedemptionAmount: number;
   maturityDate: string;
@@ -661,7 +661,8 @@ export interface RedemptionInquiryResponse {
 }
 
 export interface ProcessRedemptionRequest {
-  accountNumber: string;
+  idValue: string;
+  redemptionType: string;
   redemptionDate?: string;
   reason?: string;
 }
@@ -670,9 +671,10 @@ export interface ProcessRedemptionResponse {
   accountNumber: string;
   transactionReference: string;
   redemptionAmount: number;
+  redemptionTransactionId: string;
+  netRedemptionAmount: number;
   penaltyApplied: number;
-  status: 'COMPLETED' | 'FAILED';
+  redemptionStatus: 'COMPLETED' | 'FAILED';
   message: string;
-  processedAt: string;
+  redemptionDate: string;
 }
-

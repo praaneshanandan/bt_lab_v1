@@ -226,7 +226,7 @@ export const calculatorApi = {
 export const fdAccountApi = {
   // Account Creation
   createStandardAccount: (data: CreateStandardAccountRequest) =>
-    accountApiInstance.post('/api/fd-accounts/accounts/create/standard', data),
+    accountApiInstance.post('/api/accounts/create/default"', data),
 
   customizeAccount: (data: CustomizeAccountRequest) =>
     accountApiInstance.post('/api/fd-accounts/accounts/create/customize', data),
@@ -393,7 +393,7 @@ export const accountServiceApi = {
     newAccountApiInstance.post('/transactions', data),
   
   // Get all transactions (Admin/Manager only)
-  getAllTransactions: () => newAccountApiInstance.get('/transactions'),
+  getAllTransactions: () => newAccountApiInstance.get('/transactions/list'),
 };
 
 export default loginApi;
