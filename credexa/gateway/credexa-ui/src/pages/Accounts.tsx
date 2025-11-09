@@ -34,7 +34,7 @@ const Accounts: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<FDAccount | null>(null);
   const [accountBalance, setAccountBalance] = useState<AccountBalanceResponse | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createMode, setCreateMode] = useState<'default' | 'custom'>('default');
+  const [createMode] = useState<'default' | 'custom'>('default');
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');

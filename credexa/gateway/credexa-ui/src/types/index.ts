@@ -595,13 +595,6 @@ export interface FDTransaction {
   updatedAt: string;
 }
 
-export interface CreateTransactionRequest {
-  accountNumber: string;
-  transactionType: 'OPENING' | 'INTEREST_CREDIT' | 'MATURITY' | 'PREMATURE_WITHDRAWAL' | 'CLOSURE';
-  transactionAmount: number;
-  description?: string;
-}
-
 export interface TransactionInquiryRequest {
   accountNumber?: string;
   transactionType?: string;

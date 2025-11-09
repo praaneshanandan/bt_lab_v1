@@ -11,4 +11,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    outDir: '../src/main/resources/static',
+    emptyOutDir: true,
+  },
 })

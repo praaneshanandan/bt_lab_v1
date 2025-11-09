@@ -23,7 +23,10 @@ public class CorsConfig {
         corsConfig.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:3000",
             "http://localhost:5173",
-            "http://localhost:*"
+            "http://localhost:*",
+            "https://*.ngrok-free.app",
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok.io"
         ));
         
         // Allowed headers

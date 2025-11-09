@@ -1,0 +1,69 @@
+package com.app.gateway.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
+
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+
+@Configuration
+public class WebConfig {
+
+    @Bean
+    public RouterFunction<ServerResponse> staticResourceRouter() {
+        return RouterFunctions
+            // Serve index.html for root path
+            .route(GET("/"), request -> {
+                Resource resource = new ClassPathResource("static/index.html");
+                if (resource.exists()) {
+                    return ok().contentType(MediaType.TEXT_HTML)
+                            .body(BodyInserters.fromResource(resource));
+                }
+                return ServerResponse.notFound().build();
+            })
+            
+            // Serve static assets (JS, CSS, images, etc.)
+            .andRoute(GET("/assets/**"), request -> {
+                Resource resource = new ClassPathResource("static" + request.path());
+                if (resource.exists()) {
+                    return ok().body(BodyInserters.fromResource(resource));
+                }
+                return ServerResponse.notFound().build();
+            })
+            
+            // Serve favicon
+            .andRoute(GET("/favicon.ico"), request -> {
+                Resource resource = new ClassPathResource("static/favicon.ico");
+                if (resource.exists()) {
+                    return ok().body(BodyInserters.fromResource(resource));
+                }
+                return ServerResponse.notFound().build();
+            })
+            
+            // Catch-all for React Router (client-side routing)
+            // This must be last and should NOT intercept API calls
+            .andRoute(GET("/**"), request -> {
+                String path = request.path();
+                
+                // Don't intercept API or actuator paths - let Gateway handle them
+                if (path.startsWith("/api/") || path.startsWith("/actuator/")) {
+                    return ServerResponse.notFound().build();
+                }
+                
+                // For all other paths, serve index.html (React Router will handle it)
+                Resource resource = new ClassPathResource("static/index.html");
+                if (resource.exists()) {
+                    return ok().contentType(MediaType.TEXT_HTML)
+                            .body(BodyInserters.fromResource(resource));
+                }
+                return ServerResponse.notFound().build();
+            });
+    }
+}

@@ -44,11 +44,9 @@ const BatchManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [ttStatus, mStatus, cStatus, aStatus] = await Promise.allSettled([
+      const [ttStatus, mStatus] = await Promise.allSettled([
         accountServiceApi.getTimeTravelStatus(),
         accountServiceApi.getMaturityProcessingStatus(),
-        accountServiceApi.getBatchStatus(), // This gets all batch status
-        accountServiceApi.getBatchStatus(),
       ]);
 
       if (ttStatus.status === 'fulfilled') {

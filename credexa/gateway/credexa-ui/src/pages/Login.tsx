@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Loader2, CheckCircle2, AlertTriangle, Lock } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertTriangle, Lock } from 'lucide-react';
 import { PasswordStrength } from '@/components/PasswordStrength';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { authApi } from '@/services/api';

@@ -14,56 +14,53 @@ import type {
   AdminCreateCustomerRequest,
 } from '../types';
 
-// Service ports:
-// Login Service: 8081
-// Customer Service: 8082
-// FD Account Service: 8083
-// Product Pricing Service: 8084
-// FD Calculator Service: 8085
+// All requests now go through the Gateway (port 8080)
+// Gateway routes to backend services based on path prefixes
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-// Create axios instance for Login Service
+// Create axios instance for Login Service (via Gateway /api/auth/*)
 const loginApi = axios.create({
-  baseURL: 'http://localhost:8081',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Create axios instance for Customer Service
+// Create axios instance for Customer Service (via Gateway /api/customer/*)
 const customerApiInstance = axios.create({
-  baseURL: 'http://localhost:8082',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Create axios instance for FD Account Service
+// Create axios instance for FD Account Service (via Gateway /api/fd-accounts/*)
 const accountApiInstance = axios.create({
-  baseURL: 'http://localhost:8083',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Create axios instance for Product Pricing Service
+// Create axios instance for Product Pricing Service (via Gateway /api/products/*)
 const productApiInstance = axios.create({
-  baseURL: 'http://localhost:8084',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Create axios instance for Calculator Service
+// Create axios instance for Calculator Service (via Gateway /api/calculator/*)
 const calculatorApiInstance = axios.create({
-  baseURL: 'http://localhost:8085',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Create axios instance for NEW Account Service (Port 8087)
+// Create axios instance for NEW Account Service (via Gateway /api/accounts/*)
 const newAccountApiInstance = axios.create({
-  baseURL: 'http://localhost:8087/api/accounts',
+  baseURL: API_BASE_URL + '/api/accounts',
   headers: {
     'Content-Type': 'application/json',
   },

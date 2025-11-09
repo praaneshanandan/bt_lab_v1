@@ -25,7 +25,7 @@ spring:
 
         # Customer Service Routes
         - id: customer-service
-          uri: http://localhost:8083
+          uri: http://localhost:8082
           predicates:
             - Path=/api/customer/**
           filters:
@@ -43,9 +43,17 @@ spring:
         - id: login-service
           uri: http://localhost:8081
           predicates:
-            - Path=/api/login/**
+            - Path=/api/auth/**
           filters:
-            - RewritePath=/api/login/(?<segment>.*), /api/auth/$\{segment}
+            - StripPrefix=0
+        
+        # New Account Service Routes (port 8087)
+        - id: account-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/accounts/**
+          filters:
+            - StripPrefix=0
 
       # Global CORS configuration
       globalcors:
@@ -63,12 +71,15 @@ spring:
               - OPTIONS
             allowedHeaders:
               - "*"
+            exposedHeaders:
+              - "Authorization"
             allowCredentials: true
             maxAge: 3600
 
       # Default filters for all routes
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - PreserveHostHeader
 
 # Actuator endpoints
 management:
