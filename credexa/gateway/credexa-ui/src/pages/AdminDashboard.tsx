@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, Wallet, TrendingUp, AlertCircle, Activity } from 'lucide-react';
+import { Users, Package, Wallet, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminStats {
@@ -8,8 +8,6 @@ interface AdminStats {
   totalProducts: number;
   totalAccounts: number;
   totalValue: number;
-  pendingApprovals: number;
-  recentActivity: number;
 }
 
 export default function AdminDashboard() {
@@ -20,8 +18,6 @@ export default function AdminDashboard() {
     totalProducts: 0,
     totalAccounts: 0,
     totalValue: 0,
-    pendingApprovals: 0,
-    recentActivity: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -31,15 +27,58 @@ export default function AdminDashboard() {
 
   const fetchAdminStats = async () => {
     try {
-      // TODO: Fetch admin stats from APIs
-      // For now, showing placeholder data
+      // Import API services
+      const { customerApi, productApi, accountServiceApi } = await import('../services/api');
+      
+      // Fetch all data in parallel
+      const [customersRes, productsRes, accountsRes] = await Promise.allSettled([
+        customerApi.getAllCustomers(),
+        productApi.getAllProducts(),
+        accountServiceApi.getAllAccounts(),
+      ]);
+      
+      console.log('Customers response:', customersRes);
+      console.log('Products response:', productsRes);
+      console.log('Accounts response:', accountsRes);
+      
+      // Extract customers count
+      const customersData = customersRes.status === 'fulfilled' ? customersRes.value.data : null;
+      console.log('Customers data:', customersData);
+      const totalCustomers = Array.isArray(customersData?.data) 
+        ? customersData.data.length 
+        : Array.isArray(customersData) 
+          ? customersData.length 
+          : 0;
+      
+      // Extract products count
+      const productsData = productsRes.status === 'fulfilled' ? productsRes.value.data : null;
+      console.log('Products data:', productsData);
+      // Backend returns { success, message, data: { content: [], totalElements, ...pagination } }
+      const productsArray = productsData?.data?.content || productsData?.data || [];
+      const totalProducts = productsData?.data?.totalElements || 
+                           (Array.isArray(productsArray) ? productsArray.length : 0);
+      console.log('Products array:', productsArray);
+      console.log('Total products:', totalProducts);
+      
+      // Extract accounts data
+      const accountsData = accountsRes.status === 'fulfilled' ? accountsRes.value.data : null;
+      console.log('Accounts data:', accountsData);
+      // Backend returns { success, message, data: { content: [], ...pagination } }
+      const accounts = accountsData?.data?.content || accountsData?.data || [];
+      console.log('Accounts array:', accounts);
+      
+      const totalAccounts = accounts.length;
+      
+      // Calculate total value (sum of all account balances)
+      const totalValue = accounts.reduce((sum: number, acc: {currentBalance?: number, principalAmount?: number}) => {
+        return sum + (acc.currentBalance || acc.principalAmount || 0);
+      }, 0);
+      
       setStats({
-        totalCustomers: 0,
-        totalProducts: 0,
-        totalAccounts: 0,
-        totalValue: 0,
-        pendingApprovals: 0,
-        recentActivity: 0,
+        totalCustomers,
+        totalProducts,
+        totalAccounts,
+        totalValue,
       });
     } catch (error) {
       console.error('Error fetching admin stats:', error);
@@ -81,22 +120,6 @@ export default function AdminDashboard() {
       bgColor: 'bg-orange-100 dark:bg-orange-950',
       onClick: () => navigate('/accounts'),
     },
-    {
-      title: 'Pending Approvals',
-      value: stats.pendingApprovals,
-      icon: AlertCircle,
-      color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-100 dark:bg-red-950',
-      onClick: () => {},
-    },
-    {
-      title: 'Recent Activity',
-      value: stats.recentActivity,
-      icon: Activity,
-      color: 'text-indigo-600 dark:text-indigo-400',
-      bgColor: 'bg-indigo-100 dark:bg-indigo-950',
-      onClick: () => {},
-    },
   ];
 
   if (loading) {
@@ -137,88 +160,49 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest transactions and account updates</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              No recent activity
-            </div>
-          </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Upcoming Maturities</CardTitle>
+          <CardDescription>FD accounts maturing in the next 30 days</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            No upcoming maturities
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Maturities</CardTitle>
-            <CardDescription>FD accounts maturing in the next 30 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              No upcoming maturities
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate('/customers')}
-                className="w-full text-left p-3 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
-              >
-                <h3 className="font-semibold text-blue-900 dark:text-blue-100">Manage Customers</h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300">View and edit customer data</p>
-              </button>
-              <button
-                onClick={() => navigate('/products')}
-                className="w-full text-left p-3 bg-green-50 dark:bg-green-950 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors border border-green-200 dark:border-green-800"
-              >
-                <h3 className="font-semibold text-green-900 dark:text-green-100">Manage Products</h3>
-                <p className="text-sm text-green-700 dark:text-green-300">Configure FD products</p>
-              </button>
-              <button
-                onClick={() => navigate('/accounts')}
-                className="w-full text-left p-3 bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-lg transition-colors border border-purple-200 dark:border-purple-800"
-              >
-                <h3 className="font-semibold text-purple-900 dark:text-purple-100">View All Accounts</h3>
-                <p className="text-sm text-purple-700 dark:text-purple-300">Monitor FD accounts</p>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>System Overview</CardTitle>
-            <CardDescription>Key system metrics and status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-foreground">Customer Growth (30 days)</span>
-                <span className="text-lg font-bold text-green-600">+0%</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-foreground">Total Deposits (30 days)</span>
-                <span className="text-lg font-bold text-blue-600">₹0</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-foreground">Active FD Accounts</span>
-                <span className="text-lg font-bold text-purple-600">0</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common administrative tasks</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button
+              onClick={() => navigate('/customers')}
+              className="text-left p-4 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
+            >
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100">Manage Customers</h3>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">View and edit customer data</p>
+            </button>
+            <button
+              onClick={() => navigate('/products')}
+              className="text-left p-4 bg-green-50 dark:bg-green-950 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors border border-green-200 dark:border-green-800"
+            >
+              <h3 className="font-semibold text-green-900 dark:text-green-100">Manage Products</h3>
+              <p className="text-sm text-green-700 dark:text-green-300 mt-1">Configure FD products</p>
+            </button>
+            <button
+              onClick={() => navigate('/accounts')}
+              className="text-left p-4 bg-purple-50 dark:bg-purple-950 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-lg transition-colors border border-purple-200 dark:border-purple-800"
+            >
+              <h3 className="font-semibold text-purple-900 dark:text-purple-100">View All Accounts</h3>
+              <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">Monitor FD accounts</p>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
