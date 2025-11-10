@@ -8,27 +8,11 @@ spring:
     gateway:
       routes:
 
-      # Redemption Enquiry
-        - id: account-service
-          uri: http://localhost:8087
+        # Login/Auth Service Routes
+        - id: login-service
+          uri: http://localhost:8081
           predicates:
-            - Path=/api/redemptions/**
-          filters:
-            - StripPrefix=0
-
-        # FD Account Service Routes
-        - id: fd-account-service
-          uri: http://localhost:8087
-          predicates:
-            - Path=/api/fd-accounts/**
-          filters:
-            - StripPrefix=0
-
-        # Product Pricing Service Routes
-        - id: product-pricing-service
-          uri: http://localhost:8084
-          predicates:
-            - Path=/api/products/**
+            - Path=/api/auth/**
           filters:
             - StripPrefix=0
 
@@ -40,6 +24,14 @@ spring:
           filters:
             - StripPrefix=0
 
+        # Product Pricing Service Routes
+        - id: product-pricing-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=0
+
         # FD Calculator Service Routes
         - id: fd-calculator-service
           uri: http://localhost:8085
@@ -48,19 +40,20 @@ spring:
           filters:
             - StripPrefix=0
 
-        # Login/Auth Service Routes
-        - id: login-service
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - StripPrefix=0
-        
-        # New Account Service Routes (port 8087)
+        # Account Service - All Routes including Redemptions (port 8087)
+        # Backend has context-path=/api/accounts, so we forward everything as-is
         - id: account-service
           uri: http://localhost:8087
           predicates:
             - Path=/api/accounts/**
+          filters:
+            - StripPrefix=0
+
+        # FD Account Service Routes (Legacy - port 8087)
+        - id: fd-account-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/fd-accounts/**
           filters:
             - StripPrefix=0
 

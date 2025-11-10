@@ -32,9 +32,12 @@ const Redemptions: React.FC = () => {
     setProcessResult(null);
     
     try {
+      // Convert date to LocalDateTime format (YYYY-MM-DDTHH:mm:ss)
+      const formattedDate = redemptionDate ? `${redemptionDate}T00:00:00` : undefined;
+      
       const response = await accountServiceApi.inquireRedemption({
         idValue,
-        redemptionDate: redemptionDate || undefined,
+        redemptionDate: formattedDate,
       });
       console.log(response.data.data)
       setInquiryResult(response.data.data);
@@ -58,10 +61,13 @@ const Redemptions: React.FC = () => {
     setError(null);
     
     try {
+      // Convert date to LocalDateTime format (YYYY-MM-DDTHH:mm:ss)
+      const formattedDate = redemptionDate ? `${redemptionDate}T00:00:00` : undefined;
+      
       const response = await accountServiceApi.processRedemption({
         idValue: idValue,
         redemptionType: "FULL",
-        redemptionDate: redemptionDate || undefined,
+        redemptionDate: formattedDate,
         remarks: reason || undefined,
       });
       console.log(response.data)
