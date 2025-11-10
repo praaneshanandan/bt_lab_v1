@@ -114,7 +114,11 @@ const Accounts: React.FC = () => {
   const fetchAccountBalance = async (accountNumber: string) => {
     try {
       const response = await accountServiceApi.getAccountBalance(accountNumber);
-      setAccountBalance(response.data);
+      console.log('Balance API response:', response.data);
+      // Backend returns ApiResponse<BalanceResponse>, so access response.data.data
+      const balanceData = response.data.data || response.data;
+      console.log('Setting balance data:', balanceData);
+      setAccountBalance(balanceData);
     } catch (err: any) {
       console.error('Error fetching balance:', err);
     }
@@ -496,13 +500,13 @@ const Accounts: React.FC = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Opening Date</p>
                   <p className="text-foreground font-semibold mt-1">
-                    {formatDate(selectedAccount.openingDate)}
+                    {selectedAccount.openingDate ? formatDate(selectedAccount.openingDate) : 'N/A'}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Maturity Date</p>
                   <p className="text-foreground font-semibold mt-1">
-                    {formatDate(selectedAccount.maturityDate)}
+                    {selectedAccount.maturityDate ? formatDate(selectedAccount.maturityDate) : 'N/A'}
                   </p>
                 </div>
                 {selectedAccount.lastInterestCreditDate && (
