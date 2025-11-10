@@ -450,20 +450,26 @@ const Accounts: React.FC = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Accrued Interest</p>
+                      <p className="text-sm text-muted-foreground">Interest Earned</p>
                       <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
-                        {formatCurrency(accountBalance.accruedInterest)}
+                        {formatCurrency(accountBalance.interestEarned)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Balance</p>
+                      <p className="text-sm text-muted-foreground">TDS Deducted</p>
+                      <p className="text-xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+                        {formatCurrency(accountBalance.tdsAmount)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Net Amount (After TDS)</p>
                       <p className="text-2xl font-bold text-primary mt-1">
-                        {formatCurrency(accountBalance.totalBalance)}
+                        {formatCurrency(accountBalance.netAmount)}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Maturity Amount</p>
-                      <p className="text-xl font-bold text-foreground mt-1">
+                    <div className="col-span-2 pt-2 border-t border-primary/30">
+                      <p className="text-sm text-muted-foreground">Projected Maturity Amount</p>
+                      <p className="text-2xl font-bold text-foreground mt-1">
                         {formatCurrency(accountBalance.maturityAmount)}
                       </p>
                     </div>
@@ -500,13 +506,15 @@ const Accounts: React.FC = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Opening Date</p>
                   <p className="text-foreground font-semibold mt-1">
-                    {selectedAccount.openingDate ? formatDate(selectedAccount.openingDate) : 'N/A'}
+                    {accountBalance?.effectiveDate ? formatDate(accountBalance.effectiveDate) : 
+                     selectedAccount.openingDate ? formatDate(selectedAccount.openingDate) : 'N/A'}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Maturity Date</p>
                   <p className="text-foreground font-semibold mt-1">
-                    {selectedAccount.maturityDate ? formatDate(selectedAccount.maturityDate) : 'N/A'}
+                    {accountBalance?.maturityDate ? formatDate(accountBalance.maturityDate) :
+                     selectedAccount.maturityDate ? formatDate(selectedAccount.maturityDate) : 'N/A'}
                   </p>
                 </div>
                 {selectedAccount.lastInterestCreditDate && (
